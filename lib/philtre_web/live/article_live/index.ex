@@ -3,7 +3,7 @@ defmodule PhiltreWeb.ArticleLive.Index do
 
   alias Philtre.Articles
 
-  def mount(arg0, session, socket) do
+  def mount(%{}, _session, socket) do
     socket = assign(socket, :articles, Articles.list_articles())
 
     {:ok, socket}

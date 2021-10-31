@@ -1,3 +1,10 @@
+<nav class="admin">
+  <ul>
+    <li><%= live_patch "Home", to: "/" %></li>
+    <li><%= live_patch "Index", to: "/articles" %></li>
+    <li><%= live_patch "New", to: "/articles/new" %></li>
+  </ul>
+</nav>
 <main class="container">
   <p class="alert alert-info" role="alert"
     phx-click="lv:clear-flash"

@@ -1,0 +1,6 @@
+<%= for article <- @articles do %>
+  <div>
+    <h1><a href={article.id}><%= article.title %></a></h1>
+    <div><%= article.body %></div>
+  </div>
+<% end %>

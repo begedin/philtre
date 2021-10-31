@@ -1,1 +1,6 @@
-<%= live_patch "Back", to: Routes.article_index_path(@socket, :index) %>
+<%= live_patch "Back", to: "/articles"%>
+<.form for={@changeset} phx_submit="save">
+  <input name="article[title]" value="Foo" />
+  <textarea name="article[body]">Bar</textarea>
+  <button type="submit">Save</button>
+</.form>

@@ -1,1 +1,5 @@
-<%= live_patch "Back", to: Routes.article_index_path(@socket, :index) %>
+<%= live_patch "Back", to: "/articles"%>
+<.form let={f} for={@changeset} phx_submit="save">
+  <%= text_input(f, :title) %>
+  <%= textarea(f, :body) %>
+</.form>

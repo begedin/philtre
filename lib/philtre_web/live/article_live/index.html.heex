@@ -1,3 +1,10 @@
 <%= live_patch "New", to: Routes.article_new_path(@socket, :new) %>
 <%= live_patch "Edit", to: Routes.article_edit_path(@socket, :edit, 1) %>
 <%= live_patch "Show", to: Routes.article_show_path(@socket, :show, 1) %>
+
+
+<div>
+  <%= for article <- @articles do %>
+    <div><%= live_patch(article.title, to: "/articles/#{article.id}/edit") %></div>
+  <% end %>
+</div>

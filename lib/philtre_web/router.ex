@@ -17,7 +17,12 @@ defmodule PhiltreWeb.Router do
   scope "/", PhiltreWeb do
     pipe_through :browser
 
-    get "/", PageController, :index
+    live "/articles", ArticleLive.Index, :index
+    live "/articles/new", ArticleLive.New, :new
+    live "/articles/:id/edit", ArticleLive.Edit, :edit
+    live "/articles/:id", ArticleLive.Show, :show
+
+    resources("/", ArticleController, only: [:index, :show])
   end
 
   # Other scopes may use custom stacks.

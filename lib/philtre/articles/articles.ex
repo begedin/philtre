@@ -1,36 +1,22 @@
 defmodule Philtre.Articles do
   alias Ecto.Changeset
-
   alias Philtre.Articles
   alias Philtre.Repo
 
-  def changeset do
-    changeset(%{})
-  end
-
-  def changeset(%Articles.Article{} = article) do
-    changeset(article, %{})
-  end
-
-  def changeset(%{} = params) do
-    changeset(%Articles.Article{}, params)
-  end
-
-  def changeset(%Articles.Article{} = article, %{} = params) do
-    article
-    |> Changeset.cast(params, [:body, :title])
-    |> Changeset.validate_required([:body, :title])
-  end
+  @spec changeset(map | struct) :: Changeset.t()
+  defdelegate changeset(struct_or_params \\ %{}), to: Articles.Article
+  @spec changeset(struct, map) :: Changeset.t()
+  defdelegate changeset(struct, params), to: Articles.Article
 
   def create_article(%{} = params) do
     params
-    |> changeset()
+    |> Articles.Article.changeset()
     |> Repo.insert()
   end
 
   def update_article(%Articles.Article{} = article, %{} = params) do
     article
-    |> changeset(params)
+    |> Articles.Article.changeset(params)
     |> Repo.update()
   end
 

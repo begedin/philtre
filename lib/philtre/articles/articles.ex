@@ -24,7 +24,11 @@ defmodule Philtre.Articles do
     Repo.all(Articles.Article)
   end
 
-  def get_article(id) do
-    Repo.get(Articles.Article, id)
+  @spec get_article(String.t()) :: {:ok, Articles.Article.t()} | {:error, :not_found}
+  def get_article(slug) do
+    case Repo.get_by(Articles.Article, slug: slug) do
+      %Articles.Article{} = article -> {:ok, article}
+      nil -> {:error, :not_found}
+    end
   end
 end

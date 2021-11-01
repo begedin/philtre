@@ -19,10 +19,11 @@ defmodule PhiltreWeb.Router do
 
     live "/articles", ArticleLive.Index, :index
     live "/articles/new", ArticleLive.New, :new
-    live "/articles/:id/edit", ArticleLive.Edit, :edit
-    live "/articles/:id", ArticleLive.Show, :show
+    live "/articles/:slug/edit", ArticleLive.Edit, :edit
+    live "/articles/:slug", ArticleLive.Show, :show
 
-    resources("/", ArticleController, only: [:index, :show])
+    get("/", ArticleController, :index)
+    get("/:slug", ArticleController, :show)
   end
 
   # Other scopes may use custom stacks.

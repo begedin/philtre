@@ -6,5 +6,7 @@ defmodule Philtre.Repo.Migrations.AddArticleSlug do
     alter table(:articles) do
       add(:slug, :string, null: false)
     end
+
+    create(unique_index(:articles, :slug))
   end
 end

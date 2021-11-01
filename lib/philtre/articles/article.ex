@@ -3,6 +3,8 @@ defmodule Philtre.Articles.Article do
 
   alias Ecto.Changeset
 
+  alias Philtre.Repo
+
   @type t :: %__MODULE__{}
 
   schema "articles" do
@@ -31,6 +33,8 @@ defmodule Philtre.Articles.Article do
     |> Changeset.cast(params, [:body, :title])
     |> Changeset.validate_required([:body, :title])
     |> generate_slug()
+    |> Changeset.unique_constraint(:slug)
+    |> Changeset.unsafe_validate_unique(:slug, Repo)
   end
 
   defp generate_slug(%Changeset{valid?: false} = changeset), do: changeset

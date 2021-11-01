@@ -1,5 +1,5 @@
 <div>
   <%= for article <- @articles do %>
-    <div><%= live_patch(article.title, to: "/articles/#{article.id}/edit") %></div>
+    <div><%= live_patch(article.title, to: "/articles/#{article.slug}/edit") %></div>
   <% end %>
 </div>

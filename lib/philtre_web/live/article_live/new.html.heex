@@ -1,8 +1,1 @@
-<.form let={f} id="article" for={@changeset} phx_submit="save">
-  <%= text_input(f, :title) %>
-  <%= error_tag(f, :title) %>
-  <%= error_tag(f, :slug) %>
-  <%= textarea(f, :body) %>
-  <%= error_tag(f, :body) %>
-  <button type="submit">Save</button>
-</.form>
+<.live_component module={ArticleForm} id="article_form" />

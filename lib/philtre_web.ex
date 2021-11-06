@@ -54,6 +54,7 @@ defmodule PhiltreWeb do
   def live_component do
     quote do
       use Phoenix.LiveComponent
+      alias Phoenix.LiveView
 
       unquote(view_helpers())
     end

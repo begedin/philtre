@@ -1,4 +1,4 @@
 <div>
   <h1><%= @article.title %></h1>
-  <div><%= @article.body %></div>
+  <div><%= raw(@article.body_html) %></div>
 </div>

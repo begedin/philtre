@@ -18,6 +18,19 @@ defmodule PhiltreWeb.ArticleLive.NewTest do
     assert {:ok, %{title: "Foo", body: "Bar"}} = Articles.get_article("foo")
   end
 
+  test "renders preview of article", %{conn: conn} do
+    {:ok, view, _html} = live(conn, "/articles/new")
+
+    assert dom =
+             view
+             |> element("textarea")
+             |> render_keyup(%{value: "## Foo"})
+             |> Floki.parse_document!()
+
+    assert [h_1] = Floki.find(dom, "h2")
+    assert h_1 |> Floki.text() |> String.trim() == "Foo"
+  end
+
   test "validates validation errors", %{conn: conn} do
     article = Factories.create_article()
     {:ok, view, _html} = live(conn, "/articles/new")

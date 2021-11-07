@@ -8,6 +8,7 @@ defmodule PhiltreWeb.ArticleLive.Index do
 
   alias Philtre.Articles
 
+  @spec mount(map, %LiveView.Session{}, LiveView.Socket.t()) :: {:ok, LiveView.Socket.t()}
   def mount(%{}, _session, socket) do
     socket = assign(socket, :articles, Articles.list_articles())
 

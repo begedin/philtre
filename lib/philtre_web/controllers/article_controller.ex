@@ -2,12 +2,15 @@ defmodule PhiltreWeb.ArticleController do
   use PhiltreWeb, :controller
 
   alias Philtre.Articles
+  alias Plug.Conn
 
+  @spec index(Conn.t(), map) :: Conn.t()
   def index(conn, %{}) do
     articles = Articles.list_articles()
     render(conn, "index.html", articles: articles)
   end
 
+  @spec show(Conn.t(), map) :: Conn.t()
   def show(conn, %{"slug" => slug}) do
     case Articles.get_article(slug) do
       {:ok, article} ->

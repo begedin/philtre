@@ -13,18 +13,22 @@ defmodule Philtre.Articles do
   @spec changeset(struct, map) :: Changeset.t()
   defdelegate changeset(struct, params), to: Articles.Article
 
+  @spec create_article(map) :: {:ok, Articles.Article.t()} | {:error, Changeset.t()}
   def create_article(%{} = params) do
     params
     |> Articles.Article.changeset()
     |> Repo.insert()
   end
 
+  @spec update_article(Articles.Article.t(), map) ::
+          {:ok, Articles.Article.t()} | {:error, Changeset.t()}
   def update_article(%Articles.Article{} = article, %{} = params) do
     article
     |> Articles.Article.changeset(params)
     |> Repo.update()
   end
 
+  @spec list_articles :: list(Articles.Article.t())
   def list_articles do
     Repo.all(Articles.Article)
   end

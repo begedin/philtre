@@ -34,6 +34,7 @@ defmodule Philtre.MixProject do
   defp deps do
     [
       {:credo, "1.5.6"},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:earmark, "1.4.18"},
       {:ecto_sql, "~> 3.6"},
       {:esbuild, "~> 0.2", runtime: Mix.env() == :dev},

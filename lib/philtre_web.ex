@@ -47,6 +47,8 @@ defmodule PhiltreWeb do
       use Phoenix.LiveView,
         layout: {PhiltreWeb.LayoutView, "live.html"}
 
+      alias Phoenix.LiveView
+
       unquote(view_helpers())
     end
   end

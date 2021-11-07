@@ -1,6 +1,7 @@
 # 0.2.0 2021-11-07
 
 - credo + pre-commit hook for credo
+- dialyzer + specs + fixes + pre-commit hook for dialyzer
 
 # 0.2.0 2021-11-06
 

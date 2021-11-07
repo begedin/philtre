@@ -6,6 +6,7 @@ defmodule PhiltreWeb.ArticleLive.New do
 
   alias PhiltreWeb.ArticleLive.ArticleForm
 
+  @spec mount(map, %LiveView.Session{}, LiveView.Socket.t()) :: {:ok, LiveView.Socket.t()}
   def mount(%{}, _session, socket) do
     {:ok, socket}
   end

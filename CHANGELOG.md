@@ -1,3 +1,7 @@
+# 0.2.0 2021-11-07
+
+- credo + pre-commit hook for credo
+
 # 0.2.0 2021-11-06
 
 - basic markdown support

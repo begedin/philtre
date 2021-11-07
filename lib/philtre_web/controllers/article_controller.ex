@@ -9,9 +9,10 @@ defmodule PhiltreWeb.ArticleController do
   end
 
   def show(conn, %{"slug" => slug}) do
-    with {:ok, article} <- Articles.get_article(slug) do
-      render(conn, "show.html", article: article)
-    else
+    case Articles.get_article(slug) do
+      {:ok, article} ->
+        render(conn, "show.html", article: article)
+
       {:error, :not_found} ->
         conn
         |> put_view(PhiltreWeb.ErrorView)

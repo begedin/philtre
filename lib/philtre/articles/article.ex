@@ -1,4 +1,13 @@
 defmodule Philtre.Articles.Article do
+  @moduledoc """
+  Represents a single blog article stored in the database.
+
+  The `:body_html` field is produced automatically as the user is editing the
+  `:body` field.
+
+  The `:slug` field is produced automatically as the user is editing the
+  `:title` field.
+  """
   use Ecto.Schema
 
   alias Ecto.Changeset

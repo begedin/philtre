@@ -1,0 +1,34 @@
+#!/bin/bash
+
+echo "Pre-commit running..."
+
+# Fail on any commad evaluated without exit code = 0
+set -euo pipefail
+
+function run_credo {
+    cmd=(mix credo --strict)
+
+    if [ "$#" == 0 ]; then
+        exit 0
+    fi
+
+    for file in "$@"; do
+        cmd+=("--files-included" "$file")
+    done
+
+    command "${cmd[@]}"
+
+    CREDO_RES=$?
+    if [ $CREDO_RES -ne 0 ]
+    then
+        echo "Commit aborted. Credo check failed."
+        exit 1
+    fi
+}
+
+# Ensure that we are in a project dir
+cd `git rev-parse --show-toplevel`
+# Running formatting check before commit any changes
+mix format --check-formatted
+# Run a credo check onto changed files. Will skip if no *.ex or *.exs files are changed
+run_credo `git diff --name-only --cached | grep -i -e '\.ex$' -e '\.exs$'`

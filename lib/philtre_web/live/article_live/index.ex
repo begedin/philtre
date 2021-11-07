@@ -1,4 +1,9 @@
 defmodule PhiltreWeb.ArticleLive.Index do
+  @moduledoc """
+  Implements the page for listing articles in the admin interface.
+
+  From here, users can manage each individual article.
+  """
   use PhiltreWeb, :live_view
 
   alias Philtre.Articles

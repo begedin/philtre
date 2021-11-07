@@ -1,4 +1,7 @@
 defmodule PhiltreWeb.ArticleLive.ArticleForm do
+  @moduledoc """
+  Shared component used for both creation and editing of an article.
+  """
   use PhiltreWeb, :live_component
 
   alias Philtre.Articles
@@ -26,7 +29,7 @@ defmodule PhiltreWeb.ArticleLive.ArticleForm do
   end
 
   @spec assigns :: map
-  defp assigns() do
+  defp assigns do
     %{
       changeset: Articles.changeset(),
       preview: preview("")

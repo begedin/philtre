@@ -1,4 +1,9 @@
 defmodule Philtre.Articles do
+  @moduledoc """
+  Primary context for dealing with articles.
+
+  An article is a single blogpost published on the site.
+  """
   alias Ecto.Changeset
   alias Philtre.Articles
   alias Philtre.Repo

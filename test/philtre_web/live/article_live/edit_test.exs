@@ -29,9 +29,21 @@ defmodule PhiltreWeb.ArticleLive.EditTest do
 
     page = %Editor.Page{
       blocks: [
-        %Editor.Block{id: "1", type: "h1", cells: [%Editor.Cell{type: "span", content: "Foo"}]},
-        %Editor.Block{id: "2", type: "p", cells: [%Editor.Cell{type: "span", content: "Bar"}]},
-        %Editor.Block{id: "3", type: "p", cells: [%Editor.Cell{type: "span", content: "Baz"}]}
+        %Editor.Block{
+          id: "1",
+          type: "h1",
+          cells: [%Editor.Cell{id: "11", type: "span", content: "Foo"}]
+        },
+        %Editor.Block{
+          id: "2",
+          type: "p",
+          cells: [%Editor.Cell{id: "22", type: "span", content: "Bar"}]
+        },
+        %Editor.Block{
+          id: "3",
+          type: "p",
+          cells: [%Editor.Cell{id: "33", type: "span", content: "Baz"}]
+        }
       ]
     }
 
@@ -49,17 +61,17 @@ defmodule PhiltreWeb.ArticleLive.EditTest do
     assert content == %{
              "blocks" => [
                %{
-                 "cells" => [%{"content" => "Foo", "id" => nil, "type" => "span"}],
+                 "cells" => [%{"content" => "Foo", "id" => "11", "type" => "span"}],
                  "id" => "1",
                  "type" => "h1"
                },
                %{
-                 "cells" => [%{"content" => "Bar", "id" => nil, "type" => "span"}],
+                 "cells" => [%{"content" => "Bar", "id" => "22", "type" => "span"}],
                  "id" => "2",
                  "type" => "p"
                },
                %{
-                 "cells" => [%{"content" => "Baz", "id" => nil, "type" => "span"}],
+                 "cells" => [%{"content" => "Baz", "id" => "33", "type" => "span"}],
                  "id" => "3",
                  "type" => "p"
                }

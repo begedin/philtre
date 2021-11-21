@@ -36,7 +36,7 @@ defmodule Philtre.Articles.Article do
 
   def title(%__MODULE__{} = article) do
     article.content
-    |> to_page()
+    |> Editor.normalize()
     |> title()
   end
 
@@ -60,7 +60,7 @@ defmodule Philtre.Articles.Article do
 
   def body(%__MODULE__{} = article) do
     article.content
-    |> to_page()
+    |> Editor.normalize()
     |> body()
   end
 
@@ -68,10 +68,6 @@ defmodule Philtre.Articles.Article do
     rest
     |> Enum.map(&Editor.text/1)
     |> Enum.join()
-  end
-
-  defp to_page(%{} = content) do
-    Editor.normalize(content)
   end
 
   @spec slugify(String.t()) :: String.t()

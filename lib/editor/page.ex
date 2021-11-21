@@ -29,25 +29,12 @@ defmodule Editor.Page do
     current_block_index = Enum.find_index(blocks, &(&1.id === block_id))
     current_block = Enum.at(blocks, current_block_index)
 
-    split_blocks = split(current_block, cell_id, index)
+    blocks =
+      blocks
+      |> List.replace_at(current_block_index, Editor.Block.split(current_block, cell_id, index))
+      |> List.flatten()
 
-    blocks = blocks |> List.replace_at(current_block_index, split_blocks) |> List.flatten()
     %{page | blocks: blocks}
-  end
-
-  defp split(%Editor.Block{cells: cells} = block, cell_id, index) do
-    cell_index = Enum.find_index(cells, &(&1.id === cell_id))
-    cell = Enum.at(cells, cell_index)
-    {content_before, content_after} = String.split_at(cell.content, index)
-
-    {cells_before, cells_after} = Enum.split(cells, cell_index + 1)
-    cell_before = %{cell | content: content_before}
-    cell_after = %{cell | content: content_after, id: Editor.Utils.new_id()}
-
-    [
-      %{block | cells: List.replace_at(cells_before, -1, cell_before)},
-      %{block | cells: [cell_after | cells_after], id: Editor.Utils.new_id(), type: "p"}
-    ]
   end
 
   @spec update_block(t, block_id :: id, cell_id :: id, String.t()) :: t

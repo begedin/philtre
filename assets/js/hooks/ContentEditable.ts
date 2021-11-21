@@ -1,6 +1,5 @@
 const ContentEditable = {
   mounted() {
-    console.log("mounted", this.getBlockId(), this.getCellId());
     const el: HTMLElement = this.el;
     el.style.whiteSpace = "pre-wrap";
     el.style.wordBreak = "break-word";
@@ -46,7 +45,6 @@ const ContentEditable = {
 
     el.addEventListener("keypress", (event: KeyboardEvent) => {
       const selection = window.getSelection();
-      console.log(selection);
 
       if (event.key === "Enter") {
         event.preventDefault();
@@ -62,10 +60,7 @@ const ContentEditable = {
     el.focus();
   },
 
-  updated() {
-    console.log("updated", this.getBlockId(), this.getCellId());
-    // this.el.focus();
-  },
+  updated() {},
 
   getTarget(): string {
     return this.el.getAttribute("phx-target");

@@ -79,26 +79,18 @@ defmodule Editor.Block do
     %{block | type: type, cells: cells}
   end
 
-  @spec downgrade_block(t) :: t
-  def downgrade_block(%{type: "h1"} = block), do: %{block | type: "h2"}
-  def downgrade_block(%{type: "h2"} = block), do: %{block | type: "h3"}
-  def downgrade_block(%{type: "h3"} = block), do: %{block | type: "p"}
-  def downgrade_block(%{type: "pre"} = block), do: %{block | type: "p"}
-  def downgrade_block(%{} = block), do: block
-
   def backspace(%__MODULE__{cells: cells, type: type} = block, cell_id) do
     cell_index = Enum.find_index(cells, &(&1.id === cell_id))
-    IO.inspect({cell_index, block})
 
     cond do
       cell_index === 0 and type === "p" ->
         []
 
       cell_index === 0 ->
-        [downgrade_block(block)]
+        [block |> downgrade() |> downgrade_cells()]
 
       cell_index > 0 ->
-        action = cells |> Enum.at(cell_index) |> Editor.Cell.backspace() |> IO.inspect()
+        action = cells |> Enum.at(cell_index) |> Editor.Cell.backspace()
 
         new_cells =
           case action do
@@ -106,7 +98,7 @@ defmodule Editor.Block do
             :join_to_previous -> join_cells(block, cell_index, cell_index - 1)
           end
 
-        [%{block | cells: new_cells}] |> IO.inspect()
+        [%{block | cells: new_cells}]
     end
   end
 
@@ -123,5 +115,18 @@ defmodule Editor.Block do
     cells
     |> List.delete_at(from_index)
     |> List.replace_at(to_index, cell)
+  end
+
+  @spec downgrade(t) :: t
+  defp downgrade(%{type: "h1"} = block), do: %{block | type: "h2"}
+  defp downgrade(%{type: "h2"} = block), do: %{block | type: "h3"}
+  defp downgrade(%{type: "h3"} = block), do: %{block | type: "p"}
+  defp downgrade(%{type: "pre"} = block), do: %{block | type: "p"}
+  defp downgrade(%{type: "ul"} = block), do: %{block | type: "p"}
+  defp downgrade(%{} = block), do: block
+
+  @spec downgrade_cells(t) :: t
+  defp downgrade_cells(%{cells: cells} = block) do
+    %{block | cells: Enum.map(cells, &Editor.Cell.downgrade/1)}
   end
 end

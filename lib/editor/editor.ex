@@ -45,9 +45,7 @@ defmodule Editor do
   end
 
   def html(%Editor.Page{} = page) do
-    page.blocks
-    |> Enum.map(&html/1)
-    |> Enum.join("")
+    page.blocks |> Enum.map(&html/1) |> Enum.join("")
   end
 
   def html(%Editor.Block{} = block) do

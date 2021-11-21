@@ -59,7 +59,9 @@ defmodule PhiltreWeb.ArticleLive.NewTest do
                  "id" => "3",
                  "type" => "p"
                }
-             ]
+             ],
+             "active_cell_id" => nil,
+             "cursor_index" => nil
            }
   end
 

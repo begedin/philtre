@@ -102,3 +102,16 @@ nav.admin ul {
   gap: 1rem;
   justify-content: center;
 }
+
+.editor__section {
+  min-height: 1em;
+}
+
+.editor__section:hover {
+  background: #f5f5f5;
+}
+
+[contenteditable] {
+  outline: none;
+  cursor: text;
+}

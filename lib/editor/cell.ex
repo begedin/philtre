@@ -1,6 +1,8 @@
 defmodule Editor.Cell do
   defstruct [:id, :type, :content]
 
+  @type t :: %__MODULE__{}
+
   def new() do
     %__MODULE__{
       id: Editor.Utils.new_id(),
@@ -43,4 +45,8 @@ defmodule Editor.Cell do
   def join(%__MODULE__{} = from, %__MODULE__{} = to) do
     %{to | content: to.content <> from.content}
   end
+
+  @spec downgrade(t) :: t
+  def downgrade(%{type: type} = cell) when type !== "span", do: %{cell | type: "span"}
+  def downgrade(%{} = cell), do: cell
 end

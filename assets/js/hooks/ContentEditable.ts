@@ -60,7 +60,16 @@ const ContentEditable = {
     el.focus();
   },
 
-  updated() {},
+  updated() {
+    const active = this.el.dataset.active == "";
+    const cursorIndex = parseInt(this.el.dataset.cursorIndex);
+    if (active && !isNaN(cursorIndex)) {
+      this.el.focus();
+      const selection = window.getSelection();
+
+      selection.setPosition(selection.focusNode, cursorIndex);
+    }
+  },
 
   getTarget(): string {
     return this.el.getAttribute("phx-target");

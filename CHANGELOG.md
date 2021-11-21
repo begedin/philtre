@@ -1,3 +1,11 @@
+# 0.4.0 2021-11-21
+
+- block + cell based editor, supporting following blocks
+  - p
+  - h1,h2,h3
+  - ul
+  - with block downgrades, splitting, etc.
+
 # 0.2.0 2021-11-07
 
 - credo + pre-commit hook for credo

@@ -1,5 +1,4 @@
 <div>
-  <%= for section <- @article.sections do %>
-    <%= content_tag(section.type, do: raw(section.content)) %>
-  <% end %>
+  <h1><%= Articles.Article.title(@article) %></h1>
+  <div><%= @article |> Articles.Article.body() |> raw() %></div>
 </div>

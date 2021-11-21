@@ -1,10 +1,6 @@
-<%= for %{sections: [%{content: title} | sections]} = article <- @articles do %>
+<%= for article <- @articles do %>
   <div>
-    <h1><a href={article.slug}><%= title %></a></h1>
-    <div>
-      <%= for section <- sections do %>
-        <%= content_tag(section.type, do: raw(section.content)) %>
-      <% end %>
-    </div>
+    <h1><a href={article.slug}><%= Articles.Article.title(article) %></a></h1>
+    <div><%= article |> Articles.Article.body() |> raw() %></div>
   </div>
 <% end %>

@@ -1,15 +1,22 @@
 <div>
   <%= for block <- @page.blocks do %>
-    <%= content_tag(
-      block.type,
-      [
-        contenteditable: true,
-        data: [block_id: block.id],
-        id: "content-#{block.id}",
-        phx_hook: "ContentEditable",
-        phx_target: @myself
-      ],
-      do: raw(block.content)
-    ) %>
+    <%= content_tag(block.type, [data: [block_id: block.id], id: "block-#{block.id}"]) do %>
+      <%= for cell <- block.cells  do %>
+        <%= content_tag(
+          cell.type,
+          [
+            contenteditable: true,
+            data: [
+              cell_id: cell.id,
+              block_id: block.id
+            ],
+            id: "cell-#{block.id}",
+            phx_hook: "ContentEditable",
+            phx_target: @myself
+          ],
+          do: raw(cell.content)
+         ) %>
+      <% end %>
+    <% end %>
   <% end %>
 </div>

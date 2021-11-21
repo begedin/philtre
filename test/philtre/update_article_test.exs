@@ -9,12 +9,12 @@ defmodule Philtre.Articles.UpdateArticleTest do
       %Editor.Block{
         id: Ecto.UUID.generate(),
         type: "h1",
-        content: "My New Title"
+        cells: [%Editor.Cell{type: "span", content: "My New Title"}]
       },
       %Editor.Block{
         id: Ecto.UUID.generate(),
         type: "p",
-        content: "My New Content"
+        cells: [%Editor.Cell{type: "span", content: "My New Content"}]
       }
     ]
   }

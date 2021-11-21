@@ -13,9 +13,9 @@ defmodule PhiltreWeb.ArticleLive.NewTest do
 
     page = %Editor.Page{
       blocks: [
-        %Editor.Block{id: "1", type: "h1", content: "Foo"},
-        %Editor.Block{id: "2", type: "p", content: "Bar"},
-        %Editor.Block{id: "3", type: "p", content: "Baz"}
+        %Editor.Block{id: "1", type: "h1", cells: [%Editor.Cell{type: "span", content: "Foo"}]},
+        %Editor.Block{id: "2", type: "p", cells: [%Editor.Cell{type: "span", content: "Bar"}]},
+        %Editor.Block{id: "3", type: "p", cells: [%Editor.Cell{type: "span", content: "Baz"}]}
       ]
     }
 
@@ -23,28 +23,45 @@ defmodule PhiltreWeb.ArticleLive.NewTest do
 
     assert dom = view |> render() |> Floki.parse_document!()
 
-    assert dom |> Floki.find("h1[contenteditable]") |> Floki.text() == "Foo"
-    assert dom |> Floki.find("p[contenteditable]") |> Floki.text() == "BarBaz"
+    assert dom |> Floki.find("h1 span[contenteditable]") |> Floki.text() == "Foo"
+    assert dom |> Floki.find("p span[contenteditable]") |> Floki.text() == "BarBaz"
 
     assert view |> element("button") |> render_click()
 
-    assert {:ok,
-            %{
-              sections: [
-                %Philtre.Articles.Article.Section{content: "Foo", id: "1", type: "h1"},
-                %Philtre.Articles.Article.Section{content: "Bar", id: "2", type: "p"},
-                %Philtre.Articles.Article.Section{content: "Baz", id: "3", type: "p"}
-              ]
-            }} = Articles.get_article("foo")
+    assert {:ok, %{content: content}} = Articles.get_article("foo")
+
+    assert content == %{
+             "blocks" => [
+               %{
+                 "cells" => [%{"content" => "Foo", "id" => nil, "type" => "span"}],
+                 "id" => "1",
+                 "type" => "h1"
+               },
+               %{
+                 "cells" => [%{"content" => "Bar", "id" => nil, "type" => "span"}],
+                 "id" => "2",
+                 "type" => "p"
+               },
+               %{
+                 "cells" => [%{"content" => "Baz", "id" => nil, "type" => "span"}],
+                 "id" => "3",
+                 "type" => "p"
+               }
+             ]
+           }
   end
 
   test "validates validation errors", %{conn: conn} do
-    %{sections: [title_section | _]} = Factories.create_article()
+    article = Factories.create_article()
     {:ok, view, _html} = live(conn, "/articles/new")
 
     page = %Editor.Page{
       blocks: [
-        %Editor.Block{id: "1", type: "h1", content: title_section.content}
+        %Editor.Block{
+          id: "1",
+          type: "h1",
+          cells: [%Editor.Cell{type: "span", content: Articles.Article.title(article)}]
+        }
       ]
     }
 

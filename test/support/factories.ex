@@ -7,14 +7,14 @@ defmodule Philtre.Factories do
   @article_params %Editor.Page{
     blocks: [
       %Editor.Block{
-        id: Ecto.UUID.generate(),
+        id: Editor.Utils.new_id(),
         type: "h1",
-        content: "My Article"
+        cells: [%Editor.Cell{id: Editor.Utils.new_id(), type: "span", content: "My Article"}]
       },
       %Editor.Block{
-        id: Ecto.UUID.generate(),
+        id: Editor.Utils.new_id(),
         type: "p",
-        content: "My Content"
+        cells: [%Editor.Cell{id: Editor.Utils.new_id(), type: "span", content: "My Content"}]
       }
     ]
   }
@@ -42,8 +42,8 @@ defmodule Philtre.Factories do
             Enum.map(page.blocks, fn %Editor.Block{} = block ->
               %Editor.Block{
                 type: block.type,
-                id: Ecto.UUID.generate(),
-                content: "#{block.content} #{index}"
+                id: Editor.Utils.new_id(),
+                cells: Enum.map(block.cells, &%{&1 | content: "#{&1.content} #{index}"})
               }
             end)
       }

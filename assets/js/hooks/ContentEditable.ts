@@ -1,5 +1,6 @@
 const ContentEditable = {
   mounted() {
+    console.log("mounted", this.getBlockId(), this.getCellId());
     const el: HTMLElement = this.el;
     el.style.whiteSpace = "pre-wrap";
     el.style.wordBreak = "break-word";
@@ -14,8 +15,9 @@ const ContentEditable = {
 
         "update_block",
         {
+          cell_id: this.getCellId(),
+          block_id: this.getBlockId(),
           value: el.innerHTML,
-          block_id: el.dataset.blockId,
         },
         () => {
           if (selection.focusOffset === oldIndex) {
@@ -35,18 +37,24 @@ const ContentEditable = {
         if (selection.focusOffset === 0) {
           event.preventDefault();
           this.pushEventTo(this.getTarget(), "downgrade_block", {
-            block_id: el.dataset.blockId,
+            cell_id: this.getCellId(),
+            block_id: this.getBlockId(),
           });
         }
       }
     });
 
     el.addEventListener("keypress", (event: KeyboardEvent) => {
+      const selection = window.getSelection();
+      console.log(selection);
+
       if (event.key === "Enter") {
         event.preventDefault();
 
-        this.pushEventTo(this.getTarget(), "add_block_after", {
-          block_id: el.dataset.blockId,
+        this.pushEventTo(this.getTarget(), "insert_block", {
+          cell_id: this.getCellId(),
+          block_id: this.getBlockId(),
+          index: selection.focusOffset,
         });
       }
     });
@@ -54,10 +62,21 @@ const ContentEditable = {
     el.focus();
   },
 
-  updated() {},
+  updated() {
+    console.log("updated", this.getBlockId(), this.getCellId());
+    // this.el.focus();
+  },
 
   getTarget(): string {
     return this.el.getAttribute("phx-target");
+  },
+
+  getCellId(): string {
+    return this.el.dataset.cellId;
+  },
+
+  getBlockId(): string {
+    return this.el.dataset.blockId;
   },
 };
 

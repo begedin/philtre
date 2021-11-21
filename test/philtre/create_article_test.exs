@@ -8,14 +8,16 @@ defmodule Philtre.Articles.CreateArticleTest do
   @params %Editor.Page{
     blocks: [
       %Editor.Block{
-        id: Ecto.UUID.generate(),
+        id: Editor.Utils.new_id(),
         type: "h1",
-        content: "My Article"
+        cells: [
+          %Editor.Cell{id: Editor.Utils.new_id(), type: "span", content: "My Article"}
+        ]
       },
       %Editor.Block{
-        id: Ecto.UUID.generate(),
+        id: Editor.Utils.new_id(),
         type: "p",
-        content: "My Content"
+        cells: [%Editor.Cell{id: Editor.Utils.new_id(), type: "span", content: "My Content"}]
       }
     ]
   }

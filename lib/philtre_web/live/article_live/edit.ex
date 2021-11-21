@@ -9,12 +9,7 @@ defmodule PhiltreWeb.ArticleLive.Edit do
   @spec mount(map, %LiveView.Session{}, LiveView.Socket.t()) :: {:ok, LiveView.Socket.t()}
   def mount(%{"slug" => slug}, _session, socket) do
     {:ok, %Articles.Article{} = article} = Articles.get_article(slug)
-
-    {:ok,
-     assign(socket, %{
-       article: article,
-       page: Articles.Article.to_page(article)
-     })}
+    {:ok, assign(socket, %{article: article, page: Editor.normalize(article.content)})}
   end
 
   def handle_event("save", %{}, socket) do

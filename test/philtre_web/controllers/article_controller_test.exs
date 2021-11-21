@@ -8,14 +8,14 @@ defmodule PhiltreWeb.ArticleControllerTest do
   describe "GET /" do
     test "renders list of articles", %{conn: conn} do
       [
-        %{sections: [section_1 | _]},
-        %{sections: [section_2 | _]}
+        article_1,
+        article_2
       ] = Factories.create_articles(2)
 
       dom = conn |> get("/") |> html_response(200) |> Floki.parse_document!()
 
-      assert Floki.text(dom) =~ section_1.content
-      assert Floki.text(dom) =~ section_2.content
+      assert Floki.text(dom) =~ Articles.Article.title(article_1)
+      assert Floki.text(dom) =~ Articles.Article.title(article_2)
     end
   end
 
@@ -28,9 +28,8 @@ defmodule PhiltreWeb.ArticleControllerTest do
       path = article_path(article)
       dom = conn |> get(path) |> html_response(200) |> Floki.parse_document!()
 
-      Enum.each(article.sections, fn %Articles.Article.Section{} = section ->
-        assert Floki.text(dom) =~ section.content
-      end)
+      assert Floki.text(dom) =~ Articles.Article.title(article)
+      assert Floki.text(dom) =~ Articles.Article.body(article)
     end
 
     test "renders 404 if article not found", %{conn: conn} do

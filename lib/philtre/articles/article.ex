@@ -11,72 +11,67 @@ defmodule Philtre.Articles.Article do
 
   alias Philtre.Repo
 
-  defmodule Section do
-    @moduledoc """
-    Represents a section of an article
-    """
-    use Ecto.Schema
-    alias Ecto.Changeset
-
-    @primary_key false
-    embedded_schema do
-      field(:content, :string, null: false)
-      field(:id, :binary_id, null: false, primary_key: true, autogenerate: true)
-      field(:type, :string, null: false)
-    end
-
-    def changeset(struct, params) do
-      struct
-      |> Changeset.cast(params, [:content, :id, :type])
-      |> Changeset.validate_required([:content, :id, :type])
-      |> Changeset.validate_inclusion(:type, ["h1", "h2", "h3", "p", "pre"])
-    end
-  end
-
   @type t :: %__MODULE__{}
 
   schema "articles" do
     field(:slug, :string, null: false)
-    embeds_many(:sections, Section, on_replace: :delete)
+    field(:content, :map)
   end
 
   @spec changeset(Editor.Page.t()) :: Changeset.t()
   def changeset(%Editor.Page{} = page) do
-    params = from_page(page)
-    changeset(%__MODULE__{}, params)
+    changeset(%__MODULE__{}, page)
   end
 
-  @spec changeset(t, Editor.Page.t() | map) :: Changeset.t()
+  @spec changeset(t, Editor.Page.t()) :: Changeset.t()
   def changeset(%__MODULE__{} = article, %Editor.Page{} = page) do
-    params = from_page(page)
-    changeset(article, params)
-  end
-
-  def changeset(%__MODULE__{} = article, %{} = params) do
     article
-    |> Changeset.cast(params, [])
-    |> Changeset.cast_embed(:sections, required: true)
-    |> generate_slug()
+    |> Changeset.cast(
+      %{content: Editor.serialize(page), slug: slug(page)},
+      [:content, :slug]
+    )
     |> Changeset.unique_constraint(:slug)
     |> Changeset.unsafe_validate_unique(:slug, Repo)
   end
 
-  @spec generate_slug(Changeset.t()) :: Changeset.t()
-  defp generate_slug(%Changeset{valid?: false} = changeset), do: changeset
+  def title(%__MODULE__{} = article) do
+    article.content
+    |> to_page()
+    |> title()
+  end
 
-  defp generate_slug(%Changeset{valid?: true} = changeset) do
-    case Changeset.fetch_field(changeset, :sections) do
-      :error ->
-        changeset
+  def title(%Editor.Page{blocks: blocks}) do
+    blocks
+    |> Enum.at(0)
+    |> Editor.text()
+  end
 
-      {_, [%Changeset{} = section_changeset | _]} ->
-        title = Changeset.fetch_field!(section_changeset, :content)
-        Changeset.put_change(changeset, :slug, slugify(title))
+  def slug(%__MODULE__{} = article) do
+    article
+    |> title()
+    |> slugify()
+  end
 
-      {_, [%Section{} = section | _]} ->
-        title = section.content
-        Changeset.put_change(changeset, :slug, slugify(title))
-    end
+  def slug(%Editor.Page{} = page) do
+    page
+    |> title()
+    |> slugify()
+  end
+
+  def body(%__MODULE__{} = article) do
+    article.content
+    |> to_page()
+    |> body()
+  end
+
+  def body(%Editor.Page{blocks: [_heading | rest]}) do
+    rest
+    |> Enum.map(&Editor.text/1)
+    |> Enum.join()
+  end
+
+  defp to_page(%{} = content) do
+    Editor.normalize(content)
   end
 
   @spec slugify(String.t()) :: String.t()
@@ -87,25 +82,5 @@ defmodule Philtre.Articles.Article do
     |> :unicode.characters_to_nfd_binary()
     |> String.replace(~r/[^a-z0-9-\s]/u, "")
     |> String.replace(~r/\s/, "-")
-  end
-
-  @spec to_page(t) :: Editor.Page.t()
-  def to_page(%__MODULE__{} = article) do
-    %Editor.Page{
-      blocks:
-        Enum.map(article.sections, fn %Section{} = section ->
-          %Editor.Block{id: section.id, content: section.content, type: section.type}
-        end)
-    }
-  end
-
-  @spec from_page(Editor.Page.t()) :: map
-  def from_page(%Editor.Page{} = page) do
-    %{
-      sections:
-        Enum.map(page.blocks, fn %Editor.Block{} = block ->
-          Map.from_struct(%Section{id: block.id, content: block.content, type: block.type})
-        end)
-    }
   end
 end

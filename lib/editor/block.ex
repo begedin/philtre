@@ -1,52 +1,45 @@
 defmodule Editor.Block do
-  defstruct [:id, :type, :content]
+  defstruct [:id, :type, :cells]
 
-  @type t :: %__MODULE__{}
+  @type id :: Editor.Utils.id()
+  @type t :: %__MODULE__{cells: []}
 
-  @spec update_content(t, String.t()) :: t
-  def update_content(block, value) do
+  @spec update(t, id, String.t()) :: t
+  def update(block, cell_id, value) do
     block
-    |> Map.put(:content, value)
-    |> resolve_transform("h1")
-    |> resolve_transform("h2")
-    |> resolve_transform("h3")
-    |> resolve_transform("pre")
+    |> update_cell(cell_id, value)
+    |> resolve_transform()
   end
 
-  @spec resolve_transform(t, String.t()) :: t
-  defp resolve_transform(%{type: type, content: "## " <> _} = block, type) do
-    block
+  defp update_cell(%Editor.Block{cells: cells} = block, cell_id, value) do
+    cell_index = Enum.find_index(cells, &(&1.id === cell_id))
+    cells = List.update_at(cells, cell_index, &%{&1 | content: value})
+    %{block | cells: cells}
   end
 
-  defp resolve_transform(%{content: "# " <> rest} = block, "h1") do
-    %{block | type: "h1", content: rest}
+  @spec resolve_transform(t) :: t
+  defp resolve_transform(%__MODULE__{} = block) do
+    case Enum.at(block.cells, 0) do
+      %{content: "# " <> rest} -> block |> set_type("h1") |> set_cell(0, rest)
+      %{content: "#&nbsp;" <> rest} -> block |> set_type("h1") |> set_cell(0, rest)
+      %{content: "## " <> rest} -> block |> set_type("h2") |> set_cell(0, rest)
+      %{content: "##&nbsp;" <> rest} -> block |> set_type("h2") |> set_cell(0, rest)
+      %{content: "### " <> rest} -> block |> set_type("h3") |> set_cell(0, rest)
+      %{content: "###&nbsp;" <> rest} -> block |> set_type("h3") |> set_cell(0, rest)
+      %{content: "```" <> rest} -> block |> set_type("pre") |> set_cell(0, rest)
+      %{} -> block
+    end
   end
 
-  defp resolve_transform(%{content: "#&nbsp;" <> rest} = block, "h1") do
-    %{block | type: "h1", content: rest}
+  defp set_type(%__MODULE__{} = block, type) do
+    %{block | type: type}
   end
 
-  defp resolve_transform(%{content: "## " <> rest} = block, "h2") do
-    %{block | type: "h2", content: rest}
+  defp set_cell(%__MODULE__{} = block, index, content) do
+    cell = Enum.at(block.cells, index)
+    cells = List.replace_at(block.cells, index, %{cell | content: content})
+    %{block | cells: cells}
   end
-
-  defp resolve_transform(%{content: "##&nbsp;" <> rest} = block, "h2") do
-    %{block | type: "h2", content: rest}
-  end
-
-  defp resolve_transform(%{content: "### " <> rest} = block, "h3") do
-    %{block | type: "h3", content: rest}
-  end
-
-  defp resolve_transform(%{content: "###&nbsp;" <> rest} = block, "h3") do
-    %{block | type: "h3", content: rest}
-  end
-
-  defp resolve_transform(%{content: "```" <> rest} = block, "pre") do
-    %{block | type: "pre", content: rest}
-  end
-
-  defp resolve_transform(%{} = block, _type), do: block
 
   @spec downgrade_block(t) :: t
   def downgrade_block(%{type: "h1"} = block), do: %{block | type: "h2"}

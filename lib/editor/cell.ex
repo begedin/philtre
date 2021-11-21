@@ -21,4 +21,26 @@ defmodule Editor.Cell do
 
     {cell_before, cell_after}
   end
+
+  def trim(%__MODULE__{content: "# " <> rest} = cell), do: %{cell | content: rest}
+  def trim(%__MODULE__{content: "## " <> rest} = cell), do: %{cell | content: rest}
+  def trim(%__MODULE__{content: "### " <> rest} = cell), do: %{cell | content: rest}
+  def trim(%__MODULE__{content: "#&nbsp;" <> rest} = cell), do: %{cell | content: rest}
+  def trim(%__MODULE__{content: "##&nbsp;" <> rest} = cell), do: %{cell | content: rest}
+  def trim(%__MODULE__{content: "###&nbsp;" <> rest} = cell), do: %{cell | content: rest}
+  def trim(%__MODULE__{content: "```" <> rest} = cell), do: %{cell | content: rest}
+  def trim(%__MODULE__{content: "* " <> rest} = cell), do: %{cell | content: rest}
+  def trim(%__MODULE__{content: "*&nbsp;" <> rest} = cell), do: %{cell | content: rest}
+  def trim(%__MODULE__{content: content} = cell), do: %{cell | content: content}
+
+  def transform(%__MODULE__{} = cell, type) when type in ["li"] do
+    %{cell | type: type}
+  end
+
+  def backspace(%__MODULE__{content: ""}), do: :delete
+  def backspace(%__MODULE__{}), do: :join_to_previous
+
+  def join(%__MODULE__{} = from, %__MODULE__{} = to) do
+    %{to | content: to.content <> from.content}
+  end
 end

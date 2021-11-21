@@ -38,8 +38,8 @@ defmodule Editor do
     {:noreply, socket}
   end
 
-  def handle_event("downgrade_block", %{"cell_id" => cell_id, "block_id" => block_id}, socket) do
-    page = Editor.Page.downgrade_block(socket.assigns.page, block_id, cell_id)
+  def handle_event("backspace", %{"cell_id" => cell_id, "block_id" => block_id}, socket) do
+    page = Editor.Page.backspace(socket.assigns.page, block_id, cell_id)
     send(self(), {:updated_page, page})
     {:noreply, socket}
   end

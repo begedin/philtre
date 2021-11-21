@@ -51,34 +51,17 @@ defmodule Editor.Page do
     %{page | blocks: blocks}
   end
 
-  @spec downgrade_block(t, block_id :: id, cell_id :: id) :: t
-  def downgrade_block(%__MODULE__{blocks: blocks} = page, block_id, cell_id) do
+  @spec backspace(t, block_id :: id, cell_id :: id) :: t
+  def backspace(%__MODULE__{blocks: blocks} = page, block_id, cell_id) do
     block_index = Enum.find_index(blocks, &(&1.id === block_id))
     block = Enum.at(blocks, block_index)
-    previous_block = Enum.at(blocks, block_index - 1)
-
-    cell_index = Enum.find_index(block.cells, &(&1.id === cell_id))
 
     blocks =
-      cond do
-        cell_index !== 0 ->
-          blocks
-
-        block_index === 0 ->
-          blocks
-
-        block.type !== "p" ->
-          List.update_at(blocks, block_index, &Editor.Block.downgrade_block(&1))
-
-        block.type === "p" ->
-          blocks
-          |> List.delete_at(block_index)
-          |> List.replace_at(block_index - 1, %{
-            previous_block
-            | cells: previous_block.cells ++ block.cells
-          })
-      end
+      blocks
+      |> List.replace_at(block_index, Editor.Block.backspace(block, cell_id))
+      |> List.flatten()
 
     %{page | blocks: blocks}
+    |> IO.inspect()
   end
 end

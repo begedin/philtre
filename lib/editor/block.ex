@@ -25,15 +25,19 @@ defmodule Editor.Block do
     # current block gets cells before cursor, and part of current cell before
     # cursor
     cells_before = List.replace_at(cells_before, -1, cell_before)
-
-    # new block gets part of current cell after cursor and other cells after
-    # cursor
-    block_before = %{block | cells: cells_before}
-
     cells_after = [cell_after | cells_after]
-    block_after = %{new() | cells: cells_after}
 
-    [block_before, block_after]
+    if block.type in ["ul"] do
+      [%{block | cells: cells_before ++ cells_after}]
+    else
+      # new block gets part of current cell after cursor and other cells after
+      # cursor
+      block_before = %{block | cells: cells_before}
+
+      block_after = %{new() | cells: cells_after}
+
+      [block_before, block_after]
+    end
   end
 
   @spec update(t, id, String.t()) :: t
@@ -50,27 +54,29 @@ defmodule Editor.Block do
   end
 
   @spec resolve_transform(t) :: t
-  defp resolve_transform(%__MODULE__{} = block) do
-    case Enum.at(block.cells, 0) do
-      %{content: "# " <> rest} -> block |> set_type("h1") |> set_cell(0, rest)
-      %{content: "#&nbsp;" <> rest} -> block |> set_type("h1") |> set_cell(0, rest)
-      %{content: "## " <> rest} -> block |> set_type("h2") |> set_cell(0, rest)
-      %{content: "##&nbsp;" <> rest} -> block |> set_type("h2") |> set_cell(0, rest)
-      %{content: "### " <> rest} -> block |> set_type("h3") |> set_cell(0, rest)
-      %{content: "###&nbsp;" <> rest} -> block |> set_type("h3") |> set_cell(0, rest)
-      %{content: "```" <> rest} -> block |> set_type("pre") |> set_cell(0, rest)
-      %{} -> block
+  defp resolve_transform(%__MODULE__{cells: [first_cell | _]} = block) do
+    case first_cell.content do
+      "# " <> _ -> transform(block, "h1")
+      "#&nbsp;" <> _ -> transform(block, "h1")
+      "## " <> _ -> transform(block, "h2")
+      "##&nbsp;" <> _ -> transform(block, "h2")
+      "### " <> _ -> transform(block, "h3")
+      "###&nbsp;" <> _ -> transform(block, "h3")
+      "```" <> _ -> transform(block, "pre")
+      "* " <> _ -> transform(block, "ul")
+      "*&nbsp;" <> _ -> transform(block, "ul")
+      _ -> block
     end
   end
 
-  defp set_type(%__MODULE__{} = block, type) do
-    %{block | type: type}
+  defp transform(%__MODULE__{cells: [cell | rest]} = block, "ul") do
+    cells = Enum.map([Editor.Cell.trim(cell) | rest], &Editor.Cell.transform(&1, "li"))
+    %{block | type: "ul", cells: cells}
   end
 
-  defp set_cell(%__MODULE__{} = block, index, content) do
-    cell = Enum.at(block.cells, index)
-    cells = List.replace_at(block.cells, index, %{cell | content: content})
-    %{block | cells: cells}
+  defp transform(%__MODULE__{cells: [cell | rest]} = block, type) do
+    cells = [Editor.Cell.trim(cell) | rest]
+    %{block | type: type, cells: cells}
   end
 
   @spec downgrade_block(t) :: t
@@ -79,4 +85,43 @@ defmodule Editor.Block do
   def downgrade_block(%{type: "h3"} = block), do: %{block | type: "p"}
   def downgrade_block(%{type: "pre"} = block), do: %{block | type: "p"}
   def downgrade_block(%{} = block), do: block
+
+  def backspace(%__MODULE__{cells: cells, type: type} = block, cell_id) do
+    cell_index = Enum.find_index(cells, &(&1.id === cell_id))
+    IO.inspect({cell_index, block})
+
+    cond do
+      cell_index === 0 and type === "p" ->
+        []
+
+      cell_index === 0 ->
+        [downgrade_block(block)]
+
+      cell_index > 0 ->
+        action = cells |> Enum.at(cell_index) |> Editor.Cell.backspace() |> IO.inspect()
+
+        new_cells =
+          case action do
+            :delete -> List.delete_at(cells, cell_index)
+            :join_to_previous -> join_cells(block, cell_index, cell_index - 1)
+          end
+
+        [%{block | cells: new_cells}] |> IO.inspect()
+    end
+  end
+
+  defp join_cells(%__MODULE__{} = block, from_index, to_index)
+       when from_index < 0 or to_index < 0 do
+    block
+  end
+
+  defp join_cells(%__MODULE__{cells: cells}, from_index, to_index) do
+    from_cell = Enum.at(cells, from_index)
+    to_cell = Enum.at(cells, to_index)
+    cell = Editor.Cell.join(to_cell, from_cell)
+
+    cells
+    |> List.delete_at(from_index)
+    |> List.replace_at(to_index, cell)
+  end
 end

@@ -35,7 +35,7 @@ const ContentEditable = {
         const selection = window.getSelection();
         if (selection.focusOffset === 0) {
           event.preventDefault();
-          this.pushEventTo(this.getTarget(), "downgrade_block", {
+          this.pushEventTo(this.getTarget(), "backspace", {
             cell_id: this.getCellId(),
             block_id: this.getBlockId(),
           });

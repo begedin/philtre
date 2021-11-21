@@ -8,23 +8,18 @@ defmodule Philtre.Articles do
   alias Philtre.Articles
   alias Philtre.Repo
 
-  @spec changeset(map | struct) :: Changeset.t()
-  defdelegate changeset(struct_or_params \\ %{}), to: Articles.Article
-  @spec changeset(struct, map) :: Changeset.t()
-  defdelegate changeset(struct, params), to: Articles.Article
-
-  @spec create_article(map) :: {:ok, Articles.Article.t()} | {:error, Changeset.t()}
-  def create_article(%{} = params) do
-    params
+  @spec create_article(Editor.Page.t()) :: {:ok, Articles.Article.t()} | {:error, Changeset.t()}
+  def create_article(%Editor.Page{} = page) do
+    page
     |> Articles.Article.changeset()
     |> Repo.insert()
   end
 
-  @spec update_article(Articles.Article.t(), map) ::
+  @spec update_article(Articles.Article.t(), Editor.Page.t()) ::
           {:ok, Articles.Article.t()} | {:error, Changeset.t()}
-  def update_article(%Articles.Article{} = article, %{} = params) do
+  def update_article(%Articles.Article{} = article, %Editor.Page{} = page) do
     article
-    |> Articles.Article.changeset(params)
+    |> Articles.Article.changeset(page)
     |> Repo.update()
   end
 

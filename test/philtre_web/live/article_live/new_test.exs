@@ -11,44 +11,46 @@ defmodule PhiltreWeb.ArticleLive.NewTest do
   test "creates article", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/articles/new")
 
-    assert view
-           |> form("#article", article: %{title: "Foo", body: "Bar"})
-           |> render_submit()
+    page = %Editor.Page{
+      blocks: [
+        %Editor.Block{id: "1", type: "h1", content: "Foo"},
+        %Editor.Block{id: "2", type: "p", content: "Bar"},
+        %Editor.Block{id: "3", type: "p", content: "Baz"}
+      ]
+    }
 
-    assert {:ok, %{title: "Foo", body: "Bar"}} = Articles.get_article("foo")
-  end
+    send(view.pid, {:updated_page, page})
 
-  test "renders preview of article", %{conn: conn} do
-    {:ok, view, _html} = live(conn, "/articles/new")
+    assert dom = view |> render() |> Floki.parse_document!()
 
-    assert dom =
-             view
-             |> element("textarea")
-             |> render_keyup(%{value: "## Foo"})
-             |> Floki.parse_document!()
+    assert dom |> Floki.find("h1[contenteditable]") |> Floki.text() == "Foo"
+    assert dom |> Floki.find("p[contenteditable]") |> Floki.text() == "BarBaz"
 
-    assert [h_1] = Floki.find(dom, "h2")
-    assert h_1 |> Floki.text() |> String.trim() == "Foo"
+    assert view |> element("button") |> render_click()
+
+    assert {:ok,
+            %{
+              sections: [
+                %Philtre.Articles.Article.Section{content: "Foo", id: "1", type: "h1"},
+                %Philtre.Articles.Article.Section{content: "Bar", id: "2", type: "p"},
+                %Philtre.Articles.Article.Section{content: "Baz", id: "3", type: "p"}
+              ]
+            }} = Articles.get_article("foo")
   end
 
   test "validates validation errors", %{conn: conn} do
-    article = Factories.create_article()
+    %{sections: [title_section | _]} = Factories.create_article()
     {:ok, view, _html} = live(conn, "/articles/new")
 
-    assert view
-           |> form("#article", article: %{title: article.title, body: "Bar"})
-           |> render_submit() =~ "has already been taken"
+    page = %Editor.Page{
+      blocks: [
+        %Editor.Block{id: "1", type: "h1", content: title_section.content}
+      ]
+    }
 
-    assert view
-           |> form("#article", article: %{title: "Foo", body: nil})
-           |> render_submit()
-           |> Floki.parse_document!()
-           |> Floki.text() =~ "can't be blank"
+    send(view.pid, {:updated_page, page})
 
-    assert view
-           |> form("#article", article: %{title: nil, body: "Bar"})
-           |> render_submit()
-           |> Floki.parse_document!()
-           |> Floki.text() =~ "can't be blank"
+    assert html = view |> element("button") |> render_click()
+    assert html =~ "There were some errors"
   end
 end

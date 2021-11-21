@@ -8,12 +8,16 @@ defmodule PhiltreWeb.ArticleLive.IndexTest do
   alias Philtre.Factories
 
   test "renders articles", %{conn: conn} do
-    [article_1, article_2] = Factories.create_articles(2)
+    [
+      %{sections: [section_1 | _]},
+      %{sections: [section_2 | _]}
+    ] = Factories.create_articles(2)
 
     {:ok, _view, html} = live(conn, "/articles")
 
     dom = Floki.parse_document!(html)
-    assert Floki.text(dom) =~ article_1.title
-    assert Floki.text(dom) =~ article_2.title
+
+    assert Floki.text(dom) =~ section_1.content
+    assert Floki.text(dom) =~ section_2.content
   end
 end

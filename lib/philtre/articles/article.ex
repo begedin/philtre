@@ -2,9 +2,6 @@ defmodule Philtre.Articles.Article do
   @moduledoc """
   Represents a single blog article stored in the database.
 
-  The `:body_html` field is produced automatically as the user is editing the
-  `:body` field.
-
   The `:slug` field is produced automatically as the user is editing the
   `:title` field.
   """
@@ -14,62 +11,71 @@ defmodule Philtre.Articles.Article do
 
   alias Philtre.Repo
 
-  @type t :: %__MODULE__{}
+  defmodule Section do
+    @moduledoc """
+    Represents a section of an article
+    """
+    use Ecto.Schema
+    alias Ecto.Changeset
 
-  schema "articles" do
-    field(:title, :string, null: false)
-    field(:slug, :string, null: false)
-    field(:body, :string, null: false)
-    field(:body_html, :string, null: false)
-  end
+    @primary_key false
+    embedded_schema do
+      field(:content, :string, null: false)
+      field(:id, :binary_id, null: false, primary_key: true, autogenerate: true)
+      field(:type, :string, null: false)
+    end
 
-  @spec changeset :: Ecto.Changeset.t()
-  def changeset do
-    changeset(%{})
-  end
-
-  @spec changeset(map | t) :: Changeset.t()
-  def changeset(%__MODULE__{} = article) do
-    changeset(article, %{})
-  end
-
-  def changeset(%{} = params) do
-    changeset(%__MODULE__{}, params)
-  end
-
-  @spec changeset(t, map) :: Changeset.t()
-  def changeset(%__MODULE__{} = article, %{} = params) do
-    article
-    |> Changeset.cast(params, [:body, :title])
-    |> Changeset.validate_required([:body, :title])
-    |> generate_html()
-    |> generate_slug()
-    |> Changeset.unique_constraint(:slug)
-    |> Changeset.unsafe_validate_unique(:slug, Repo)
-  end
-
-  @spec generate_html(Changeset.t()) :: Changeset.t()
-  defp generate_html(%Changeset{valid?: false} = changeset), do: changeset
-
-  defp generate_html(%Changeset{valid?: true} = changeset) do
-    case Changeset.fetch_change(changeset, :body) do
-      :error -> changeset
-      {:ok, body} -> Changeset.put_change(changeset, :body_html, to_html(body))
+    def changeset(struct, params) do
+      struct
+      |> Changeset.cast(params, [:content, :id, :type])
+      |> Changeset.validate_required([:content, :id, :type])
+      |> Changeset.validate_inclusion(:type, ["h1", "h2", "h3", "p", "pre"])
     end
   end
 
-  @spec to_html(String.t()) :: String.t()
-  defp to_html(value) when is_binary(value) do
-    Earmark.as_html!(value)
+  @type t :: %__MODULE__{}
+
+  schema "articles" do
+    field(:slug, :string, null: false)
+    embeds_many(:sections, Section, on_replace: :delete)
+  end
+
+  @spec changeset(Editor.Page.t()) :: Changeset.t()
+  def changeset(%Editor.Page{} = page) do
+    params = from_page(page)
+    changeset(%__MODULE__{}, params)
+  end
+
+  @spec changeset(t, Editor.Page.t() | map) :: Changeset.t()
+  def changeset(%__MODULE__{} = article, %Editor.Page{} = page) do
+    params = from_page(page)
+    changeset(article, params)
+  end
+
+  def changeset(%__MODULE__{} = article, %{} = params) do
+    article
+    |> Changeset.cast(params, [])
+    |> Changeset.cast_embed(:sections, required: true)
+    |> generate_slug()
+    |> Changeset.unique_constraint(:slug)
+    |> Changeset.unsafe_validate_unique(:slug, Repo)
   end
 
   @spec generate_slug(Changeset.t()) :: Changeset.t()
   defp generate_slug(%Changeset{valid?: false} = changeset), do: changeset
 
   defp generate_slug(%Changeset{valid?: true} = changeset) do
-    case Changeset.fetch_change(changeset, :title) do
-      :error -> changeset
-      {:ok, title} -> Changeset.put_change(changeset, :slug, slugify(title))
+    case Changeset.fetch_field(changeset, :sections) do
+      :error ->
+        changeset
+
+      {_, [%Changeset{} = section_changeset | _]} ->
+        title = Changeset.fetch_field!(section_changeset, :content)
+        Changeset.put_change(changeset, :slug, slugify(title))
+
+      {_, [%Section{} = section | _]} ->
+        title = section.content
+        Changeset.put_change(changeset, :slug, slugify(title))
     end
   end
 
@@ -81,5 +87,25 @@ defmodule Philtre.Articles.Article do
     |> :unicode.characters_to_nfd_binary()
     |> String.replace(~r/[^a-z0-9-\s]/u, "")
     |> String.replace(~r/\s/, "-")
+  end
+
+  @spec to_page(t) :: Editor.Page.t()
+  def to_page(%__MODULE__{} = article) do
+    %Editor.Page{
+      blocks:
+        Enum.map(article.sections, fn %Section{} = section ->
+          %Editor.Block{id: section.id, content: section.content, type: section.type}
+        end)
+    }
+  end
+
+  @spec from_page(Editor.Page.t()) :: map
+  def from_page(%Editor.Page{} = page) do
+    %{
+      sections:
+        Enum.map(page.blocks, fn %Editor.Block{} = block ->
+          Map.from_struct(%Section{id: block.id, content: block.content, type: block.type})
+        end)
+    }
   end
 end

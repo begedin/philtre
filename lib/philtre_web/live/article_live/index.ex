@@ -11,7 +11,10 @@ defmodule PhiltreWeb.ArticleLive.Index do
   @spec mount(map, %LiveView.Session{}, LiveView.Socket.t()) :: {:ok, LiveView.Socket.t()}
   def mount(%{}, _session, socket) do
     socket = assign(socket, :articles, Articles.list_articles())
-
     {:ok, socket}
+  end
+
+  def handle_params(%{}, _path, socket) do
+    {:noreply, socket}
   end
 end

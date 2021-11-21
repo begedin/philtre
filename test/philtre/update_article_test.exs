@@ -4,9 +4,23 @@ defmodule Philtre.Articles.UpdateArticleTest do
   alias Philtre.Articles
   alias Philtre.Factories
 
+  @params %Editor.Page{
+    blocks: [
+      %Editor.Block{
+        id: Ecto.UUID.generate(),
+        type: "h1",
+        content: "My New Title"
+      },
+      %Editor.Block{
+        id: Ecto.UUID.generate(),
+        type: "p",
+        content: "My New Content"
+      }
+    ]
+  }
+
   test "sets slug" do
-    assert {:ok, %{slug: "my-article-2"}} =
-             Factories.create_article()
-             |> Articles.update_article(%{title: "My Article 2", body: "Foo"})
+    assert {:ok, %{slug: "my-new-title"}} =
+             Factories.create_article() |> Articles.update_article(@params)
   end
 end

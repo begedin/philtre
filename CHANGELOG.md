@@ -1,3 +1,7 @@
+# 0.5.1 2022-01-08
+
+- update elixir to 1.13.1 + all dependencies
+
 # 0.5.0 2022-01-08
 
 - block selection feature

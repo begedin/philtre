@@ -4,8 +4,8 @@ defmodule Philtre.MixProject do
   def project do
     [
       app: :philtre,
-      version: "0.5.0",
-      elixir: "~> 1.12",
+      version: "0.5.1",
+      elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
@@ -33,9 +33,9 @@ defmodule Philtre.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:credo, "1.5.6"},
+      {:credo, "~>1.6.0"},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
-      {:earmark, "1.4.18"},
+      {:earmark, "~> 1.4.18"},
       {:ecto_sql, "~> 3.6"},
       {:esbuild, "~> 0.2", runtime: Mix.env() == :dev},
       {:floki, ">= 0.30.0", only: :test},

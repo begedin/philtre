@@ -4,16 +4,25 @@ defmodule Editor do
   """
   use PhiltreWeb, :live_component
 
+  defstruct id: nil, page: Editor.Page.new(), selected_blocks: [], clipboard: nil
+
+  @type t :: %__MODULE__{}
+
+  def new do
+    %__MODULE__{id: Ecto.UUID.generate(), page: Editor.Page.new()}
+  end
+
   @spec update(
-          %{optional(:slug) => String.t()},
+          %{optional(:editor) => t()},
           LiveView.Socket.t()
         ) :: {:ok, LiveView.Socket.t()}
-  def update(%{page: page}, socket) do
-    {:ok, assign(socket, :page, page)}
+  def update(%{editor: %__MODULE__{} = editor}, socket) do
+    socket = assign(socket, editor: editor)
+    {:ok, socket}
   end
 
   def update(%{}, socket) do
-    {:ok, assign(socket, :page, Editor.Page.new())}
+    {:ok, assign(socket, :editor, new())}
   end
 
   @spec handle_event(String.t(), map, LiveView.Socket.t()) :: {:noreply, LiveView.Socket.t()}
@@ -23,8 +32,8 @@ defmodule Editor do
         %{"cell_id" => cell_id, "block_id" => block_id, "index" => index},
         socket
       ) do
-    page = Editor.Page.insert_block(socket.assigns.page, block_id, cell_id, index)
-    send(self(), {:updated_page, page})
+    page = Editor.Page.insert_block(socket.assigns.editor.page, block_id, cell_id, index)
+    send(self(), {:update, %{socket.assigns.editor | page: page}})
     {:noreply, socket}
   end
 
@@ -33,14 +42,49 @@ defmodule Editor do
         %{"cell_id" => cell_id, "block_id" => block_id, "value" => value},
         socket
       ) do
-    page = Editor.Page.update_block(socket.assigns.page, block_id, cell_id, value)
-    send(self(), {:updated_page, page})
+    page = Editor.Page.update_block(socket.assigns.editor.page, block_id, cell_id, value)
+    send(self(), {:update, %{socket.assigns.editor | page: page}})
     {:noreply, socket}
   end
 
   def handle_event("backspace", %{"cell_id" => cell_id, "block_id" => block_id}, socket) do
-    page = Editor.Page.backspace(socket.assigns.page, block_id, cell_id)
-    send(self(), {:updated_page, page})
+    page = Editor.Page.backspace(socket.assigns.editor.page, block_id, cell_id)
+    send(self(), {:update, %{socket.assigns.editor | page: page}})
+    {:noreply, socket}
+  end
+
+  def handle_event("select_blocks", %{"block_ids" => block_ids}, socket)
+      when is_list(block_ids) do
+    selected_blocks = Enum.dedup(socket.assigns.editor.selected_blocks ++ block_ids)
+    send(self(), {:update, %{socket.assigns.editor | selected_blocks: selected_blocks}})
+    {:noreply, socket}
+  end
+
+  def handle_event("copy_blocks", %{"block_ids" => block_ids}, socket)
+      when is_list(block_ids) do
+    blocks = Enum.filter(socket.assigns.editor.page.blocks, &(&1.id in block_ids))
+    send(self(), {:update, %{socket.assigns.editor | clipboard: blocks}})
+    {:noreply, socket}
+  end
+
+  def handle_event(
+        "paste_blocks",
+        %{"cell_id" => cell_id, "block_id" => block_id, "index" => index},
+        socket
+      ) do
+    %Editor{} = editor = socket.assigns.editor
+
+    if editor.clipboard != nil do
+      %Editor.Page{} =
+        page = Editor.Page.paste_blocks(editor.page, editor.clipboard, block_id, cell_id, index)
+
+      old_block_ids = Enum.map(editor.page.blocks, & &1.id)
+      new_block_ids = Enum.map(page.blocks, & &1.id)
+
+      clone_ids = Enum.filter(new_block_ids, &(&1 not in old_block_ids))
+      send(self(), {:update, %{socket.assigns.editor | page: page, selected_blocks: clone_ids}})
+    end
+
     {:noreply, socket}
   end
 

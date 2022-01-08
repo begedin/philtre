@@ -8,6 +8,26 @@ defmodule PhiltreWeb.ArticleLive.EditTest do
   alias Philtre.Articles
   alias Philtre.Factories
 
+  @page %Editor.Page{
+    blocks: [
+      %Editor.Block{
+        id: "1",
+        type: "h1",
+        cells: [%Editor.Cell{id: "11", type: "span", content: "Foo"}]
+      },
+      %Editor.Block{
+        id: "2",
+        type: "p",
+        cells: [%Editor.Cell{id: "22", type: "span", content: "Bar"}]
+      },
+      %Editor.Block{
+        id: "3",
+        type: "p",
+        cells: [%Editor.Cell{id: "33", type: "span", content: "Baz"}]
+      }
+    ]
+  }
+
   test "renders article", %{conn: conn} do
     article = Factories.create_article()
 
@@ -27,27 +47,9 @@ defmodule PhiltreWeb.ArticleLive.EditTest do
 
     {:ok, view, _html} = live(conn, "/articles/#{slug}/edit")
 
-    page = %Editor.Page{
-      blocks: [
-        %Editor.Block{
-          id: "1",
-          type: "h1",
-          cells: [%Editor.Cell{id: "11", type: "span", content: "Foo"}]
-        },
-        %Editor.Block{
-          id: "2",
-          type: "p",
-          cells: [%Editor.Cell{id: "22", type: "span", content: "Bar"}]
-        },
-        %Editor.Block{
-          id: "3",
-          type: "p",
-          cells: [%Editor.Cell{id: "33", type: "span", content: "Baz"}]
-        }
-      ]
-    }
+    editor = %{Editor.new() | page: @page}
 
-    send(view.pid, {:updated_page, page})
+    send(view.pid, {:update, editor})
 
     assert dom = view |> render() |> Floki.parse_document!()
 
@@ -96,7 +98,9 @@ defmodule PhiltreWeb.ArticleLive.EditTest do
       ]
     }
 
-    send(view.pid, {:updated_page, page})
+    editor = %{Editor.new() | page: page}
+
+    send(view.pid, {:update, editor})
 
     assert html = view |> element("button") |> render_click()
     assert html =~ "There were some errors"

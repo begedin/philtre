@@ -49,4 +49,8 @@ defmodule Editor.Cell do
   @spec downgrade(t) :: t
   def downgrade(%{type: type} = cell) when type !== "span", do: %{cell | type: "span"}
   def downgrade(%{} = cell), do: cell
+
+  def clone(%__MODULE__{} = cell) do
+    %{cell | id: Editor.Utils.new_id()}
+  end
 end

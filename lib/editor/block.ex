@@ -1,14 +1,14 @@
 defmodule Editor.Block do
-  defstruct [:id, :type, :cells]
+  defstruct id: nil, type: nil, cells: []
 
   @type id :: Editor.Utils.id()
   @type t :: %__MODULE__{cells: []}
 
   def new do
     %__MODULE__{
+      cells: [Editor.Cell.new()],
       id: Editor.Utils.new_id(),
-      type: "p",
-      cells: [Editor.Cell.new()]
+      type: "p"
     }
   end
 
@@ -38,6 +38,30 @@ defmodule Editor.Block do
 
       [block_before, block_after]
     end
+  end
+
+  def hard_split(%__MODULE__{cells: cells} = block, cell_id, index) do
+    # split the call we are currently in
+    cell_index = Enum.find_index(cells, &(&1.id === cell_id))
+    cell = Enum.at(cells, cell_index)
+    {cell_before, cell_after} = Editor.Cell.split(cell, index)
+
+    # split other cells into two groups. first stays in current block, second
+    # goes in new block
+    {cells_before, cells_after} = Enum.split(cells, cell_index + 1)
+
+    # current block gets cells before cursor, and part of current cell before
+    # cursor
+    cells_before = List.replace_at(cells_before, -1, cell_before)
+    cells_after = [cell_after | cells_after]
+
+    # new block gets part of current cell after cursor and other cells after
+    # cursor
+    block_before = %{block | cells: cells_before}
+
+    block_after = %{new() | cells: cells_after}
+
+    [block_before, block_after]
   end
 
   @spec update(t, id, String.t()) :: t
@@ -128,5 +152,9 @@ defmodule Editor.Block do
   @spec downgrade_cells(t) :: t
   defp downgrade_cells(%{cells: cells} = block) do
     %{block | cells: Enum.map(cells, &Editor.Cell.downgrade/1)}
+  end
+
+  def clone(%__MODULE__{} = block) do
+    %{block | id: Editor.Utils.new_id(), cells: Enum.map(block.cells, &Editor.Cell.clone/1)}
   end
 end

@@ -57,18 +57,36 @@ const ContentEditable = {
       }
     });
 
-    el.focus();
+    el.addEventListener("paste", (event: ClipboardEvent) => {
+      const selection = window.getSelection();
+      event.preventDefault();
+      this.pushEventTo(this.getTarget(), "paste_blocks", {
+        cell_id: this.getCellId(),
+        block_id: this.getBlockId(),
+        index: selection.focusOffset,
+      });
+    });
+
+    this.resolveFocus();
   },
 
   updated() {
+    this.resolveFocus();
+  },
+
+  resolveFocus() {
     const active = this.el.dataset.active == "";
     const cursorIndex = parseInt(this.el.dataset.cursorIndex);
     if (active && !isNaN(cursorIndex)) {
-      this.el.focus();
-      const selection = window.getSelection();
-
-      selection.setPosition(selection.focusNode, cursorIndex);
+      setTimeout(() => this.focus(cursorIndex), 200);
     }
+  },
+
+  focus(cursorIndex: number): void {
+    this.el.focus();
+    const selection = window.getSelection();
+
+    selection.setPosition(selection.focusNode, cursorIndex);
   },
 
   getTarget(): string {

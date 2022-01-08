@@ -9,23 +9,24 @@ defmodule PhiltreWeb.ArticleLive.Edit do
   @spec mount(map, %LiveView.Session{}, LiveView.Socket.t()) :: {:ok, LiveView.Socket.t()}
   def mount(%{"slug" => slug}, _session, socket) do
     {:ok, %Articles.Article{} = article} = Articles.get_article(slug)
-    {:ok, assign(socket, %{article: article, page: Editor.normalize(article.content)})}
+    page = Editor.normalize(article.content)
+    editor = %Editor{page: page}
+    {:ok, assign(socket, %{article: article, editor: editor})}
   end
+
+  @errors_saving "There were some errors saving the article"
 
   def handle_event("save", %{}, socket) do
     %Articles.Article{} = article = socket.assigns.article
-    %Editor.Page{} = page = socket.assigns.page
+    %Editor.Page{} = page = socket.assigns.editor.page
 
     case Articles.update_article(article, page) do
-      {:ok, _article} ->
-        {:noreply, push_redirect(socket, to: "/articles")}
-
-      {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "There were some errors saving the article")}
+      {:ok, _article} -> {:noreply, push_redirect(socket, to: "/articles")}
+      {:error, _changeset} -> {:noreply, put_flash(socket, :error, @errors_saving)}
     end
   end
 
-  def handle_info({:updated_page, page}, socket) do
-    {:noreply, assign(socket, :page, page)}
+  def handle_info({:update, %Editor{} = editor}, socket) do
+    {:noreply, assign(socket, :editor, editor)}
   end
 end

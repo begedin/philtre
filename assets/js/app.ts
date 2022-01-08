@@ -25,13 +25,15 @@ import "phoenix_html";
 import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
 import ContentEditable from "./hooks/ContentEditable";
+import Clipboard from "./hooks/Clipboard";
+import Selection from "./hooks/Selection";
 import topbar from "../vendor/topbar";
 
 let csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute("content");
 let liveSocket = new LiveSocket("/live", Socket, {
-  hooks: { ContentEditable },
+  hooks: { Clipboard, ContentEditable, Selection },
   params: { _csrf_token: csrfToken },
 });
 

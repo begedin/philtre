@@ -1,3 +1,10 @@
+# 0.5.0 2022-01-08
+
+- block selection feature
+- copy paste feature
+- cleanup
+- known bug: typing too quickly changes cursor position
+
 # 0.4.0 2021-11-21
 
 - block + cell based editor, supporting following blocks

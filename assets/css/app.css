@@ -103,12 +103,22 @@ nav.admin ul {
   justify-content: center;
 }
 
-.editor__section {
+/* editor */
+
+.philtre__block {
   min-height: 1em;
 }
 
-.editor__section:hover {
+.philtre__block > * {
+  width: 100%;
+}
+
+.philtre__block:hover > * {
   background: #f5f5f5;
+}
+
+.philtre__block > [data-selected] {
+  background: #d0d0f5;
 }
 
 [contenteditable] {

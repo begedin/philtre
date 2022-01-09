@@ -55,7 +55,10 @@ defmodule Editor.Page do
   def update_block(%__MODULE__{blocks: blocks} = page, block_id, cell_id, value) do
     block_index = Enum.find_index(blocks, &(&1.id === block_id))
     %Editor.Block{} = old_block = Enum.at(blocks, block_index)
-    %Editor.Block{} = new_block = Editor.Block.update(old_block, cell_id, value)
+
+    %Editor.Block{} =
+      new_block =
+      old_block |> Editor.Block.update(cell_id, value) |> Editor.Block.resolve_transform()
 
     blocks = List.replace_at(blocks, block_index, new_block)
 

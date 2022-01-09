@@ -3,6 +3,7 @@
 - update elixir to 1.13.1 + all dependencies
 - clear up credo issues
 - add CI action workflow
+- documentation improvements
 
 # 0.5.0 2022-01-08
 

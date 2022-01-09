@@ -9,7 +9,7 @@ defmodule Editor do
   @type t :: %__MODULE__{}
 
   def new do
-    %__MODULE__{id: Ecto.UUID.generate(), page: Editor.Page.new()}
+    %__MODULE__{id: Editor.Utils.new_id(), page: Editor.Page.new()}
   end
 
   @spec update(
@@ -89,11 +89,11 @@ defmodule Editor do
   end
 
   def html(%Editor.Page{} = page) do
-    page.blocks |> Enum.map(&html/1) |> Enum.join("")
+    Enum.map_join(page.blocks, &html/1)
   end
 
   def html(%Editor.Block{} = block) do
-    cell_html = block.cells |> Enum.map(&html/1) |> Enum.join("")
+    cell_html = Enum.map_join(block.cells, &html/1)
     "<#{block.type}>#{cell_html}</#{block.type}>"
   end
 
@@ -102,13 +102,11 @@ defmodule Editor do
   end
 
   def text(%Editor.Page{} = page) do
-    page.blocks
-    |> Enum.map(&text/1)
-    |> Enum.join("")
+    Enum.map_join(page.blocks, &text/1)
   end
 
   def text(%Editor.Block{} = block) do
-    block.cells |> Enum.map(&text/1) |> Enum.join("")
+    Enum.map_join(block.cells, &text/1)
   end
 
   def text(%Editor.Cell{content: content}), do: content

@@ -1,4 +1,7 @@
 defmodule Editor.Page do
+  @moduledoc """
+  Represents the entire content of a single record written in an editor.
+  """
   defstruct blocks: [], active_cell_id: nil, cursor_index: nil
 
   @type t :: %__MODULE__{}

@@ -1,4 +1,8 @@
 defmodule Editor.Block do
+  @moduledoc """
+  Represents a mid-tier element of a page. Contains multiple cells and is usually
+  a self-contained section. For example, a title, a paragraph or a list.
+  """
   defstruct id: nil, type: nil, cells: []
 
   @type id :: Editor.Utils.id()
@@ -78,20 +82,43 @@ defmodule Editor.Block do
   end
 
   @spec resolve_transform(t) :: t
-  defp resolve_transform(%__MODULE__{cells: [first_cell | _]} = block) do
-    case first_cell.content do
-      "# " <> _ -> transform(block, "h1")
-      "#&nbsp;" <> _ -> transform(block, "h1")
-      "## " <> _ -> transform(block, "h2")
-      "##&nbsp;" <> _ -> transform(block, "h2")
-      "### " <> _ -> transform(block, "h3")
-      "###&nbsp;" <> _ -> transform(block, "h3")
-      "```" <> _ -> transform(block, "pre")
-      "* " <> _ -> transform(block, "ul")
-      "*&nbsp;" <> _ -> transform(block, "ul")
-      _ -> block
-    end
+  defp resolve_transform(%__MODULE__{cells: [%{content: "# " <> _} | _]} = block) do
+    transform(block, "h1")
   end
+
+  defp resolve_transform(%__MODULE__{cells: [%{content: "#&nbsp;" <> _} | _]} = block) do
+    transform(block, "h1")
+  end
+
+  defp resolve_transform(%__MODULE__{cells: [%{content: "## " <> _} | _]} = block) do
+    transform(block, "h2")
+  end
+
+  defp resolve_transform(%__MODULE__{cells: [%{content: "##&nbsp;" <> _} | _]} = block) do
+    transform(block, "h2")
+  end
+
+  defp resolve_transform(%__MODULE__{cells: [%{content: "### " <> _} | _]} = block) do
+    transform(block, "h3")
+  end
+
+  defp resolve_transform(%__MODULE__{cells: [%{content: "###&nbsp;" <> _} | _]} = block) do
+    transform(block, "h3")
+  end
+
+  defp resolve_transform(%__MODULE__{cells: [%{content: "```" <> _} | _]} = block) do
+    transform(block, "pre")
+  end
+
+  defp resolve_transform(%__MODULE__{cells: [%{content: "* " <> _} | _]} = block) do
+    transform(block, "ul")
+  end
+
+  defp resolve_transform(%__MODULE__{cells: [%{content: "*&nbsp;" <> _} | _]} = block) do
+    transform(block, "ul")
+  end
+
+  defp resolve_transform(%__MODULE__{} = block), do: block
 
   defp transform(%__MODULE__{cells: [cell | rest]} = block, "ul") do
     cells = Enum.map([Editor.Cell.trim(cell) | rest], &Editor.Cell.transform(&1, "li"))

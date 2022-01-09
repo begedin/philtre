@@ -1,9 +1,15 @@
 defmodule Editor.Cell do
+  @moduledoc """
+  Represents a single atomic component of a block of a page.
+
+  Theese tend to change most dynamically. They get split, shuffled around,
+  removed, or updated as the user does things.
+  """
   defstruct [:id, :type, :content]
 
   @type t :: %__MODULE__{}
 
-  def new() do
+  def new do
     %__MODULE__{
       id: Editor.Utils.new_id(),
       type: "span",

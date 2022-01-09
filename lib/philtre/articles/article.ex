@@ -65,9 +65,7 @@ defmodule Philtre.Articles.Article do
   end
 
   def body(%Editor.Page{blocks: [_heading | rest]}) do
-    rest
-    |> Enum.map(&Editor.text/1)
-    |> Enum.join()
+    Enum.map_join(rest, &Editor.text/1)
   end
 
   @spec slugify(String.t()) :: String.t()

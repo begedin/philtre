@@ -17,6 +17,8 @@ defmodule PhiltreWeb do
   and import those modules here.
   """
 
+  @type session :: %Phoenix.LiveView.Session{}
+
   def controller do
     quote do
       use Phoenix.Controller, namespace: PhiltreWeb

@@ -7,12 +7,12 @@ defmodule Philtre.Articles.UpdateArticleTest do
   @params %Editor.Page{
     blocks: [
       %Editor.Block{
-        id: Ecto.UUID.generate(),
+        id: Editor.Utils.new_id(),
         type: "h1",
         cells: [%Editor.Cell{type: "span", content: "My New Title"}]
       },
       %Editor.Block{
-        id: Ecto.UUID.generate(),
+        id: Editor.Utils.new_id(),
         type: "p",
         cells: [%Editor.Cell{type: "span", content: "My New Content"}]
       }

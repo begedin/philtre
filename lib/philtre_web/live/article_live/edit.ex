@@ -6,7 +6,7 @@ defmodule PhiltreWeb.ArticleLive.Edit do
 
   alias Philtre.Articles
 
-  @spec mount(map, %LiveView.Session{}, LiveView.Socket.t()) :: {:ok, LiveView.Socket.t()}
+  @spec mount(map, PhiltreWeb.session(), LiveView.Socket.t()) :: {:ok, LiveView.Socket.t()}
   def mount(%{"slug" => slug}, _session, socket) do
     {:ok, %Articles.Article{} = article} = Articles.get_article(slug)
     page = Editor.normalize(article.content)

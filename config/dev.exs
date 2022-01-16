@@ -25,7 +25,7 @@ config :philtre, PhiltreWeb.Endpoint,
   secret_key_base: "cTvdUG+0aK2y3CaXCRKu8UT+bxPRg6l40cnVWp9boYoucVXY4so32JYEr8EWKqLN",
   watchers: [
     # Start the esbuild watcher by calling Esbuild.install_and_run(:default, args)
-    esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]}
+    node: ["esbuild.js", "--watch", cd: Path.expand("../assets", __DIR__)]
   ]
 
 # ## SSL Support

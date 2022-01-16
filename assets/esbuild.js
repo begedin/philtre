@@ -1,34 +1,36 @@
-const esbuild = require("esbuild");
+/* eslint-env node */
+/* eslint-disable @typescript-eslint/no-var-requires */
+const esbuild = require('esbuild');
 
 // Decide which mode to proceed with
-let mode = "build";
+let mode = 'build';
 
 process.argv.slice(2).forEach((arg) => {
-  if (arg === "--watch") {
-    mode = "watch";
-  } else if (arg === "--deploy") {
-    mode = "deploy";
+  if (arg === '--watch') {
+    mode = 'watch';
+  } else if (arg === '--deploy') {
+    mode = 'deploy';
   }
 });
 
 // Define esbuild options + extras for watch and deploy
 let opts = {
-  entryPoints: ["js/app.ts"],
+  entryPoints: ['js/app.ts'],
   bundle: true,
-  logLevel: "info",
-  target: "es2016",
-  outdir: "../priv/static/assets",
+  logLevel: 'info',
+  target: 'es2016',
+  outdir: '../priv/static/assets',
 };
 
-if (mode === "watch") {
+if (mode === 'watch') {
   opts = {
     watch: true,
-    sourcemap: "inline",
+    sourcemap: 'inline',
     ...opts,
   };
 }
 
-if (mode === "deploy") {
+if (mode === 'deploy') {
   opts = {
     minify: true,
     ...opts,
@@ -40,13 +42,13 @@ if (mode === "deploy") {
 esbuild
   .build(opts)
   .then((result) => {
-    if (mode === "watch") {
+    if (mode === 'watch') {
       process.stdin.pipe(process.stdout);
-      process.stdin.on("end", () => {
+      process.stdin.on('end', () => {
         result.stop();
       });
     }
   })
-  .catch((error) => {
+  .catch(() => {
     process.exit(1);
   });

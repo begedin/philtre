@@ -67,6 +67,12 @@ jobs:
       - name: Check Formatting
         run: mix format --check-formatted
 
+      - name: Setup assets
+        run: npm --prefix assets ci
+
+      - name: Lint
+        run: npm --prefix assets run lint
+
       - name: Setup db
         run: mix do ecto.create, ecto.migrate
 

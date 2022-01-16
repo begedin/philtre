@@ -4,7 +4,7 @@ defmodule Philtre.MixProject do
   def project do
     [
       app: :philtre,
-      version: "0.5.1",
+      version: "0.6.0",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:gettext] ++ Mix.compilers(),
@@ -37,7 +37,6 @@ defmodule Philtre.MixProject do
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:earmark, "~> 1.4.18"},
       {:ecto_sql, "~> 3.6"},
-      {:esbuild, "~> 0.2", runtime: Mix.env() == :dev},
       {:floki, ">= 0.30.0", only: :test},
       {:gettext, "~> 0.18"},
       {:jason, "~> 1.2"},
@@ -64,11 +63,11 @@ defmodule Philtre.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get", "ecto.setup"],
+      setup: ["deps.get", "ecto.setup", "cmd npm --prefix assets install"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
-      "assets.deploy": ["esbuild default --minify", "phx.digest"]
+      "assets.deploy": ["cmd npm --prefix assets run deploy"]
     ]
   end
 end

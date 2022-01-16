@@ -14,22 +14,22 @@ const Selection = {
     const selection: HTMLElement = this.el;
 
     let selecting = false;
-    let initial = { x: 0, y: 0 };
+    const initial = { x: 0, y: 0 };
 
-    document.addEventListener("mousedown", (event: MouseEvent) => {
-      selection.style.display = "none";
-      selection.style.background = "rgba(0,0,255,0.1)";
-      selection.style.position = "fixed";
+    document.addEventListener('mousedown', (event: MouseEvent) => {
+      selection.style.display = 'none';
+      selection.style.background = 'rgba(0,0,255,0.1)';
+      selection.style.position = 'fixed';
 
       selecting = true;
 
       initial.x = event.x;
       initial.y = event.y;
 
-      selection.style.display = "block";
+      selection.style.display = 'block';
     });
 
-    document.addEventListener("mousemove", (event) => {
+    document.addEventListener('mousemove', (event) => {
       if (!selecting) {
         return;
       }
@@ -46,29 +46,27 @@ const Selection = {
       selection.style.height = `${height}px`;
     });
 
-    document.addEventListener("mouseup", (event) => {
-      const allBlocks = document.querySelectorAll<HTMLElement>("[data-block]");
+    document.addEventListener('mouseup', () => {
+      const allBlocks = document.querySelectorAll<HTMLElement>('[data-block]');
       const results = Array.from(allBlocks).filter((block) =>
         overlaps(block, selection)
       );
 
-      this.pushEventTo(this.getTarget(), "select_blocks", {
+      this.pushEventTo(this.getTarget(), 'select_blocks', {
         block_ids: results.map((el) => el.dataset.blockId),
       });
 
       selecting = false;
-      selection.style.display = "none";
+      selection.style.display = 'none';
       selection.style.left = `${initial.x}px`;
       selection.style.top = `${initial.y}px`;
-      selection.style.width = "0";
-      selection.style.height = "0";
+      selection.style.width = '0';
+      selection.style.height = '0';
     });
   },
 
-  updated() {},
-
   getTarget(): string {
-    return this.el.getAttribute("phx-target");
+    return this.el.getAttribute('phx-target');
   },
 };
 

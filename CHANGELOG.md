@@ -1,3 +1,7 @@
+# 0.6.0 2022-01-16
+
+- introduce esbuild via npm
+
 # 0.5.2 2022-01-08
 
 - update elixir to 1.13.1 + all dependencies

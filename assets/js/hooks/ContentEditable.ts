@@ -1,10 +1,10 @@
 const ContentEditable = {
   mounted() {
     const el: HTMLElement = this.el;
-    el.style.whiteSpace = "pre-wrap";
-    el.style.wordBreak = "break-word";
+    el.style.whiteSpace = 'pre-wrap';
+    el.style.wordBreak = 'break-word';
 
-    el.addEventListener("input", () => {
+    el.addEventListener('input', () => {
       const selection = window.getSelection();
       const oldIndex = selection.focusOffset;
       const oldNode = selection.focusNode;
@@ -12,7 +12,7 @@ const ContentEditable = {
       this.pushEventTo(
         this.getTarget(),
 
-        "update_block",
+        'update_block',
         {
           cell_id: this.getCellId(),
           block_id: this.getBlockId(),
@@ -30,12 +30,12 @@ const ContentEditable = {
       );
     });
 
-    el.addEventListener("keydown", (event: KeyboardEvent) => {
-      if (event.key === "Backspace") {
+    el.addEventListener('keydown', (event: KeyboardEvent) => {
+      if (event.key === 'Backspace') {
         const selection = window.getSelection();
         if (selection.focusOffset === 0) {
           event.preventDefault();
-          this.pushEventTo(this.getTarget(), "backspace", {
+          this.pushEventTo(this.getTarget(), 'backspace', {
             cell_id: this.getCellId(),
             block_id: this.getBlockId(),
           });
@@ -43,13 +43,13 @@ const ContentEditable = {
       }
     });
 
-    el.addEventListener("keypress", (event: KeyboardEvent) => {
+    el.addEventListener('keypress', (event: KeyboardEvent) => {
       const selection = window.getSelection();
 
-      if (event.key === "Enter") {
+      if (event.key === 'Enter') {
         event.preventDefault();
 
-        this.pushEventTo(this.getTarget(), "insert_block", {
+        this.pushEventTo(this.getTarget(), 'insert_block', {
           cell_id: this.getCellId(),
           block_id: this.getBlockId(),
           index: selection.focusOffset,
@@ -57,10 +57,10 @@ const ContentEditable = {
       }
     });
 
-    el.addEventListener("paste", (event: ClipboardEvent) => {
+    el.addEventListener('paste', (event: ClipboardEvent) => {
       const selection = window.getSelection();
       event.preventDefault();
-      this.pushEventTo(this.getTarget(), "paste_blocks", {
+      this.pushEventTo(this.getTarget(), 'paste_blocks', {
         cell_id: this.getCellId(),
         block_id: this.getBlockId(),
         index: selection.focusOffset,
@@ -75,7 +75,7 @@ const ContentEditable = {
   },
 
   resolveFocus() {
-    const active = this.el.dataset.active == "";
+    const active = this.el.dataset.active == '';
     const cursorIndex = parseInt(this.el.dataset.cursorIndex);
     if (active && !isNaN(cursorIndex)) {
       setTimeout(() => this.focus(cursorIndex), 200);
@@ -90,7 +90,7 @@ const ContentEditable = {
   },
 
   getTarget(): string {
-    return this.el.getAttribute("phx-target");
+    return this.el.getAttribute('phx-target');
   },
 
   getCellId(): string {

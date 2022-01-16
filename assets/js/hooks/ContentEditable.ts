@@ -62,7 +62,6 @@ const ContentEditable = {
       event.preventDefault();
       this.pushEventTo(this.getTarget(), 'paste_blocks', {
         cell_id: this.getCellId(),
-        block_id: this.getBlockId(),
         index: selection.focusOffset,
       });
     });

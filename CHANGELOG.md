@@ -1,6 +1,9 @@
 # 0.6.0 2022-01-16
 
 - introduce esbuild via npm
+- introduce eslint
+- introduce prettier
+- make topbar an npm dependency
 
 # 0.5.2 2022-01-08
 

@@ -1,3 +1,7 @@
+import { ViewHook } from 'phoenix_live_view';
+
+type SelectionHook = Partial<ViewHook & { getTarget: () => string }>;
+
 const overlaps = (a: HTMLElement, b: HTMLElement): boolean => {
   const aRect = a.getBoundingClientRect();
   const bRect = b.getBoundingClientRect();
@@ -9,8 +13,29 @@ const overlaps = (a: HTMLElement, b: HTMLElement): boolean => {
     aRect.left > bRect.right
   );
 };
-const Selection = {
+
+const initCopy = (hook: SelectionHook) => {
+  document.addEventListener('copy', (event: ClipboardEvent) => {
+    const selected = document.querySelectorAll<HTMLElement>(
+      '.philtre__editor [data-selected]'
+    );
+
+    if (selected.length === 0) {
+      return;
+    }
+
+    hook.pushEventTo(hook.getTarget(), 'copy_blocks', {
+      block_ids: Array.from(selected).map((el) => el.dataset.blockId),
+    });
+
+    event.preventDefault();
+  });
+};
+
+const Selection: SelectionHook = {
   mounted() {
+    initCopy(this);
+
     const selection: HTMLElement = this.el;
 
     let selecting = false;

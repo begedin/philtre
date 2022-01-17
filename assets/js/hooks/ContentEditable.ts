@@ -15,7 +15,6 @@ const ContentEditable = {
         'update_block',
         {
           cell_id: this.getCellId(),
-          block_id: this.getBlockId(),
           value: el.innerHTML,
         },
         () => {
@@ -37,7 +36,6 @@ const ContentEditable = {
           event.preventDefault();
           this.pushEventTo(this.getTarget(), 'backspace', {
             cell_id: this.getCellId(),
-            block_id: this.getBlockId(),
           });
         }
       }
@@ -51,7 +49,6 @@ const ContentEditable = {
 
         this.pushEventTo(this.getTarget(), 'insert_block', {
           cell_id: this.getCellId(),
-          block_id: this.getBlockId(),
           index: selection.focusOffset,
         });
       }

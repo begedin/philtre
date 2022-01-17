@@ -36,10 +36,10 @@ defmodule Editor do
 
   def handle_event(
         "update_block",
-        %{"cell_id" => cell_id, "block_id" => block_id, "value" => value},
+        %{"cell_id" => cell_id, "value" => value},
         socket
       ) do
-    page = Editor.Page.update_block(socket.assigns.editor.page, block_id, cell_id, value)
+    page = Editor.Page.update_block(socket.assigns.editor.page, cell_id, value)
     send(self(), {:update, %{socket.assigns.editor | page: page}})
     {:noreply, socket}
   end

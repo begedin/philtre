@@ -26,14 +26,13 @@ import { Socket } from 'phoenix';
 import { LiveSocket } from 'phoenix_live_view';
 import topbar from 'topbar';
 import ContentEditable from './hooks/ContentEditable';
-import Clipboard from './hooks/Clipboard';
 import Selection from './hooks/Selection';
 
 const csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute('content');
 const liveSocket = new LiveSocket('/live', Socket, {
-  hooks: { Clipboard, ContentEditable, Selection },
+  hooks: { ContentEditable, Selection },
   params: { _csrf_token: csrfToken },
 });
 
@@ -49,4 +48,7 @@ liveSocket.connect();
 // >> liveSocket.enableDebug()
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
-Object.defineProperty(window, 'liveSocket', { get: liveSocket });
+Object.defineProperty(window, 'liveSocket', {
+  value: liveSocket,
+  writable: false,
+});

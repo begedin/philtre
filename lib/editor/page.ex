@@ -51,10 +51,10 @@ defmodule Editor.Page do
     end
   end
 
-  @spec update_block(t, block_id :: id, cell_id :: id, String.t()) :: t
-  def update_block(%__MODULE__{blocks: blocks} = page, block_id, cell_id, value) do
-    block_index = Enum.find_index(blocks, &(&1.id === block_id))
-    %Editor.Block{} = old_block = Enum.at(blocks, block_index)
+  @spec update_block(t, cell_id :: id, String.t()) :: t
+  def update_block(%__MODULE__{blocks: blocks} = page, cell_id, value) do
+    %Editor.Block{} = old_block = find_block_by_cell_id(blocks, cell_id)
+    block_index = Enum.find_index(blocks, &(&1.id === old_block.id))
 
     %Editor.Block{} =
       new_block =

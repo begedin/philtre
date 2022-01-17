@@ -1,16 +1,11 @@
 <div id={"editor__#{@editor.id}"}>
   <div
     class="philtre__selection"
-    id="selection"
+    id={"editor__selection__#{@editor.id}"}
     phx-hook="Selection"
     phx-target={@myself}
   ></div>
-  <div
-    class="philtre__editor"
-    id={"editor__selection__#{@editor.id}"}
-    phx-hook="Clipboard"
-    phx-target={@myself}
-  >
+  <div class="philtre__editor">
     <%= for block <- @editor.page.blocks do %>
       <div class="philtre__block">
         <%= content_tag(

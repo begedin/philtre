@@ -12,10 +12,7 @@ defmodule Editor do
     %__MODULE__{id: Editor.Utils.new_id(), page: Editor.Page.new()}
   end
 
-  @spec update(
-          %{optional(:editor) => t()},
-          LiveView.Socket.t()
-        ) :: {:ok, LiveView.Socket.t()}
+  @spec update(%{optional(:editor) => t()}, LiveView.Socket.t()) :: {:ok, LiveView.Socket.t()}
   def update(%{editor: %__MODULE__{} = editor}, socket) do
     socket = assign(socket, editor: editor)
     {:ok, socket}
@@ -29,10 +26,10 @@ defmodule Editor do
 
   def handle_event(
         "insert_block",
-        %{"cell_id" => cell_id, "block_id" => block_id, "index" => index},
+        %{"cell_id" => cell_id, "index" => index},
         socket
       ) do
-    page = Editor.Page.insert_block(socket.assigns.editor.page, block_id, cell_id, index)
+    page = Editor.Page.insert_block(socket.assigns.editor.page, cell_id, index)
     send(self(), {:update, %{socket.assigns.editor | page: page}})
     {:noreply, socket}
   end
@@ -47,8 +44,8 @@ defmodule Editor do
     {:noreply, socket}
   end
 
-  def handle_event("backspace", %{"cell_id" => cell_id, "block_id" => block_id}, socket) do
-    page = Editor.Page.backspace(socket.assigns.editor.page, block_id, cell_id)
+  def handle_event("backspace", %{"cell_id" => cell_id}, socket) do
+    page = Editor.Page.backspace(socket.assigns.editor.page, cell_id)
     send(self(), {:update, %{socket.assigns.editor | page: page}})
     {:noreply, socket}
   end
@@ -67,25 +64,27 @@ defmodule Editor do
     {:noreply, socket}
   end
 
-  def handle_event(
-        "paste_blocks",
-        %{"cell_id" => cell_id, "block_id" => block_id, "index" => index},
-        socket
-      ) do
+  def handle_event("paste_blocks", %{"cell_id" => cell_id, "index" => index}, socket) do
     %Editor{} = editor = socket.assigns.editor
 
     if editor.clipboard != nil do
-      %Editor.Page{} =
-        page = Editor.Page.paste_blocks(editor.page, editor.clipboard, block_id, cell_id, index)
-
-      old_block_ids = Enum.map(editor.page.blocks, & &1.id)
-      new_block_ids = Enum.map(page.blocks, & &1.id)
-
-      clone_ids = Enum.filter(new_block_ids, &(&1 not in old_block_ids))
-      send(self(), {:update, %{socket.assigns.editor | page: page, selected_blocks: clone_ids}})
+      new_editor = paste_blocks(editor, cell_id, index)
+      send(self(), {:update, new_editor})
     end
 
     {:noreply, socket}
+  end
+
+  defp paste_blocks(%Editor{} = editor, cell_id, index) do
+    %Editor.Page{} =
+      page = Editor.Page.paste_blocks(editor.page, editor.clipboard, cell_id, index)
+
+    old_block_ids = Enum.map(editor.page.blocks, & &1.id)
+    new_block_ids = Enum.map(page.blocks, & &1.id)
+
+    clone_ids = Enum.filter(new_block_ids, &(&1 not in old_block_ids))
+
+    %{editor | page: page, selected_blocks: clone_ids}
   end
 
   def html(%Editor.Page{} = page) do

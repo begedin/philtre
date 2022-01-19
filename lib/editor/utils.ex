@@ -3,7 +3,7 @@ defmodule Editor.Utils do
   Contains various utility functions used by the library, that don't really have
   another place to fit in.
   """
-  @type id :: Ecto.UUID.t()
+  @type id :: String.t()
 
   @spec new_id :: id
   def new_id do

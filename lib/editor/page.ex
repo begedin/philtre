@@ -4,21 +4,29 @@ defmodule Editor.Page do
   """
   defstruct blocks: [], active_cell_id: nil, cursor_index: nil
 
-  @type t :: %__MODULE__{}
-  @type id :: Editor.Utils.id()
-  @type block :: Editor.Block.t()
+  alias Editor.Block
+  alias Editor.Cell
+  alias Editor.SplitResult
+  alias Editor.Utils
 
+  @type t :: %__MODULE__{}
+  @type id :: Utils.id()
+  @type block :: Block.t()
+
+  @doc """
+  Generates a new "blank" page
+  """
   @spec new :: t
   def new do
     %__MODULE__{
       active_cell_id: nil,
       blocks: [
-        %Editor.Block{
+        %Block{
           type: "h1",
-          id: Editor.Utils.new_id(),
+          id: Utils.new_id(),
           cells: [
-            %Editor.Cell{
-              id: Editor.Utils.new_id(),
+            %Cell{
+              id: Utils.new_id(),
               type: "span",
               content: "This is the title of your page"
             }
@@ -28,41 +36,40 @@ defmodule Editor.Page do
     }
   end
 
-  @spec insert_block(t, cell_id :: id, integer) :: t
-  def insert_block(%__MODULE__{blocks: blocks} = page, cell_id, index) do
-    %Editor.Block{} = current_block = find_block_by_cell_id(blocks, cell_id)
-    current_block_index = Enum.find_index(blocks, &(&1 === current_block))
+  @spec newline(t, cell_id :: id, integer) :: t
+  def newline(%__MODULE__{blocks: blocks} = page, cell_id, index) do
+    %Block{} = block = find_block_by_cell_id(blocks, cell_id)
+    %Cell{} = cell = Enum.find(block.cells, &(&1.id === cell_id))
 
-    case Editor.Block.split(current_block, cell_id, index) do
-      [%Editor.Block{} = new_block] ->
-        old_cell_ids = Enum.map(current_block.cells, & &1.id)
-        new_cell_ids = Enum.map(new_block.cells, & &1.id)
-        new_cell_id = Enum.find(new_cell_ids, &(&1 not in old_cell_ids))
-        %Editor.Cell{} = new_cell = Enum.find(new_block.cells, &(&1.id === new_cell_id))
-        active_cell_id = new_cell.id
-        cursor_index = String.length(new_cell.content)
-        blocks = List.replace_at(blocks, current_block_index, new_block)
-        %{page | blocks: blocks, active_cell_id: active_cell_id, cursor_index: cursor_index}
+    %SplitResult{} =
+      result =
+      case block.type do
+        "ul" -> Block.Ul.newline(block, cell, index)
+        _ -> Block.Base.newline(block, cell, index)
+      end
 
-      [_, %Editor.Block{} = new_block] = new_blocks ->
-        blocks = blocks |> List.replace_at(current_block_index, new_blocks) |> List.flatten()
-        active_cell = Enum.at(new_block.cells, 0)
-        %{page | blocks: blocks, active_cell_id: active_cell.id, cursor_index: 0}
-    end
+    block_index = Enum.find_index(blocks, &(&1 == block))
+
+    {blocks_before, blocks_after} =
+      blocks |> Enum.reject(&(&1 == block)) |> Enum.split(block_index)
+
+    %{
+      page
+      | blocks: blocks_before ++ result.new_blocks ++ blocks_after,
+        active_cell_id: result.active_cell_id,
+        cursor_index: result.cursor_index
+    }
   end
 
   @spec update_block(t, cell_id :: id, String.t()) :: t
   def update_block(%__MODULE__{blocks: blocks} = page, cell_id, value) do
-    %Editor.Block{} = old_block = find_block_by_cell_id(blocks, cell_id)
+    %Block{} = old_block = find_block_by_cell_id(blocks, cell_id)
     block_index = Enum.find_index(blocks, &(&1.id === old_block.id))
 
-    %Editor.Block{} =
-      new_block =
-      old_block |> Editor.Block.update(cell_id, value) |> Editor.Block.resolve_transform()
-
+    %Block{} = new_block = old_block |> Block.update(cell_id, value) |> Block.resolve_transform()
     blocks = List.replace_at(blocks, block_index, new_block)
 
-    %Editor.Cell{} = cell = Enum.find(new_block.cells, &(&1.id === cell_id))
+    %Cell{} = cell = Enum.find(new_block.cells, &(&1.id === cell_id))
 
     cursor_index =
       if old_block.type != new_block.type do
@@ -124,16 +131,20 @@ defmodule Editor.Page do
     end
   end
 
-  @spec paste_blocks(t, list(Editor.Block.t()), cell_id :: id, integer) :: t
+  @spec paste_blocks(t, list(Block.t()), cell_id :: id, integer) :: t
   def paste_blocks(%__MODULE__{} = page, blocks, cell_id, index)
       when is_list(blocks) and is_binary(cell_id) and is_integer(index) do
-    %Editor.Block{} = current_block = find_block_by_cell_id(page.blocks, cell_id)
+    %Block{} = current_block = find_block_by_cell_id(page.blocks, cell_id)
 
     current_block_index = Enum.find_index(page.blocks, &(&1 === current_block))
 
-    clones = Enum.map(blocks, &Editor.Block.clone/1)
+    clones = Enum.map(blocks, &Block.clone/1)
 
-    [part_before, part_after] = Editor.Block.hard_split(current_block, cell_id, index)
+    %Cell{} = cell = Enum.find(current_block.cells, &(&1.id === cell_id))
+
+    %SplitResult{
+      new_blocks: [part_before, part_after]
+    } = Editor.Block.Base.newline(current_block, cell, index)
 
     new_blocks = [part_before] ++ clones ++ [part_after]
     all_blocks = page.blocks |> List.replace_at(current_block_index, new_blocks) |> List.flatten()
@@ -142,9 +153,9 @@ defmodule Editor.Page do
     %{page | blocks: all_blocks, active_cell_id: active_cell.id, cursor_index: 0}
   end
 
-  @spec find_block_by_cell_id(list(Editor.Block.t()), cell_id :: id) :: Editor.Block.t() | nil
+  @spec find_block_by_cell_id(list(Block.t()), cell_id :: id) :: Block.t() | nil
   defp find_block_by_cell_id(blocks, cell_id) when is_list(blocks) and is_binary(cell_id) do
-    Enum.find(blocks, fn %Editor.Block{} = block ->
+    Enum.find(blocks, fn %Block{} = block ->
       Enum.any?(block.cells, &(&1.id === cell_id))
     end)
   end

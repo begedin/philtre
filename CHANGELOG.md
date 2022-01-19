@@ -1,3 +1,8 @@
+# 0.6.1 2022-01-19
+
+- simplification and improvements to internal API
+- fix for a selection bug
+
 # 0.6.0 2022-01-16
 
 - introduce esbuild via npm

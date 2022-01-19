@@ -52,8 +52,7 @@ defmodule Editor do
 
   def handle_event("select_blocks", %{"block_ids" => block_ids}, socket)
       when is_list(block_ids) do
-    selected_blocks = Enum.dedup(socket.assigns.editor.selected_blocks ++ block_ids)
-    send(self(), {:update, %{socket.assigns.editor | selected_blocks: selected_blocks}})
+    send(self(), {:update, %{socket.assigns.editor | selected_blocks: block_ids}})
     {:noreply, socket}
   end
 

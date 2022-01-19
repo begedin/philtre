@@ -47,7 +47,7 @@ const ContentEditable = {
       if (event.key === 'Enter') {
         event.preventDefault();
 
-        this.pushEventTo(this.getTarget(), 'insert_block', {
+        this.pushEventTo(this.getTarget(), 'newline', {
           cell_id: this.getCellId(),
           index: selection.focusOffset,
         });

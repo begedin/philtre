@@ -54,7 +54,7 @@ defmodule EditorTest do
     {:ok, view, _html} = live_isolated(conn, Wrapper)
 
     Wrapper.set_editor(view, Editor.new())
-    Wrapper.insert_block_after(view, Wrapper.get_block_at(view, 0))
+    Wrapper.newline_after(view, Wrapper.get_block_at(view, 0))
     assert %{type: "p", cells: [_]} = Wrapper.get_block_at(view, 1)
   end
 
@@ -62,7 +62,7 @@ defmodule EditorTest do
     {:ok, view, _html} = live_isolated(conn, Wrapper)
 
     %{type: "h1"} = h1 = Wrapper.get_block_at(view, 0)
-    Wrapper.insert_block_after(view, h1)
+    Wrapper.newline_after(view, h1)
 
     %{type: "p", cells: [cell]} = Wrapper.get_block_at(view, 1)
     Wrapper.update_cell(view, cell, "# foo")
@@ -77,7 +77,7 @@ defmodule EditorTest do
     Wrapper.set_editor(view, Editor.new())
 
     %{type: "h1"} = h1 = Wrapper.get_block_at(view, 0)
-    Wrapper.insert_block_after(view, h1)
+    Wrapper.newline_after(view, h1)
 
     %{type: "p", cells: [cell]} = Wrapper.get_block_at(view, 1)
     Wrapper.update_cell(view, cell, "## foo")
@@ -90,7 +90,7 @@ defmodule EditorTest do
     {:ok, view, _html} = live_isolated(conn, Wrapper)
 
     %{type: "h1"} = h1 = Wrapper.get_block_at(view, 0)
-    Wrapper.insert_block_after(view, h1)
+    Wrapper.newline_after(view, h1)
 
     %{type: "p", cells: [cell]} = Wrapper.get_block_at(view, 1)
     Wrapper.update_cell(view, cell, "### foo")
@@ -103,7 +103,7 @@ defmodule EditorTest do
     {:ok, view, _html} = live_isolated(conn, Wrapper)
 
     %{type: "h1"} = h1 = Wrapper.get_block_at(view, 0)
-    Wrapper.insert_block_after(view, h1)
+    Wrapper.newline_after(view, h1)
 
     %{type: "p", cells: [cell]} = Wrapper.get_block_at(view, 1)
     Wrapper.update_cell(view, cell, "```foo")
@@ -116,7 +116,7 @@ defmodule EditorTest do
     {:ok, view, _html} = live_isolated(conn, Wrapper)
 
     %{type: "h1"} = h1 = Wrapper.get_block_at(view, 0)
-    Wrapper.insert_block_after(view, h1)
+    Wrapper.newline_after(view, h1)
 
     %{type: "p", cells: [cell]} = Wrapper.get_block_at(view, 1)
     Wrapper.update_cell(view, cell, "* foo")

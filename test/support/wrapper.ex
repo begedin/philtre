@@ -93,14 +93,14 @@ defmodule EditorTest.Wrapper do
   end
 
   @doc """
-  Inserts block at specified 'coordinates', defined by cell id and index
+  Sends newline command at the specified index of the specified cell
   """
-  def insert_block(%View{} = view, %{cell_id: cell_id, index: index}) do
+  def newline(%View{} = view, %{cell_id: cell_id, index: index}) do
     %Editor.Block{} = block = get_block_by_cell_id(view, cell_id)
 
     view
     |> get_cell_element(cell_id)
-    |> render_hook("insert_block", %{
+    |> render_hook("newline", %{
       "cell_id" => cell_id,
       "block_id" => block.id,
       "index" => index
@@ -108,12 +108,12 @@ defmodule EditorTest.Wrapper do
   end
 
   @doc """
-  Inserts block after specified block
+  Sends newline command positioned at the end of the specified block.
   """
-  def insert_block_after(%View{} = view, %Editor.Block{} = block) do
+  def newline_after(%View{} = view, %Editor.Block{} = block) do
     %Editor.Cell{} = last_cell = Enum.at(block.cells, -1)
     index = last_cell.content |> String.length()
-    insert_block(view, %{cell_id: last_cell.id, block_id: block.id, index: index})
+    newline(view, %{cell_id: last_cell.id, block_id: block.id, index: index})
   end
 
   @doc """

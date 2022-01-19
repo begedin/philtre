@@ -6,70 +6,17 @@ defmodule Editor.Block do
   defstruct id: nil, type: nil, cells: []
 
   @type id :: Editor.Utils.id()
-  @type t :: %__MODULE__{cells: []}
+  @type t :: %__MODULE__{}
 
-  def new do
+  @spec new(String.t()) :: t
+  def new(type \\ "p")
+
+  def new(type) do
     %__MODULE__{
       cells: [Editor.Cell.new()],
       id: Editor.Utils.new_id(),
-      type: "p"
+      type: type
     }
-  end
-
-  @doc """
-  Splits the block at specified index of specified cell.
-
-  For "ul" blocks, this will split just the cell within the block into two new cells,
-  but will keep the block as is.
-
-  For all other blocks, this will split the cell and the block into two. The first block will
-  retain the same type, while the second will reset the type to "p".
-  """
-  @spec split(t, id, integer) :: list(t)
-  def split(%__MODULE__{type: "ul"} = block, cell_id, index) do
-    {cells_before, cells_after} = split_cells(block, cell_id, index)
-    [%{block | cells: cells_before ++ cells_after}]
-  end
-
-  def split(%__MODULE__{} = block, cell_id, index) do
-    {cells_before, cells_after} = split_cells(block, cell_id, index)
-
-    block_before = %{block | cells: cells_before}
-    block_after = %{new() | cells: cells_after}
-    [block_before, block_after]
-  end
-
-  @doc """
-  Splits block in two at specified cell and specified index, regardless  of block type.
-
-  Unlike `split/3`, this will ALWAYS split the block AND the cell.
-  """
-  @spec hard_split(t, id, integer) :: list(t)
-  def hard_split(%__MODULE__{} = block, cell_id, index) do
-    {cells_before, cells_after} = split_cells(block, cell_id, index)
-
-    block_before = %{block | cells: cells_before}
-    block_after = %{new() | cells: cells_after}
-    [block_before, block_after]
-  end
-
-  @spec split_cells(t, id, integer) :: {list(Editor.Cell.t()), list(Editor.Cell.t())}
-  defp split_cells(%__MODULE__{cells: cells}, cell_id, index) do
-    cell_index = Enum.find_index(cells, &(&1.id === cell_id))
-
-    # split cell into part before and after. it becomes two cells
-    %Editor.Cell{} = cell = Enum.at(cells, cell_index)
-    {%Editor.Cell{} = cell_before, %Editor.Cell{} = cell_after} = Editor.Cell.split(cell, index)
-
-    # get cells before the current and after the current cell
-    {cells_before, cells_after} = Enum.split(cells, cell_index + 1)
-
-    # create two new groups of cells
-    # - cells before split cell + first part of split cell
-    # - cells after split cell + second part of split cell
-    cells_before = List.replace_at(cells_before, -1, cell_before)
-    cells_after = [cell_after | cells_after]
-    {cells_before, cells_after}
   end
 
   @doc """
@@ -134,6 +81,7 @@ defmodule Editor.Block do
 
   def resolve_transform(%__MODULE__{} = block), do: block
 
+  @spec transform(t, String.t()) :: t
   defp transform(%__MODULE__{cells: [cell | rest]} = block, "ul") do
     cells = Enum.map([Editor.Cell.trim(cell) | rest], &Editor.Cell.transform(&1, "li"))
     %{block | type: "ul", cells: cells}
@@ -214,7 +162,7 @@ defmodule Editor.Block do
 
   @spec downgrade_cells(t) :: t
   defp downgrade_cells(%{cells: cells} = block) do
-    %{block | cells: Enum.map(cells, &Editor.Cell.downgrade/1)}
+    %{block | cells: Enum.map(cells, &Editor.Cell.transform(&1, "span"))}
   end
 
   @doc """

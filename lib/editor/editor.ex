@@ -25,11 +25,11 @@ defmodule Editor do
   @spec handle_event(String.t(), map, LiveView.Socket.t()) :: {:noreply, LiveView.Socket.t()}
 
   def handle_event(
-        "insert_block",
+        "newline",
         %{"cell_id" => cell_id, "index" => index},
         socket
       ) do
-    page = Editor.Page.insert_block(socket.assigns.editor.page, cell_id, index)
+    page = Editor.Page.newline(socket.assigns.editor.page, cell_id, index)
     send(self(), {:update, %{socket.assigns.editor | page: page}})
     {:noreply, socket}
   end

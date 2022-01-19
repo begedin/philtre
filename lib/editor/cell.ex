@@ -8,28 +8,21 @@ defmodule Editor.Cell do
   defstruct [:id, :type, :content]
 
   @type t :: %__MODULE__{}
+  @type id :: String.t()
 
-  def new do
+  @spec new(String.t(), String.t()) :: t
+  def new(type \\ "span", content \\ "") do
     %__MODULE__{
       id: Editor.Utils.new_id(),
-      type: "span",
-      content: ""
+      type: type,
+      content: content
     }
   end
 
-  def split(%__MODULE__{} = cell, index) do
-    {content_before, content_after} = String.split_at(cell.content, index)
-    cell_before = %{cell | content: content_before}
-
-    cell_after = %{
-      cell
-      | content: content_after,
-        id: Editor.Utils.new_id()
-    }
-
-    {cell_before, cell_after}
-  end
-
+  @doc """
+  Removes "markdownlike" code from a cell's content
+  """
+  @spec trim(t) :: t
   def trim(%__MODULE__{content: "# " <> rest} = cell), do: %{cell | content: rest}
   def trim(%__MODULE__{content: "## " <> rest} = cell), do: %{cell | content: rest}
   def trim(%__MODULE__{content: "### " <> rest} = cell), do: %{cell | content: rest}
@@ -41,21 +34,35 @@ defmodule Editor.Cell do
   def trim(%__MODULE__{content: "*&nbsp;" <> rest} = cell), do: %{cell | content: rest}
   def trim(%__MODULE__{content: content} = cell), do: %{cell | content: content}
 
-  def transform(%__MODULE__{} = cell, type) when type in ["li"] do
+  @doc """
+  Transforms cell into the specified type
+  """
+  @spec transform(t, String.t()) :: t
+  def transform(%__MODULE__{} = cell, type) when type in ["span", "li"] do
     %{cell | type: type}
   end
 
+  @doc """
+  Resolves the result of a backspace operation on a cell
+
+  The cell will either be deleted, or be joined with the previous cell
+  """
+  @spec backspace(t) :: :delete | :join_to_previous
   def backspace(%__MODULE__{content: ""}), do: :delete
   def backspace(%__MODULE__{}), do: :join_to_previous
 
+  @doc """
+  Joins the content of the first cell into the second
+  """
+  @spec join(t, t) :: t
   def join(%__MODULE__{} = from, %__MODULE__{} = to) do
     %{to | content: to.content <> from.content}
   end
 
-  @spec downgrade(t) :: t
-  def downgrade(%{type: type} = cell) when type !== "span", do: %{cell | type: "span"}
-  def downgrade(%{} = cell), do: cell
-
+  @doc """
+  Clones the cell by giving it a new id
+  """
+  @spec clone(t) :: t
   def clone(%__MODULE__{} = cell) do
     %{cell | id: Editor.Utils.new_id()}
   end

@@ -54,20 +54,20 @@ defmodule EditorTest do
     {:ok, view, _html} = live_isolated(conn, Wrapper)
 
     Wrapper.set_editor(view, Editor.new())
-    Wrapper.newline_after(view, Wrapper.get_block_at(view, 0))
-    assert %{type: "p", cells: [_]} = Wrapper.get_block_at(view, 1)
+    Wrapper.newline(view, Wrapper.block_at(view, 0), :end_of_last_cell)
+    assert %{type: "p", cells: [_]} = Wrapper.block_at(view, 1)
   end
 
   test "can convert block to h1", %{conn: conn} do
     {:ok, view, _html} = live_isolated(conn, Wrapper)
 
-    %{type: "h1"} = h1 = Wrapper.get_block_at(view, 0)
-    Wrapper.newline_after(view, h1)
+    %{type: "h1"} = h1 = Wrapper.block_at(view, 0)
+    Wrapper.newline(view, h1, :end_of_last_cell)
 
-    %{type: "p", cells: [cell]} = Wrapper.get_block_at(view, 1)
-    Wrapper.update_cell(view, cell, "# foo")
+    %{type: "p", cells: [cell]} = Wrapper.block_at(view, 1)
+    Wrapper.push_content(view, cell, "# foo")
 
-    assert %{type: "h1", cells: [cell]} = Wrapper.get_block_at(view, 1)
+    assert %{type: "h1", cells: [cell]} = Wrapper.block_at(view, 1)
     assert cell.content == "foo"
   end
 
@@ -76,67 +76,123 @@ defmodule EditorTest do
 
     Wrapper.set_editor(view, Editor.new())
 
-    %{type: "h1"} = h1 = Wrapper.get_block_at(view, 0)
-    Wrapper.newline_after(view, h1)
+    %{type: "h1"} = h1 = Wrapper.block_at(view, 0)
+    Wrapper.newline(view, h1, :end_of_last_cell)
 
-    %{type: "p", cells: [cell]} = Wrapper.get_block_at(view, 1)
-    Wrapper.update_cell(view, cell, "## foo")
+    %{type: "p", cells: [cell]} = Wrapper.block_at(view, 1)
+    Wrapper.push_content(view, cell, "## foo")
 
-    assert %{type: "h2", cells: [cell]} = Wrapper.get_block_at(view, 1)
+    assert %{type: "h2", cells: [cell]} = Wrapper.block_at(view, 1)
     assert cell.content == "foo"
   end
 
   test "can convert block to h3", %{conn: conn} do
     {:ok, view, _html} = live_isolated(conn, Wrapper)
 
-    %{type: "h1"} = h1 = Wrapper.get_block_at(view, 0)
-    Wrapper.newline_after(view, h1)
+    %{type: "h1"} = h1 = Wrapper.block_at(view, 0)
+    Wrapper.newline(view, h1, :end_of_last_cell)
 
-    %{type: "p", cells: [cell]} = Wrapper.get_block_at(view, 1)
-    Wrapper.update_cell(view, cell, "### foo")
+    %{type: "p", cells: [cell]} = Wrapper.block_at(view, 1)
+    Wrapper.push_content(view, cell, "### foo")
 
-    assert %{type: "h3", cells: [cell]} = Wrapper.get_block_at(view, 1)
+    assert %{type: "h3", cells: [cell]} = Wrapper.block_at(view, 1)
     assert cell.content == "foo"
   end
 
   test "can convert block to pre", %{conn: conn} do
     {:ok, view, _html} = live_isolated(conn, Wrapper)
 
-    %{type: "h1"} = h1 = Wrapper.get_block_at(view, 0)
-    Wrapper.newline_after(view, h1)
+    %{type: "h1"} = h1 = Wrapper.block_at(view, 0)
+    Wrapper.newline(view, h1, :end_of_last_cell)
 
-    %{type: "p", cells: [cell]} = Wrapper.get_block_at(view, 1)
-    Wrapper.update_cell(view, cell, "```foo")
+    %{type: "p", cells: [cell]} = Wrapper.block_at(view, 1)
+    Wrapper.push_content(view, cell, "```foo")
 
-    assert %{type: "pre", cells: [cell]} = Wrapper.get_block_at(view, 1)
+    assert %{type: "pre", cells: [cell]} = Wrapper.block_at(view, 1)
     assert cell.content == "foo"
   end
 
   test "can convert block to ul", %{conn: conn} do
     {:ok, view, _html} = live_isolated(conn, Wrapper)
 
-    %{type: "h1"} = h1 = Wrapper.get_block_at(view, 0)
-    Wrapper.newline_after(view, h1)
+    %{type: "h1"} = h1 = Wrapper.block_at(view, 0)
+    Wrapper.newline(view, h1, :end_of_last_cell)
 
-    %{type: "p", cells: [cell]} = Wrapper.get_block_at(view, 1)
-    Wrapper.update_cell(view, cell, "* foo")
+    %{type: "p", cells: [cell]} = Wrapper.block_at(view, 1)
+    Wrapper.push_content(view, cell, "* foo")
 
-    assert %{type: "ul", cells: [cell]} = Wrapper.get_block_at(view, 1)
+    assert %{type: "ul", cells: [cell]} = Wrapper.block_at(view, 1)
     assert cell.content == "foo"
     assert cell.type == "li"
   end
 
   test "can downgrade h1 to h2 to h3 to p", %{conn: conn} do
     {:ok, view, _html} = live_isolated(conn, Wrapper)
-    assert %{type: "h1"} = h1 = Wrapper.get_block_at(view, 0)
+    assert %{type: "h1"} = h1 = Wrapper.block_at(view, 0)
 
     Wrapper.downgrade_block(view, h1)
-    assert %{type: "h2"} = h2 = Wrapper.get_block_at(view, 0)
+    assert %{type: "h2"} = h2 = Wrapper.block_at(view, 0)
 
     Wrapper.downgrade_block(view, h2)
-    assert %{type: "h3"} = h3 = Wrapper.get_block_at(view, 0)
+    assert %{type: "h3"} = h3 = Wrapper.block_at(view, 0)
 
     Wrapper.downgrade_block(view, h3)
-    assert %{type: "p"} = Wrapper.get_block_at(view, 0)
+    assert %{type: "p"} = Wrapper.block_at(view, 0)
+  end
+
+  test "can downgrade ul to p", %{conn: conn} do
+    {:ok, view, _html} = live_isolated(conn, Wrapper)
+    Wrapper.newline(view, :end_of_page)
+    Wrapper.push_content(view, :end_of_page, "* foo")
+    Wrapper.newline(view, :end_of_page)
+    Wrapper.push_content(view, :end_of_page, "bar")
+    Wrapper.newline(view, :end_of_page)
+    Wrapper.push_content(view, :end_of_page, "baz")
+
+    assert Wrapper.block_types(view) === ["h1", "ul"]
+    %Editor.Block{type: "ul"} = ul = Wrapper.block_at(view, 1)
+    Wrapper.backspace(view, ul, :start_of_first_cell)
+
+    assert Wrapper.block_types(view) === ["h1", "p"]
+    assert Wrapper.block_text(view, 1) === "foobarbaz"
+
+    assert view |> Wrapper.block_at(1) |> Wrapper.cell_types() === ["span", "span", "span"]
+  end
+
+  test "can downgrade pre to p", %{conn: conn} do
+    {:ok, view, _html} = live_isolated(conn, Wrapper)
+    Wrapper.newline(view, :end_of_page)
+    Wrapper.push_content(view, :end_of_page, "```foo")
+
+    assert Wrapper.block_types(view) === ["h1", "pre"]
+    %Editor.Block{type: "pre"} = pre = Wrapper.block_at(view, 1)
+    Wrapper.backspace(view, pre, :start_of_first_cell)
+
+    assert Wrapper.block_types(view) === ["h1", "p"]
+    assert Wrapper.block_text(view, 1) === "foo"
+  end
+
+  test "can merge multiple p blocks", %{conn: conn} do
+    {:ok, view, _html} = live_isolated(conn, Wrapper)
+
+    Wrapper.newline(view, :end_of_page)
+    Wrapper.push_content(view, :end_of_page, "foo")
+    Wrapper.newline(view, :end_of_page)
+    Wrapper.push_content(view, :end_of_page, "bar")
+    Wrapper.newline(view, :end_of_page)
+    Wrapper.push_content(view, :end_of_page, "baz")
+
+    assert Wrapper.block_types(view) === ["h1", "p", "p", "p"]
+
+    %Editor.Block{type: "p"} = p = Wrapper.block_at(view, 2)
+    Wrapper.backspace(view, p, :start_of_first_cell)
+    assert Wrapper.block_types(view) === ["h1", "p", "p"]
+    assert Wrapper.block_text(view, 1) === "foobar"
+
+    %Editor.Block{type: "p"} = p = Wrapper.block_at(view, 1)
+    Wrapper.backspace(view, p, :start_of_first_cell)
+    assert Wrapper.block_types(view) === ["h1", "p"]
+    assert Wrapper.block_text(view, 0) === "This is the title of your pagefoobar"
+    assert Wrapper.block_text(view, 1) === "baz"
   end
 end

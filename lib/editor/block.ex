@@ -166,6 +166,14 @@ defmodule Editor.Block do
   end
 
   @doc """
+  Joins the content of the first block into the second
+  """
+  @spec join(t, t) :: t
+  def join(%__MODULE__{} = from, %__MODULE__{} = to) do
+    %{to | cells: to.cells ++ from.cells}
+  end
+
+  @doc """
   Clones the given block by cloning it's cells and giving it a new id
   """
   @spec clone(t) :: t

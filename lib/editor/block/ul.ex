@@ -4,6 +4,7 @@ defmodule Editor.Block.Ul do
   """
   alias Editor.Block
   alias Editor.Cell
+  alias Editor.Page
   alias Editor.SplitResult
 
   @doc """
@@ -21,6 +22,24 @@ defmodule Editor.Block.Ul do
     else
       split_cell(block, cell, index)
     end
+  end
+
+  @doc """
+  Performs backaspace operation.
+
+  Downgrades block to P. LI cells also get converted to span cells.
+  """
+  @spec backspace(Page.t(), Block.t(), Cell.t()) :: Page.t()
+  def backspace(%Page{} = page, %Block{} = block, %Cell{}) do
+    block_index = Enum.find_index(page.blocks, &(&1 === block))
+
+    new_block = %{
+      block
+      | type: "p",
+        cells: Enum.map(block.cells, &%{&1 | type: "span"})
+    }
+
+    %{page | blocks: List.replace_at(page.blocks, block_index, new_block)}
   end
 
   @spec add_p_block(Block.t()) :: SplitResult.t()

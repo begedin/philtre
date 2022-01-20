@@ -10,6 +10,8 @@ defmodule EditorTest.Wrapper do
   import Phoenix.LiveView.Helpers
   import Phoenix.LiveViewTest
 
+  alias Editor.Block
+  alias Editor.Cell
   alias Phoenix.LiveViewTest.View
 
   @doc false
@@ -53,7 +55,7 @@ defmodule EditorTest.Wrapper do
   @doc """
   Retrieves block at specified index
   """
-  def get_block_at(%View{} = view, index) do
+  def block_at(%View{} = view, index) do
     %Editor{page: %{blocks: blocks}} = get_editor(view)
     Enum.at(blocks, index)
   end
@@ -87,40 +89,52 @@ defmodule EditorTest.Wrapper do
   defp get_block_by_cell_id(%View{} = view, cell_id) do
     %Editor{} = editor = get_editor(view)
 
-    Enum.find(editor.page.blocks, fn %Editor.Block{} = block ->
+    Enum.find(editor.page.blocks, fn %Block{} = block ->
       Enum.any?(block.cells, &(&1.id === cell_id))
     end)
   end
 
   @doc """
-  Sends newline command at the specified index of the specified cell
+  Sends newline command at the location
   """
-  def newline(%View{} = view, %{cell_id: cell_id, index: index}) do
-    %Editor.Block{} = block = get_block_by_cell_id(view, cell_id)
+  def newline(%View{} = view, :end_of_page) do
+    %Editor{} = editor = get_editor(view)
+    newline(view, List.last(editor.page.blocks), :end_of_last_cell)
+  end
 
+  @doc """
+  Sends newline command at the location
+  """
+  def newline(%View{} = view, %Block{} = block, :end_of_last_cell) do
+    newline(view, List.last(block.cells), :end)
+  end
+
+  def newline(%View{} = view, %Cell{} = cell, :end) do
+    newline(view, cell, String.length(cell.content))
+  end
+
+  def newline(%View{} = view, %Cell{id: cell_id}, index) when is_integer(index) do
     view
     |> get_cell_element(cell_id)
     |> render_hook("newline", %{
       "cell_id" => cell_id,
-      "block_id" => block.id,
       "index" => index
     })
   end
 
   @doc """
-  Sends newline command positioned at the end of the specified block.
+  Updates cell at specified location with specified value
   """
-  def newline_after(%View{} = view, %Editor.Block{} = block) do
-    %Editor.Cell{} = last_cell = Enum.at(block.cells, -1)
-    index = last_cell.content |> String.length()
-    newline(view, %{cell_id: last_cell.id, block_id: block.id, index: index})
+  def push_content(%View{} = view, :end_of_page, content) when is_binary(content) do
+    %Editor{} = editor = get_editor(view)
+    %Block{} = last_block = List.last(editor.page.blocks)
+    %Cell{} = last_cell = List.last(last_block.cells)
+
+    push_content(view, last_cell, content)
   end
 
-  @doc """
-  Updates specified cell with specified value
-  """
-  def update_cell(%View{} = view, %Editor.Cell{} = cell, value) do
-    %Editor.Block{} = block = get_block_by_cell_id(view, cell.id)
+  def push_content(%View{} = view, %Cell{} = cell, value) do
+    %Block{} = block = get_block_by_cell_id(view, cell.id)
 
     view
     |> get_cell_element(cell.id)
@@ -134,16 +148,9 @@ defmodule EditorTest.Wrapper do
   @doc """
   Simulates downgrade of a block (presing backspace from index 0 of first cell)
   """
-  def downgrade_block(%View{} = view, %Editor.Block{} = block) do
-    %Editor.Cell{} = cell = Enum.at(block.cells, 0)
-
-    view
-    |> get_cell_element(cell.id)
-    |> render_hook("backspace", %{
-      "cell_id" => cell.id,
-      "block_id" => block.id,
-      "index" => 0
-    })
+  def downgrade_block(%View{} = view, %Block{} = block) do
+    %Cell{} = cell = Enum.at(block.cells, 0)
+    backspace(view, cell, 0)
   end
 
   @doc """
@@ -168,14 +175,38 @@ defmodule EditorTest.Wrapper do
   Simulates paste action of selected blocks
   """
   def paste_blocks(%View{} = view, %{cell_id: cell_id, index: index}) do
-    %Editor.Block{} = block = get_block_by_cell_id(view, cell_id)
-
     view
     |> element(@model.selection)
     |> render_hook("paste_blocks", %{
       "cell_id" => cell_id,
-      "block_id" => block.id,
       "index" => index
     })
+  end
+
+  def backspace(%View{} = view, %Block{} = block, :start_of_first_cell) do
+    backspace(view, List.first(block.cells), 0)
+  end
+
+  def backspace(%View{} = view, %Cell{} = cell, index) when is_integer(index) do
+    view
+    |> get_cell_element(cell.id)
+    |> render_hook("backspace", %{
+      "cell_id" => cell.id,
+      "index" => 0
+    })
+  end
+
+  def cell_types(%Block{} = block) do
+    Enum.map(block.cells, & &1.type)
+  end
+
+  def block_types(%View{} = view) do
+    %Editor{} = editor = get_editor(view)
+    Enum.map(editor.page.blocks, & &1.type)
+  end
+
+  def block_text(%View{} = view, index) when is_integer(index) do
+    %Block{} = block = block_at(view, index)
+    Editor.text(block)
   end
 end

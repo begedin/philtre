@@ -44,8 +44,12 @@ defmodule Editor.Page do
     %SplitResult{} =
       result =
       case block.type do
+        "h1" -> Block.H1.newline(block, cell, index)
+        "h2" -> Block.H2.newline(block, cell, index)
+        "h3" -> Block.H3.newline(block, cell, index)
+        "p" -> Block.P.newline(block, cell, index)
+        "pre" -> Block.Pre.newline(block, cell, index)
         "ul" -> Block.Ul.newline(block, cell, index)
-        _ -> Block.Base.newline(block, cell, index)
       end
 
     block_index = Enum.find_index(blocks, &(&1 == block))
@@ -83,51 +87,16 @@ defmodule Editor.Page do
 
   @spec backspace(t, cell_id :: id) :: t
   def backspace(%__MODULE__{blocks: blocks} = page, cell_id) do
-    %Editor.Block{type: old_type, cells: old_cells} =
-      block = find_block_by_cell_id(blocks, cell_id)
+    %Editor.Block{} = block = find_block_by_cell_id(blocks, cell_id)
+    %Editor.Cell{} = cell = Enum.find(block.cells, &(&1.id === cell_id))
 
-    block_index = Enum.find_index(blocks, &(&1 === block))
-
-    case Editor.Block.backspace(block, cell_id) do
-      # block deletion
-      [] ->
-        blocks = List.delete_at(blocks, block_index)
-        prev_block = Enum.at(blocks, block_index - 1)
-        prev_cell = Enum.at(prev_block.cells, -1)
-
-        %{
-          page
-          | blocks: blocks,
-            active_cell_id: prev_cell.id,
-            cursor_index: String.length(prev_cell.content)
-        }
-
-      # block downgrade
-      [%{type: new_type} = downgraded_block] when new_type != old_type ->
-        blocks = List.replace_at(blocks, block_index, downgraded_block)
-        active_cell = Enum.at(block.cells, 0)
-
-        %{
-          page
-          | blocks: blocks,
-            active_cell_id: active_cell.id,
-            cursor_index: 0
-        }
-
-      # cell merge
-      [%{cells: cells} = smaller_block] when length(cells) < length(old_cells) ->
-        blocks = List.replace_at(blocks, block_index, smaller_block)
-        cell_index = Enum.find_index(old_cells, &(&1.id == cell_id)) - 1
-
-        old_cell = Enum.at(old_cells, cell_index)
-        active_cell = Enum.at(cells, cell_index)
-
-        %{
-          page
-          | blocks: blocks,
-            active_cell_id: active_cell.id,
-            cursor_index: String.length(old_cell.content)
-        }
+    case block.type do
+      "p" -> Block.P.backspace(page, block, cell)
+      "h1" -> Block.H1.backspace(page, block, cell)
+      "h2" -> Block.H2.backspace(page, block, cell)
+      "h3" -> Block.H3.backspace(page, block, cell)
+      "ul" -> Block.Ul.backspace(page, block, cell)
+      "pre" -> Block.Pre.backspace(page, block, cell)
     end
   end
 

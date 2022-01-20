@@ -125,7 +125,6 @@ defmodule EditorTest.Wrapper do
   @doc """
   Updates cell at specified location with specified value
   """
-  @spec push_content(View.t(), Cell.t() | atom, String.t()) :: any
   def push_content(%View{} = view, :end_of_page, content) when is_binary(content) do
     %Editor{} = editor = get_editor(view)
     %Block{} = last_block = List.last(editor.page.blocks)

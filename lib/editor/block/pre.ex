@@ -5,15 +5,14 @@ defmodule Editor.Block.Pre do
 
   alias Editor.Block
   alias Editor.Cell
-  alias Editor.Page
 
   defdelegate newline(block, cell, index), to: Block.Base
 
   @doc """
   Performs backspace operation. Downgrades block to P.
   """
-  @spec backspace(Page.t(), Block.t(), Cell.t()) :: Page.t()
-  def backspace(%Page{} = page, %Block{} = block, %Cell{}) do
-    Block.Base.downgrade(page, block)
+  @spec backspace(Editor.t(), Block.t(), Cell.t()) :: Editor.t()
+  def backspace(%Editor{} = editor, %Block{} = block, %Cell{}) do
+    Block.Base.downgrade(editor, block)
   end
 end

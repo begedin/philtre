@@ -56,7 +56,7 @@ defmodule EditorTest.Wrapper do
   Retrieves block at specified index
   """
   def block_at(%View{} = view, index) do
-    %Editor{page: %{blocks: blocks}} = get_editor(view)
+    %Editor{blocks: blocks} = get_editor(view)
     Enum.at(blocks, index)
   end
 
@@ -64,7 +64,7 @@ defmodule EditorTest.Wrapper do
   Retrieves block by specified id
   """
   def get_block_by_id(%View{} = view, block_id) do
-    %Editor{page: %{blocks: blocks}} = get_editor(view)
+    %Editor{blocks: blocks} = get_editor(view)
     Enum.find(blocks, &(&1.id === block_id))
   end
 
@@ -72,12 +72,36 @@ defmodule EditorTest.Wrapper do
   Retrieves cell by specified id
   """
   def get_cell_by_id(%View{} = view, cell_id) do
-    %Editor{page: %{blocks: blocks}} = get_editor(view)
+    %Editor{blocks: blocks} = get_editor(view)
 
     blocks
     |> Enum.map(& &1.cells)
     |> List.flatten()
     |> Enum.find(&(&1.id === cell_id))
+  end
+
+  @doc """
+  Sends newline command at the location
+  """
+  def newline(%View{} = view, :end_of_page) do
+    %Editor{} = editor = get_editor(view)
+    newline(view, List.last(editor.blocks), :end_of_last_cell)
+  end
+
+  @doc """
+  Retrieve cursor index
+  """
+  def cursor_index(%View{} = view) do
+    %Editor{} = editor = get_editor(view)
+    editor.cursor_index
+  end
+
+  @doc """
+  Retrieve active cell id of the editor
+  """
+  def active_cell_id(%View{} = view) do
+    %Editor{} = editor = get_editor(view)
+    editor.active_cell_id
   end
 
   @model %{selection: "[id^=editor__selection__]"}
@@ -89,17 +113,9 @@ defmodule EditorTest.Wrapper do
   defp get_block_by_cell_id(%View{} = view, cell_id) do
     %Editor{} = editor = get_editor(view)
 
-    Enum.find(editor.page.blocks, fn %Block{} = block ->
+    Enum.find(editor.blocks, fn %Block{} = block ->
       Enum.any?(block.cells, &(&1.id === cell_id))
     end)
-  end
-
-  @doc """
-  Sends newline command at the location
-  """
-  def newline(%View{} = view, :end_of_page) do
-    %Editor{} = editor = get_editor(view)
-    newline(view, List.last(editor.page.blocks), :end_of_last_cell)
   end
 
   @doc """
@@ -127,7 +143,7 @@ defmodule EditorTest.Wrapper do
   """
   def push_content(%View{} = view, :end_of_page, content) when is_binary(content) do
     %Editor{} = editor = get_editor(view)
-    %Block{} = last_block = List.last(editor.page.blocks)
+    %Block{} = last_block = List.last(editor.blocks)
     %Cell{} = last_cell = List.last(last_block.cells)
 
     push_content(view, last_cell, content)
@@ -202,7 +218,7 @@ defmodule EditorTest.Wrapper do
 
   def block_types(%View{} = view) do
     %Editor{} = editor = get_editor(view)
-    Enum.map(editor.page.blocks, & &1.type)
+    Enum.map(editor.blocks, & &1.type)
   end
 
   def block_text(%View{} = view, index) when is_integer(index) do

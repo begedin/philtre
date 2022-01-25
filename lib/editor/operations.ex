@@ -1,43 +1,18 @@
-defmodule Editor.Page do
+defmodule Editor.Operations do
   @moduledoc """
   Represents the entire content of a single record written in an editor.
   """
-  defstruct blocks: [], active_cell_id: nil, cursor_index: nil
 
   alias Editor.Block
   alias Editor.Cell
   alias Editor.SplitResult
   alias Editor.Utils
 
-  @type t :: %__MODULE__{}
   @type id :: Utils.id()
   @type block :: Block.t()
 
-  @doc """
-  Generates a new "blank" page
-  """
-  @spec new :: t
-  def new do
-    %__MODULE__{
-      active_cell_id: nil,
-      blocks: [
-        %Block{
-          type: "h1",
-          id: Utils.new_id(),
-          cells: [
-            %Cell{
-              id: Utils.new_id(),
-              type: "span",
-              content: "This is the title of your page"
-            }
-          ]
-        }
-      ]
-    }
-  end
-
-  @spec newline(t, cell_id :: id, integer) :: t
-  def newline(%__MODULE__{blocks: blocks} = page, cell_id, index) do
+  @spec newline(Editor.t(), cell_id :: id, integer) :: Editor.t()
+  def newline(%Editor{blocks: blocks} = editor, cell_id, index) do
     %Block{} = block = find_block_by_cell_id(blocks, cell_id)
     %Cell{} = cell = Enum.find(block.cells, &(&1.id === cell_id))
 
@@ -58,15 +33,15 @@ defmodule Editor.Page do
       blocks |> Enum.reject(&(&1 == block)) |> Enum.split(block_index)
 
     %{
-      page
+      editor
       | blocks: blocks_before ++ result.new_blocks ++ blocks_after,
         active_cell_id: result.active_cell_id,
         cursor_index: result.cursor_index
     }
   end
 
-  @spec update_block(t, cell_id :: id, String.t()) :: t
-  def update_block(%__MODULE__{blocks: blocks} = page, cell_id, value) do
+  @spec update_block(Editor.t(), cell_id :: id, String.t()) :: Editor.t()
+  def update_block(%Editor{blocks: blocks} = editor, cell_id, value) do
     %Block{} = old_block = find_block_by_cell_id(blocks, cell_id)
     block_index = Enum.find_index(blocks, &(&1.id === old_block.id))
 
@@ -82,30 +57,30 @@ defmodule Editor.Page do
         nil
       end
 
-    %{page | blocks: blocks, active_cell_id: cell_id, cursor_index: cursor_index}
+    %{editor | blocks: blocks, active_cell_id: cell_id, cursor_index: cursor_index}
   end
 
-  @spec backspace(t, cell_id :: id) :: t
-  def backspace(%__MODULE__{blocks: blocks} = page, cell_id) do
+  @spec backspace(Editor.t(), cell_id :: id) :: Editor.t()
+  def backspace(%Editor{blocks: blocks} = editor, cell_id) do
     %Editor.Block{} = block = find_block_by_cell_id(blocks, cell_id)
     %Editor.Cell{} = cell = Enum.find(block.cells, &(&1.id === cell_id))
 
     case block.type do
-      "p" -> Block.P.backspace(page, block, cell)
-      "h1" -> Block.H1.backspace(page, block, cell)
-      "h2" -> Block.H2.backspace(page, block, cell)
-      "h3" -> Block.H3.backspace(page, block, cell)
-      "ul" -> Block.Ul.backspace(page, block, cell)
-      "pre" -> Block.Pre.backspace(page, block, cell)
+      "p" -> Block.P.backspace(editor, block, cell)
+      "h1" -> Block.H1.backspace(editor, block, cell)
+      "h2" -> Block.H2.backspace(editor, block, cell)
+      "h3" -> Block.H3.backspace(editor, block, cell)
+      "ul" -> Block.Ul.backspace(editor, block, cell)
+      "pre" -> Block.Pre.backspace(editor, block, cell)
     end
   end
 
-  @spec paste_blocks(t, list(Block.t()), cell_id :: id, integer) :: t
-  def paste_blocks(%__MODULE__{} = page, blocks, cell_id, index)
+  @spec paste_blocks(Editor.t(), list(Block.t()), cell_id :: id, integer) :: Editor.t()
+  def paste_blocks(%Editor{} = editor, blocks, cell_id, index)
       when is_list(blocks) and is_binary(cell_id) and is_integer(index) do
-    %Block{} = current_block = find_block_by_cell_id(page.blocks, cell_id)
+    %Block{} = current_block = find_block_by_cell_id(editor.blocks, cell_id)
 
-    current_block_index = Enum.find_index(page.blocks, &(&1 === current_block))
+    current_block_index = Enum.find_index(editor.blocks, &(&1 === current_block))
 
     clones = Enum.map(blocks, &Block.clone/1)
 
@@ -116,10 +91,19 @@ defmodule Editor.Page do
     } = Editor.Block.Base.newline(current_block, cell, index)
 
     new_blocks = [part_before] ++ clones ++ [part_after]
-    all_blocks = page.blocks |> List.replace_at(current_block_index, new_blocks) |> List.flatten()
+
+    all_blocks =
+      editor.blocks |> List.replace_at(current_block_index, new_blocks) |> List.flatten()
+
     active_cell = Enum.at(part_after.cells, 0)
 
-    %{page | blocks: all_blocks, active_cell_id: active_cell.id, cursor_index: 0}
+    %{
+      editor
+      | blocks: all_blocks,
+        active_cell_id: active_cell.id,
+        cursor_index: 0,
+        selected_blocks: Enum.map(clones, & &1.id)
+    }
   end
 
   @spec find_block_by_cell_id(list(Block.t()), cell_id :: id) :: Block.t() | nil

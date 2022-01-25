@@ -5,7 +5,7 @@ defmodule EditorTest do
 
   import Phoenix.LiveViewTest
 
-  @page %Editor.Page{
+  @editor %Editor{
     blocks: [
       %Editor.Block{
         id: "1",
@@ -28,9 +28,9 @@ defmodule EditorTest do
   test "can select,then copy and paste blocks", %{conn: conn} do
     {:ok, view, _html} = live_isolated(conn, Wrapper)
 
-    Wrapper.set_editor(view, %{Editor.new() | page: @page})
+    Wrapper.set_editor(view, @editor)
 
-    block_ids = @page.blocks |> Enum.map(& &1.id) |> Enum.take(2)
+    block_ids = @editor.blocks |> Enum.map(& &1.id) |> Enum.take(2)
 
     Wrapper.select_blocks(view, block_ids)
 
@@ -40,14 +40,14 @@ defmodule EditorTest do
     Wrapper.copy_blocks(view, block_ids)
 
     editor = Wrapper.get_editor(view)
-    assert editor.clipboard == Enum.take(@page.blocks, 2)
+    assert editor.clipboard == Enum.take(@editor.blocks, 2)
 
     # pasting right after first "Foo"
     Wrapper.paste_blocks(view, %{cell_id: "11", index: 3})
 
     editor = Wrapper.get_editor(view)
-    assert Enum.count(editor.page.blocks) == 6
-    assert Editor.text(editor.page) == "FooFooBarBarBaz"
+    assert Enum.count(editor.blocks) == 6
+    assert Editor.text(editor) == "FooFooBarBarBaz"
   end
 
   test "can insert block after block", %{conn: conn} do
@@ -188,6 +188,8 @@ defmodule EditorTest do
     Wrapper.backspace(view, p, :start_of_first_cell)
     assert Wrapper.block_types(view) === ["h1", "p", "p"]
     assert Wrapper.block_text(view, 1) === "foobar"
+    assert Wrapper.cursor_index(view) === 0
+    assert Wrapper.active_cell_id(view) === Enum.at(p.cells, 0).id
 
     %Editor.Block{type: "p"} = p = Wrapper.block_at(view, 1)
     Wrapper.backspace(view, p, :start_of_first_cell)

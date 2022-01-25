@@ -18,18 +18,20 @@ defmodule Philtre.Articles.Article do
     field(:content, :map)
   end
 
-  @spec changeset(Editor.Page.t()) :: Changeset.t()
-  def changeset(%Editor.Page{} = page) do
-    changeset(%__MODULE__{}, page)
+  @spec changeset(Editor.t()) :: Changeset.t()
+  def changeset(%Editor{} = editor) do
+    changeset(%__MODULE__{}, editor)
   end
 
-  @spec changeset(t, Editor.Page.t()) :: Changeset.t()
-  def changeset(%__MODULE__{} = article, %Editor.Page{} = page) do
+  @spec changeset(t, Editor.t()) :: Changeset.t()
+  def changeset(%__MODULE__{} = article, %Editor{} = editor) do
+    content =
+      editor
+      |> Editor.serialize()
+      |> Map.take([:blocks])
+
     article
-    |> Changeset.cast(
-      %{content: Editor.serialize(page), slug: slug(page)},
-      [:content, :slug]
-    )
+    |> Changeset.cast(%{content: content, slug: slug(editor)}, [:content, :slug])
     |> Changeset.unique_constraint(:slug)
     |> Changeset.unsafe_validate_unique(:slug, Repo)
   end
@@ -40,7 +42,7 @@ defmodule Philtre.Articles.Article do
     |> title()
   end
 
-  def title(%Editor.Page{blocks: blocks}) do
+  def title(%Editor{blocks: blocks}) do
     blocks
     |> Enum.at(0)
     |> Editor.text()
@@ -52,8 +54,8 @@ defmodule Philtre.Articles.Article do
     |> slugify()
   end
 
-  def slug(%Editor.Page{} = page) do
-    page
+  def slug(%Editor{} = editor) do
+    editor
     |> title()
     |> slugify()
   end
@@ -64,7 +66,7 @@ defmodule Philtre.Articles.Article do
     |> body()
   end
 
-  def body(%Editor.Page{blocks: [_heading | rest]}) do
+  def body(%Editor{blocks: [_heading | rest]}) do
     Enum.map_join(rest, &Editor.text/1)
   end
 

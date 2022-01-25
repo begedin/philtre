@@ -14,10 +14,10 @@ defmodule PhiltreWeb.ArticleLive.New do
   @errors_saving "There were some errors saving the article"
 
   def handle_event("save", %{}, socket) do
-    %Editor.Page{} = page = socket.assigns.editor.page
+    %Editor{} = editor = socket.assigns.editor
 
     socket =
-      case Articles.create_article(page) do
+      case Articles.create_article(editor) do
         {:ok, _article} -> push_redirect(socket, to: "/articles")
         {:error, _changeset} -> put_flash(socket, :error, @errors_saving)
       end

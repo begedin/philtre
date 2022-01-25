@@ -8,7 +8,7 @@ defmodule PhiltreWeb.ArticleLive.NewTest do
   alias Philtre.Articles
   alias Philtre.Factories
 
-  @page %Editor.Page{
+  @editor %Editor{
     blocks: [
       %Editor.Block{
         id: "1",
@@ -31,8 +31,7 @@ defmodule PhiltreWeb.ArticleLive.NewTest do
   test "creates article", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/articles/new")
 
-    editor = %{Editor.new() | page: @page}
-    send(view.pid, {:update, editor})
+    send(view.pid, {:update, @editor})
 
     assert dom = view |> render() |> Floki.parse_document!()
 
@@ -60,18 +59,16 @@ defmodule PhiltreWeb.ArticleLive.NewTest do
                  "id" => "3",
                  "type" => "p"
                }
-             ],
-             "active_cell_id" => nil,
-             "cursor_index" => nil
+             ]
            }
   end
 
   test "can select,then copy and paste blocks", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/articles/new")
 
-    send(view.pid, {:update, %{Editor.new() | page: @page}})
+    send(view.pid, {:update, @editor})
 
-    block_ids = @page.blocks |> Enum.map(& &1.id) |> Enum.take(2)
+    block_ids = @editor.blocks |> Enum.map(& &1.id) |> Enum.take(2)
 
     view
     |> element("[id^=editor__selection__]")
@@ -85,7 +82,7 @@ defmodule PhiltreWeb.ArticleLive.NewTest do
     |> render_hook("copy_blocks", %{"block_ids" => block_ids})
 
     assert %{socket: %{assigns: %{editor: %Editor{} = editor}}} = :sys.get_state(view.pid)
-    assert editor.clipboard == Enum.take(@page.blocks, 2)
+    assert editor.clipboard == Enum.take(@editor.blocks, 2)
 
     view
     |> element("[id^=editor__selection__]")
@@ -97,15 +94,15 @@ defmodule PhiltreWeb.ArticleLive.NewTest do
     })
 
     assert %{socket: %{assigns: %{editor: %Editor{} = editor}}} = :sys.get_state(view.pid)
-    assert Enum.count(editor.page.blocks) == 6
-    assert Editor.text(editor.page) == "FooFooBarBarBaz"
+    assert Enum.count(editor.blocks) == 6
+    assert Editor.text(editor) == "FooFooBarBarBaz"
   end
 
   test "validates validation errors", %{conn: conn} do
     article = Factories.create_article()
     {:ok, view, _html} = live(conn, "/articles/new")
 
-    page = %Editor.Page{
+    editor = %Editor{
       blocks: [
         %Editor.Block{
           id: "1",
@@ -115,7 +112,7 @@ defmodule PhiltreWeb.ArticleLive.NewTest do
       ]
     }
 
-    send(view.pid, {:update, %{Editor.new() | page: page}})
+    send(view.pid, {:update, editor})
 
     assert html = view |> element("button") |> render_click()
     assert html =~ "There were some errors"

@@ -8,7 +8,7 @@ defmodule PhiltreWeb.ArticleLive.EditTest do
   alias Philtre.Articles
   alias Philtre.Factories
 
-  @page %Editor.Page{
+  @editor %Editor{
     blocks: [
       %Editor.Block{
         id: "1",
@@ -47,9 +47,7 @@ defmodule PhiltreWeb.ArticleLive.EditTest do
 
     {:ok, view, _html} = live(conn, "/articles/#{slug}/edit")
 
-    editor = %{Editor.new() | page: @page}
-
-    send(view.pid, {:update, editor})
+    send(view.pid, {:update, @editor})
 
     assert dom = view |> render() |> Floki.parse_document!()
 
@@ -77,9 +75,7 @@ defmodule PhiltreWeb.ArticleLive.EditTest do
                  "id" => "3",
                  "type" => "p"
                }
-             ],
-             "active_cell_id" => nil,
-             "cursor_index" => nil
+             ]
            }
   end
 
@@ -88,7 +84,7 @@ defmodule PhiltreWeb.ArticleLive.EditTest do
 
     {:ok, view, _html} = live(conn, "/articles/#{slug}/edit")
 
-    page = %Editor.Page{
+    editor = %Editor{
       blocks: [
         %Editor.Block{
           id: "1",
@@ -97,8 +93,6 @@ defmodule PhiltreWeb.ArticleLive.EditTest do
         }
       ]
     }
-
-    editor = %{Editor.new() | page: page}
 
     send(view.pid, {:update, editor})
 

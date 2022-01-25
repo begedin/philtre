@@ -32,6 +32,8 @@ defmodule Editor.Cell do
   def trim(%__MODULE__{content: "```" <> rest} = cell), do: %{cell | content: rest}
   def trim(%__MODULE__{content: "* " <> rest} = cell), do: %{cell | content: rest}
   def trim(%__MODULE__{content: "*&nbsp;" <> rest} = cell), do: %{cell | content: rest}
+  def trim(%__MODULE__{content: "&gt; " <> rest} = cell), do: %{cell | content: rest}
+  def trim(%__MODULE__{content: "&gt;&nbsp;" <> rest} = cell), do: %{cell | content: rest}
   def trim(%__MODULE__{content: content} = cell), do: %{cell | content: content}
 
   @doc """

@@ -1,5 +1,5 @@
 /* This file is for your main application CSS */
-@import "./phoenix.css";
+@import './phoenix.css';
 
 /* Alerts and form errors used by phx.new */
 .alert {
@@ -124,4 +124,10 @@ nav.admin ul {
 [contenteditable] {
   outline: none;
   cursor: text;
+}
+
+.philtre__block blockquote {
+  margin-left: 0;
+  padding-left: 2em;
+  border-left: 0.25em solid gray;
 }

@@ -25,6 +25,7 @@ defmodule Editor.Operations do
         "p" -> Block.P.newline(block, cell, index)
         "pre" -> Block.Pre.newline(block, cell, index)
         "ul" -> Block.Ul.newline(block, cell, index)
+        "blockquote" -> Block.Blockquote.newline(block, cell, index)
       end
 
     block_index = Enum.find_index(blocks, &(&1 == block))
@@ -72,6 +73,7 @@ defmodule Editor.Operations do
       "h3" -> Block.H3.backspace(editor, block, cell)
       "ul" -> Block.Ul.backspace(editor, block, cell)
       "pre" -> Block.Pre.backspace(editor, block, cell)
+      "blockquote" -> Block.Blockquote.backspace(editor, block, cell)
     end
   end
 

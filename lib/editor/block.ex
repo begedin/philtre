@@ -79,6 +79,14 @@ defmodule Editor.Block do
     transform(block, "ul")
   end
 
+  def resolve_transform(%__MODULE__{cells: [%{content: "&gt; " <> _} | _]} = block) do
+    transform(block, "blockquote")
+  end
+
+  def resolve_transform(%__MODULE__{cells: [%{content: "&gt;&nbsp;" <> _} | _]} = block) do
+    transform(block, "blockquote")
+  end
+
   def resolve_transform(%__MODULE__{} = block), do: block
 
   @spec transform(t, String.t()) :: t

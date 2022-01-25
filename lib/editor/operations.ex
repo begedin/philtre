@@ -97,7 +97,13 @@ defmodule Editor.Operations do
 
     active_cell = Enum.at(part_after.cells, 0)
 
-    %{editor | blocks: all_blocks, active_cell_id: active_cell.id, cursor_index: 0}
+    %{
+      editor
+      | blocks: all_blocks,
+        active_cell_id: active_cell.id,
+        cursor_index: 0,
+        selected_blocks: Enum.map(clones, & &1.id)
+    }
   end
 
   @spec find_block_by_cell_id(list(Block.t()), cell_id :: id) :: Block.t() | nil

@@ -4,7 +4,7 @@ defmodule Philtre.MixProject do
   def project do
     [
       app: :philtre,
-      version: "0.6.1",
+      version: "0.7.0",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:gettext] ++ Mix.compilers(),

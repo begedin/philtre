@@ -1,3 +1,10 @@
+# 0.7.0 2022-01-25
+
+- blockquote
+- further codebase simplication
+- removal of page struct
+- bugfixes to backspace operation
+
 # 0.6.1 2022-01-19
 
 - simplification and improvements to internal API

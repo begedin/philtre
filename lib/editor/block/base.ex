@@ -37,6 +37,7 @@ defmodule Editor.Block.Base do
     }
   end
 
+  @spec backspace(Page.t(), Block.t(), Cell.t()) :: Page.t()
   def backspace(%Page{} = page, %Block{cells: [first | _]} = block, %Cell{} = cell)
       when cell == first do
     # merge with previous block
@@ -51,7 +52,12 @@ defmodule Editor.Block.Base do
       |> List.delete_at(block_index)
       |> List.replace_at(previous_block_index, merged_block)
 
-    %{page | blocks: new_blocks}
+    %{
+      page
+      | blocks: new_blocks,
+        active_cell_id: first.id,
+        cursor_index: 0
+    }
   end
 
   def backspace(%Page{} = page, %Block{} = block, %Cell{} = cell) do

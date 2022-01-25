@@ -80,6 +80,30 @@ defmodule EditorTest.Wrapper do
     |> Enum.find(&(&1.id === cell_id))
   end
 
+  @doc """
+  Sends newline command at the location
+  """
+  def newline(%View{} = view, :end_of_page) do
+    %Editor{} = editor = get_editor(view)
+    newline(view, List.last(editor.page.blocks), :end_of_last_cell)
+  end
+
+  @doc """
+  Retrieve cursor index
+  """
+  def cursor_index(%View{} = view) do
+    %Editor{} = editor = get_editor(view)
+    editor.page.cursor_index
+  end
+
+  @doc """
+  Retrieve active cell id of the page
+  """
+  def active_cell_id(%View{} = view) do
+    %Editor{} = editor = get_editor(view)
+    editor.page.active_cell_id
+  end
+
   @model %{selection: "[id^=editor__selection__]"}
 
   defp get_cell_element(%View{} = view, cell_id) do
@@ -92,14 +116,6 @@ defmodule EditorTest.Wrapper do
     Enum.find(editor.page.blocks, fn %Block{} = block ->
       Enum.any?(block.cells, &(&1.id === cell_id))
     end)
-  end
-
-  @doc """
-  Sends newline command at the location
-  """
-  def newline(%View{} = view, :end_of_page) do
-    %Editor{} = editor = get_editor(view)
-    newline(view, List.last(editor.page.blocks), :end_of_last_cell)
   end
 
   @doc """

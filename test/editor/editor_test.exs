@@ -188,6 +188,8 @@ defmodule EditorTest do
     Wrapper.backspace(view, p, :start_of_first_cell)
     assert Wrapper.block_types(view) === ["h1", "p", "p"]
     assert Wrapper.block_text(view, 1) === "foobar"
+    assert Wrapper.cursor_index(view) === 0
+    assert Wrapper.active_cell_id(view) === Enum.at(p.cells, 0).id
 
     %Editor.Block{type: "p"} = p = Wrapper.block_at(view, 1)
     Wrapper.backspace(view, p, :start_of_first_cell)

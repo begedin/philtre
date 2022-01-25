@@ -5,7 +5,7 @@ defmodule Philtre.Articles.CreateArticleTest do
 
   alias Philtre.Articles
 
-  @params %Editor.Page{
+  @params %Editor{
     blocks: [
       %Editor.Block{
         id: Editor.Utils.new_id(),

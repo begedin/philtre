@@ -4,7 +4,7 @@ defmodule Philtre.Articles.UpdateArticleTest do
   alias Philtre.Articles
   alias Philtre.Factories
 
-  @params %Editor.Page{
+  @params %Editor{
     blocks: [
       %Editor.Block{
         id: Editor.Utils.new_id(),

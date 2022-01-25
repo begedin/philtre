@@ -4,12 +4,38 @@ defmodule Editor do
   """
   use PhiltreWeb, :live_component
 
-  defstruct id: nil, page: Editor.Page.new(), selected_blocks: [], clipboard: nil
+  alias Editor.Block
+  alias Editor.Cell
+  alias Editor.Operations
+  alias Editor.Utils
+
+  defstruct active_cell_id: nil,
+            blocks: [],
+            clipboard: nil,
+            cursor_index: nil,
+            id: nil,
+            selected_blocks: []
 
   @type t :: %__MODULE__{}
 
   def new do
-    %__MODULE__{id: Editor.Utils.new_id(), page: Editor.Page.new()}
+    %__MODULE__{
+      id: Utils.new_id(),
+      active_cell_id: nil,
+      blocks: [
+        %Block{
+          type: "h1",
+          id: Utils.new_id(),
+          cells: [
+            %Cell{
+              id: Utils.new_id(),
+              type: "span",
+              content: "This is the title of your page"
+            }
+          ]
+        }
+      ]
+    }
   end
 
   @spec update(%{optional(:editor) => t()}, LiveView.Socket.t()) :: {:ok, LiveView.Socket.t()}
@@ -29,8 +55,8 @@ defmodule Editor do
         %{"cell_id" => cell_id, "index" => index},
         socket
       ) do
-    page = Editor.Page.newline(socket.assigns.editor.page, cell_id, index)
-    send(self(), {:update, %{socket.assigns.editor | page: page}})
+    editor = Operations.newline(socket.assigns.editor, cell_id, index)
+    send(self(), {:update, editor})
     {:noreply, socket}
   end
 
@@ -39,14 +65,14 @@ defmodule Editor do
         %{"cell_id" => cell_id, "value" => value},
         socket
       ) do
-    page = Editor.Page.update_block(socket.assigns.editor.page, cell_id, value)
-    send(self(), {:update, %{socket.assigns.editor | page: page}})
+    editor = Operations.update_block(socket.assigns.editor, cell_id, value)
+    send(self(), {:update, editor})
     {:noreply, socket}
   end
 
   def handle_event("backspace", %{"cell_id" => cell_id}, socket) do
-    page = Editor.Page.backspace(socket.assigns.editor.page, cell_id)
-    send(self(), {:update, %{socket.assigns.editor | page: page}})
+    editor = Operations.backspace(socket.assigns.editor, cell_id)
+    send(self(), {:update, editor})
     {:noreply, socket}
   end
 
@@ -58,7 +84,7 @@ defmodule Editor do
 
   def handle_event("copy_blocks", %{"block_ids" => block_ids}, socket)
       when is_list(block_ids) do
-    blocks = Enum.filter(socket.assigns.editor.page.blocks, &(&1.id in block_ids))
+    blocks = Enum.filter(socket.assigns.editor.blocks, &(&1.id in block_ids))
     send(self(), {:update, %{socket.assigns.editor | clipboard: blocks}})
     {:noreply, socket}
   end
@@ -75,19 +101,18 @@ defmodule Editor do
   end
 
   defp paste_blocks(%Editor{} = editor, cell_id, index) do
-    %Editor.Page{} =
-      page = Editor.Page.paste_blocks(editor.page, editor.clipboard, cell_id, index)
+    %Editor{} = new_editor = Operations.paste_blocks(editor, editor.clipboard, cell_id, index)
 
-    old_block_ids = Enum.map(editor.page.blocks, & &1.id)
-    new_block_ids = Enum.map(page.blocks, & &1.id)
+    old_block_ids = Enum.map(editor.blocks, & &1.id)
+    new_block_ids = Enum.map(new_editor.blocks, & &1.id)
 
     clone_ids = Enum.filter(new_block_ids, &(&1 not in old_block_ids))
 
-    %{editor | page: page, selected_blocks: clone_ids}
+    %{new_editor | selected_blocks: clone_ids}
   end
 
-  def html(%Editor.Page{} = page) do
-    Enum.map_join(page.blocks, &html/1)
+  def html(%Editor{} = editor) do
+    Enum.map_join(editor.blocks, &html/1)
   end
 
   def html(%Editor.Block{} = block) do
@@ -99,8 +124,8 @@ defmodule Editor do
     "<#{cell.type}>#{cell.content}</#{cell.type}>"
   end
 
-  def text(%Editor.Page{} = page) do
-    Enum.map_join(page.blocks, &text/1)
+  def text(%Editor{} = editor) do
+    Enum.map_join(editor.blocks, &text/1)
   end
 
   def text(%Editor.Block{} = block) do
@@ -109,10 +134,10 @@ defmodule Editor do
 
   def text(%Editor.Cell{content: content}), do: content
 
-  def serialize(%Editor.Page{} = page) do
-    page
+  def serialize(%Editor{} = editor) do
+    editor
     |> Map.from_struct()
-    |> Map.put(:blocks, Enum.map(page.blocks, &serialize/1))
+    |> Map.put(:blocks, Enum.map(editor.blocks, &serialize/1))
   end
 
   def serialize(%Editor.Block{} = block) do
@@ -130,9 +155,7 @@ defmodule Editor do
   end
 
   def normalize(%{blocks: blocks}) when is_list(blocks) do
-    %Editor.Page{
-      blocks: Enum.map(blocks, &normalize/1)
-    }
+    %Editor{blocks: Enum.map(blocks, &normalize/1)}
   end
 
   def normalize(%{"cells" => cells, "id" => id, "type" => type})

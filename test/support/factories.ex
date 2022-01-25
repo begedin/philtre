@@ -4,7 +4,7 @@ defmodule Philtre.Factories do
   """
   alias Philtre.Articles
 
-  @article_params %Editor.Page{
+  @article_params %Editor{
     blocks: [
       %Editor.Block{
         id: Editor.Utils.new_id(),
@@ -19,27 +19,27 @@ defmodule Philtre.Factories do
     ]
   }
 
-  @spec create_article(Editor.Page.t()) :: Articles.Article.t()
-  def create_article(%Editor.Page{} = page \\ @article_params) do
-    {:ok, article} = Articles.create_article(page)
+  @spec create_article(Editor.t()) :: Articles.Article.t()
+  def create_article(%Editor{} = editor \\ @article_params) do
+    {:ok, article} = Articles.create_article(editor)
     article
   end
 
-  @spec create_articles(list(Editor.Page.t())) :: list(Articles.Article.t())
+  @spec create_articles(list(Editor.t())) :: list(Articles.Article.t())
   def create_articles(params) when is_list(params) do
     Enum.map(params, &create_article/1)
   end
 
   @spec create_articles(pos_integer, map) :: list(Articles.Article.t())
-  def create_articles(count, %Editor.Page{} = page \\ @article_params)
+  def create_articles(count, %Editor{} = editor \\ @article_params)
       when is_integer(count) and count > 1 do
     Enum.map(1..count, fn index ->
-      page = Map.merge(@article_params, page)
+      editor = Map.merge(@article_params, editor)
 
-      page = %{
-        page
+      editor = %{
+        editor
         | blocks:
-            Enum.map(page.blocks, fn %Editor.Block{} = block ->
+            Enum.map(editor.blocks, fn %Editor.Block{} = block ->
               %Editor.Block{
                 type: block.type,
                 id: Editor.Utils.new_id(),
@@ -48,7 +48,7 @@ defmodule Philtre.Factories do
             end)
       }
 
-      create_article(page)
+      create_article(editor)
     end)
   end
 end

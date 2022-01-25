@@ -5,7 +5,6 @@ defmodule Editor.Block.Base do
 
   alias Editor.Block
   alias Editor.Cell
-  alias Editor.Page
   alias Editor.SplitResult
 
   @doc """
@@ -37,30 +36,30 @@ defmodule Editor.Block.Base do
     }
   end
 
-  @spec backspace(Page.t(), Block.t(), Cell.t()) :: Page.t()
-  def backspace(%Page{} = page, %Block{cells: [first | _]} = block, %Cell{} = cell)
+  @spec backspace(Editor.t(), Block.t(), Cell.t()) :: Editor.t()
+  def backspace(%Editor{} = editor, %Block{cells: [first | _]} = block, %Cell{} = cell)
       when cell == first do
     # merge with previous block
-    block_index = Enum.find_index(page.blocks, &(&1 === block))
+    block_index = Enum.find_index(editor.blocks, &(&1 === block))
     previous_block_index = block_index - 1
-    %Block{} = previous_block = Enum.at(page.blocks, previous_block_index)
+    %Block{} = previous_block = Enum.at(editor.blocks, previous_block_index)
 
     %Block{} = merged_block = Block.join(block, previous_block)
 
     new_blocks =
-      page.blocks
+      editor.blocks
       |> List.delete_at(block_index)
       |> List.replace_at(previous_block_index, merged_block)
 
     %{
-      page
+      editor
       | blocks: new_blocks,
         active_cell_id: first.id,
         cursor_index: 0
     }
   end
 
-  def backspace(%Page{} = page, %Block{} = block, %Cell{} = cell) do
+  def backspace(%Editor{} = editor, %Block{} = block, %Cell{} = cell) do
     # merge two cells within a block
     cell_index = Enum.find_index(block.cells, &(&1 === cell))
     previous_cell_index = cell_index - 1
@@ -73,20 +72,20 @@ defmodule Editor.Block.Base do
       |> List.replace_at(previous_cell_index, merged_cell)
 
     %Block{} = new_block = %{block | cells: new_cells}
-    block_index = Enum.find_index(page.blocks, &(&1 === block))
-    new_blocks = List.replace_at(page.blocks, block_index, new_block)
+    block_index = Enum.find_index(editor.blocks, &(&1 === block))
+    new_blocks = List.replace_at(editor.blocks, block_index, new_block)
 
     %{
-      page
+      editor
       | blocks: new_blocks,
         active_cell_id: merged_cell.id,
         cursor_index: String.length(previous_cell.content)
     }
   end
 
-  def downgrade(%Page{} = page, %Block{} = block, type \\ "p") do
-    block_index = Enum.find_index(page.blocks, &(&1 === block))
-    %{page | blocks: List.replace_at(page.blocks, block_index, %{block | type: type})}
+  def downgrade(%Editor{} = editor, %Block{} = block, type \\ "p") do
+    block_index = Enum.find_index(editor.blocks, &(&1 === block))
+    %{editor | blocks: List.replace_at(editor.blocks, block_index, %{block | type: type})}
   end
 
   @doc """

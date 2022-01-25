@@ -8,18 +8,18 @@ defmodule Philtre.Articles do
   alias Philtre.Articles
   alias Philtre.Repo
 
-  @spec create_article(Editor.Page.t()) :: {:ok, Articles.Article.t()} | {:error, Changeset.t()}
-  def create_article(%Editor.Page{} = page) do
-    page
+  @spec create_article(Editor.t()) :: {:ok, Articles.Article.t()} | {:error, Changeset.t()}
+  def create_article(%Editor{} = editor) do
+    editor
     |> Articles.Article.changeset()
     |> Repo.insert()
   end
 
-  @spec update_article(Articles.Article.t(), Editor.Page.t()) ::
+  @spec update_article(Articles.Article.t(), Editor.t()) ::
           {:ok, Articles.Article.t()} | {:error, Changeset.t()}
-  def update_article(%Articles.Article{} = article, %Editor.Page{} = page) do
+  def update_article(%Articles.Article{} = article, %Editor{} = editor) do
     article
-    |> Articles.Article.changeset(page)
+    |> Articles.Article.changeset(editor)
     |> Repo.update()
   end
 

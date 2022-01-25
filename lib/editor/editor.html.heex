@@ -6,7 +6,7 @@
     phx-target={@myself}
   ></div>
   <div class="philtre__editor">
-    <%= for block <- @editor.page.blocks do %>
+    <%= for block <- @editor.blocks do %>
       <div class="philtre__block">
         <%= content_tag(
           block.type,
@@ -24,8 +24,8 @@
                 data_block_id: block.id,
                 data_cell: true,
                 data_cell_id: cell.id,
-                data_active: @editor.page.active_cell_id == cell.id,
-                data_cursor_index: @editor.page.cursor_index,
+                data_active: @editor.active_cell_id == cell.id,
+                data_cursor_index: @editor.cursor_index,
                 id: "cell-#{cell.id}",
                 phx_hook: "ContentEditable",
                 phx_target: @myself

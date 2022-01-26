@@ -6,13 +6,13 @@ defmodule Editor.Block.H1 do
   alias Editor.Block
   alias Editor.Cell
 
-  defdelegate newline(block, cell, index), to: Block.Base
+  defdelegate newline(block, cell, index), to: Block
 
   @doc """
   Performs backspace operation. Downgrades block to h2.
   """
   @spec backspace(Editor.t(), Block.t(), Cell.t()) :: Editor.t()
   def backspace(%Editor{} = editor, %Block{} = block, %Cell{}) do
-    Block.Base.downgrade(editor, block, "h2")
+    Block.downgrade(editor, block, "h2")
   end
 end

@@ -1,3 +1,7 @@
+# 0.7.1 2022-01-25
+
+- reduce blocks after backspacing or updating, so they contain a minimal amount of cells
+
 # 0.7.0 2022-01-25
 
 - blockquote

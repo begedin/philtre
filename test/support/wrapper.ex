@@ -61,6 +61,14 @@ defmodule EditorTest.Wrapper do
   end
 
   @doc """
+  Retrieves specified cell from specified block
+  """
+  def cell_at(%View{} = view, block_index, cell_index) do
+    %Block{} = block = block_at(view, block_index)
+    Enum.at(block.cells, cell_index)
+  end
+
+  @doc """
   Retrieves block by specified id
   """
   def get_block_by_id(%View{} = view, block_id) do

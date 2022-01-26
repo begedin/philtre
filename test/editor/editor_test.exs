@@ -140,7 +140,7 @@ defmodule EditorTest do
     assert %{type: "p"} = Wrapper.block_at(view, 0)
   end
 
-  test "can downgrade ul to p", %{conn: conn} do
+  test "can downgrade ul to p, merging cells", %{conn: conn} do
     {:ok, view, _html} = live_isolated(conn, Wrapper)
     Wrapper.newline(view, :end_of_page)
     Wrapper.push_content(view, :end_of_page, "* foo")
@@ -156,7 +156,7 @@ defmodule EditorTest do
     assert Wrapper.block_types(view) === ["h1", "p"]
     assert Wrapper.block_text(view, 1) === "foobarbaz"
 
-    assert view |> Wrapper.block_at(1) |> Wrapper.cell_types() === ["span", "span", "span"]
+    assert view |> Wrapper.block_at(1) |> Wrapper.cell_types() === ["span"]
   end
 
   test "can downgrade pre to p", %{conn: conn} do
@@ -188,8 +188,9 @@ defmodule EditorTest do
     Wrapper.backspace(view, p, :start_of_first_cell)
     assert Wrapper.block_types(view) === ["h1", "p", "p"]
     assert Wrapper.block_text(view, 1) === "foobar"
-    assert Wrapper.cursor_index(view) === 0
-    assert Wrapper.active_cell_id(view) === Enum.at(p.cells, 0).id
+    assert view |> Wrapper.block_at(1) |> Wrapper.cell_types() === ["span"]
+    assert Wrapper.cursor_index(view) === 3
+    assert Wrapper.active_cell_id(view) === Wrapper.cell_at(view, 1, 0).id
 
     %Editor.Block{type: "p"} = p = Wrapper.block_at(view, 1)
     Wrapper.backspace(view, p, :start_of_first_cell)

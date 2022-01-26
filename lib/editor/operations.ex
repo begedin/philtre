@@ -4,6 +4,7 @@ defmodule Editor.Operations do
   """
 
   alias Editor.Block
+  alias Editor.BlockReduction
   alias Editor.Cell
   alias Editor.SplitResult
   alias Editor.Utils
@@ -53,18 +54,19 @@ defmodule Editor.Operations do
       |> Block.update(cell_id, value)
       |> Block.resolve_transform()
 
-    blocks = List.replace_at(blocks, block_index, new_block)
-
     %Cell{} = cell = Enum.find(new_block.cells, &(&1.id === cell_id))
 
-    cursor_index =
-      if block.type != new_block.type do
-        String.length(cell.content)
-      else
-        nil
-      end
+    cursor_index = if block.type != new_block.type, do: String.length(cell.content), else: 0
+    %BlockReduction{} = result = BlockReduction.perform(new_block, cell_id, cursor_index)
 
-    %{editor | blocks: blocks, active_cell_id: cell_id, cursor_index: cursor_index}
+    blocks = List.replace_at(blocks, block_index, result.new_block)
+
+    %{
+      editor
+      | blocks: blocks,
+        active_cell_id: result.active_cell_id,
+        cursor_index: result.cursor_index
+    }
   end
 
   @spec backspace(Editor.t(), cell_id :: id) :: Editor.t()
@@ -88,7 +90,7 @@ defmodule Editor.Operations do
 
     %SplitResult{
       new_blocks: [part_before, part_after]
-    } = Editor.Block.Base.newline(current_block, cell, index)
+    } = Editor.Block.newline(current_block, cell, index)
 
     new_blocks = [part_before] ++ clones ++ [part_after]
 

@@ -11,22 +11,22 @@ defmodule Editor.Operations do
   @type id :: Utils.id()
   @type block :: Block.t()
 
+  @block_map %{
+    "h1" => Block.H1,
+    "h2" => Block.H2,
+    "h3" => Block.H3,
+    "p" => Block.P,
+    "pre" => Block.Pre,
+    "ul" => Block.Ul,
+    "blockquote" => Block.Blockquote
+  }
+
   @spec newline(Editor.t(), cell_id :: id, integer) :: Editor.t()
   def newline(%Editor{blocks: blocks} = editor, cell_id, index) do
     %Block{} = block = find_block_by_cell_id(blocks, cell_id)
     %Cell{} = cell = Enum.find(block.cells, &(&1.id === cell_id))
 
-    %SplitResult{} =
-      result =
-      case block.type do
-        "h1" -> Block.H1.newline(block, cell, index)
-        "h2" -> Block.H2.newline(block, cell, index)
-        "h3" -> Block.H3.newline(block, cell, index)
-        "p" -> Block.P.newline(block, cell, index)
-        "pre" -> Block.Pre.newline(block, cell, index)
-        "ul" -> Block.Ul.newline(block, cell, index)
-        "blockquote" -> Block.Blockquote.newline(block, cell, index)
-      end
+    %SplitResult{} = result = @block_map[block.type].newline(block, cell, index)
 
     block_index = Enum.find_index(blocks, &(&1 == block))
 
@@ -41,18 +41,24 @@ defmodule Editor.Operations do
     }
   end
 
-  @spec update_block(Editor.t(), cell_id :: id, String.t()) :: Editor.t()
-  def update_block(%Editor{blocks: blocks} = editor, cell_id, value) do
-    %Block{} = old_block = find_block_by_cell_id(blocks, cell_id)
-    block_index = Enum.find_index(blocks, &(&1.id === old_block.id))
+  @spec update(Editor.t(), cell_id :: id, String.t()) :: Editor.t()
+  def update(%Editor{blocks: blocks} = editor, cell_id, value) do
+    %Block{} = block = find_block_by_cell_id(blocks, cell_id)
 
-    %Block{} = new_block = old_block |> Block.update(cell_id, value) |> Block.resolve_transform()
+    block_index = Enum.find_index(blocks, &(&1.id === block.id))
+
+    %Block{} =
+      new_block =
+      block
+      |> Block.update(cell_id, value)
+      |> Block.resolve_transform()
+
     blocks = List.replace_at(blocks, block_index, new_block)
 
     %Cell{} = cell = Enum.find(new_block.cells, &(&1.id === cell_id))
 
     cursor_index =
-      if old_block.type != new_block.type do
+      if block.type != new_block.type do
         String.length(cell.content)
       else
         nil
@@ -66,15 +72,7 @@ defmodule Editor.Operations do
     %Editor.Block{} = block = find_block_by_cell_id(blocks, cell_id)
     %Editor.Cell{} = cell = Enum.find(block.cells, &(&1.id === cell_id))
 
-    case block.type do
-      "p" -> Block.P.backspace(editor, block, cell)
-      "h1" -> Block.H1.backspace(editor, block, cell)
-      "h2" -> Block.H2.backspace(editor, block, cell)
-      "h3" -> Block.H3.backspace(editor, block, cell)
-      "ul" -> Block.Ul.backspace(editor, block, cell)
-      "pre" -> Block.Pre.backspace(editor, block, cell)
-      "blockquote" -> Block.Blockquote.backspace(editor, block, cell)
-    end
+    @block_map[block.type].backspace(editor, block, cell)
   end
 
   @spec paste_blocks(Editor.t(), list(Block.t()), cell_id :: id, integer) :: Editor.t()

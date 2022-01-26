@@ -43,7 +43,6 @@ defmodule Editor.Block.Base do
     block_index = Enum.find_index(editor.blocks, &(&1 === block))
     previous_block_index = block_index - 1
     %Block{} = previous_block = Enum.at(editor.blocks, previous_block_index)
-
     %Block{} = merged_block = Block.join(block, previous_block)
 
     new_blocks =

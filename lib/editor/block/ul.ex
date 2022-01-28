@@ -57,8 +57,8 @@ defmodule Editor.Block.Ul do
 
   @spec split_cell(Block.t(), Cell.t(), integer) :: SplitResult.t()
   defp split_cell(%Block{} = block, %Cell{} = cell, index) do
-    {cells_before, cells_after} = Block.Base.split_around_cell(block.cells, cell)
-    {cell_before, cell_after} = Block.Base.split_cell(cell, index)
+    {cells_before, cells_after} = Block.split_around_cell(block.cells, cell)
+    {cell_before, cell_after} = Block.split_cell(cell, index)
 
     %Cell{id: active_cell_id} = cell_after
 

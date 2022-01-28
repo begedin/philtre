@@ -5,6 +5,6 @@ defmodule Editor.Block.P do
 
   alias Editor.Block
 
-  defdelegate newline(block, cell, index), to: Block.Base
-  defdelegate backspace(editor, block, cell), to: Block.Base
+  defdelegate newline(block, cell, index), to: Block
+  defdelegate backspace(editor, block, cell), to: Block
 end

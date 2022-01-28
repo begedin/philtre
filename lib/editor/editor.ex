@@ -58,7 +58,7 @@ defmodule Editor do
   end
 
   def handle_event("update_block", %{"cell_id" => cell_id, "value" => value}, socket) do
-    editor = Operations.update_block(socket.assigns.editor, cell_id, value)
+    editor = Operations.update(socket.assigns.editor, cell_id, value)
     send(self(), {:update, editor})
     {:noreply, socket}
   end

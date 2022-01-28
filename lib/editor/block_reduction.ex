@@ -1,6 +1,10 @@
 defmodule Editor.BlockReduction do
-  alias Editor.Cell
+  @moduledoc """
+  Performs reduction operation on a block, collapsing all adjacent cells of the
+  same type into one.
+  """
   alias Editor.Block
+  alias Editor.Cell
 
   defstruct [:new_block, :active_cell_id, :cursor_index]
 

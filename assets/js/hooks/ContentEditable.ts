@@ -1,56 +1,89 @@
-const ContentEditable = {
+const FOCUS = '%%%focuspoint%%%';
+
+const splitAtCaret = (element) => {
+  const selection = document.getSelection();
+  const range = selection.getRangeAt(0);
+
+  // generates dom container for selection from start of contenteditable to caret
+  const preCaretRange = range.cloneRange();
+  preCaretRange.selectNodeContents(element);
+  preCaretRange.setEnd(range.endContainer, range.endOffset);
+  const preContainer = document.createElement('div');
+  preContainer.append(preCaretRange.cloneContents());
+
+  // generates dom container for selection from caret to end of contenteditable
+  const postCaretRange = range.cloneRange();
+  postCaretRange.selectNodeContents(element);
+  postCaretRange.setStart(range.startContainer, range.startOffset);
+  const postContainer = document.createElement('div');
+  postContainer.append(postCaretRange.cloneContents());
+
+  return [preContainer.innerHTML, postContainer.innerHTML];
+};
+
+const debounce = (func, timeout = 300) => {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      func.call(args);
+    }, timeout);
+  };
+};
+
+const pushEventTo = (hook, target, event, payload) =>
+  new Promise((resolve) => {
+    hook.pushEventTo(target, event, payload, resolve);
+  });
+
+const pushUpdate = (hook) => {
+  const el = hook.el;
+  const [pre, post] = splitAtCaret(el);
+  const value = pre + FOCUS + post;
+  console.log('pushing update', { value, pre, post });
+  return pushEventTo(hook, hook.getTarget(), 'update', { value });
+};
+
+const ContentEditable: {
+  mounted: () => void;
+  updated?: () => void;
+  getTarget: () => string;
+  getId: () => string;
+  resolveFocus: () => void;
+  selectedRange?: Range;
+} = {
   mounted() {
     const el: HTMLElement = this.el;
-    el.style.whiteSpace = 'pre-wrap';
-    el.style.wordBreak = 'break-word';
 
-    el.addEventListener('input', () => {
-      const selection = window.getSelection();
-      const oldIndex = selection.focusOffset;
-      const oldNode = selection.focusNode;
+    el.addEventListener(
+      'input',
+      debounce(() => {
+        console.log('regular update');
+        pushUpdate(this);
+      }, 300)
+    );
 
-      this.pushEventTo(
-        this.getTarget(),
-
-        'update_block',
-        {
-          cell_id: this.getCellId(),
-          value: el.innerHTML,
-        },
-        () => {
-          if (selection.focusOffset === oldIndex) {
-            return;
-          }
-          const index =
-            oldIndex > el.innerText.length ? el.innerText.length : oldIndex;
-
-          selection.setPosition(oldNode, index);
-        }
-      );
-    });
-
-    el.addEventListener('keydown', (event: KeyboardEvent) => {
+    el.addEventListener('keydown', async (event: KeyboardEvent) => {
       if (event.key === 'Backspace') {
-        const selection = window.getSelection();
-        if (selection.focusOffset === 0) {
+        const [pre] = splitAtCaret(el);
+        if (pre.length === 0) {
           event.preventDefault();
-          this.pushEventTo(this.getTarget(), 'backspace', {
-            cell_id: this.getCellId(),
-          });
+
+          const target = this.getTarget();
+          await pushUpdate(this);
+          pushEventTo(this, target, 'backspace_from_start', null);
         }
       }
     });
 
     el.addEventListener('keypress', (event: KeyboardEvent) => {
-      const selection = window.getSelection();
-
       if (event.key === 'Enter') {
         event.preventDefault();
 
-        this.pushEventTo(this.getTarget(), 'newline', {
-          cell_id: this.getCellId(),
-          index: selection.focusOffset,
-        });
+        const [pre, post] = splitAtCaret(el);
+        const pushEvent = event.shiftKey ? 'split_line' : 'split_block';
+        const target = this.getTarget();
+        pushEventTo(this, target, pushEvent, { pre, post: FOCUS + post });
       }
     });
 
@@ -58,8 +91,7 @@ const ContentEditable = {
       const selection = window.getSelection();
       event.preventDefault();
       this.pushEventTo(this.getTarget(), 'paste_blocks', {
-        cell_id: this.getCellId(),
-        index: selection.focusOffset,
+        index: selection.anchorOffset,
       });
     });
 
@@ -67,34 +99,50 @@ const ContentEditable = {
   },
 
   updated() {
+    console.log('updated');
     this.resolveFocus();
   },
 
   resolveFocus() {
-    const active = this.el.dataset.active == '';
-    const cursorIndex = parseInt(this.el.dataset.cursorIndex);
-    if (active && !isNaN(cursorIndex)) {
-      setTimeout(() => this.focus(cursorIndex), 200);
+    console.log('resolveFocus');
+    const el: HTMLElement = this.el;
+    const node = Array.from(el.childNodes).find((n) =>
+      n.textContent.includes(FOCUS)
+    );
+
+    if (!node) {
+      return;
     }
-  },
+    const start = node.textContent.indexOf(FOCUS);
+    console.log({
+      node,
+      children: node.hasChildNodes(),
+      textLength: node.textContent.length,
+      start,
+      end: start + FOCUS.length,
+      text: node.textContent,
+    });
 
-  focus(cursorIndex: number): void {
-    this.el.focus();
-    const selection = window.getSelection();
+    el.focus();
 
-    selection.setPosition(selection.focusNode, cursorIndex);
+    const selection = document.getSelection();
+    const range = selection.getRangeAt(0);
+    range.selectNodeContents(node);
+    range.setStart(node, start);
+    range.setEnd(node, start + FOCUS.length);
+    console.log(range);
+    range.deleteContents();
+    selection.deleteFromDocument();
+
+    console.log('after focus', el.innerHTML);
   },
 
   getTarget(): string {
     return this.el.getAttribute('phx-target');
   },
 
-  getCellId(): string {
-    return this.el.dataset.cellId;
-  },
-
-  getBlockId(): string {
-    return this.el.dataset.blockId;
+  getId(): string {
+    return this.el.id;
   },
 };
 

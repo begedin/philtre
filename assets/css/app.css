@@ -105,6 +105,10 @@ nav.admin ul {
 
 /* editor */
 
+.philtre__editor {
+  max-width: 500px;
+}
+
 .philtre__block {
   min-height: 1em;
 }

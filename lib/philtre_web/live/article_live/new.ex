@@ -11,6 +11,13 @@ defmodule PhiltreWeb.ArticleLive.New do
     {:ok, assign(socket, :editor, Editor.new())}
   end
 
+  def render(assigns) do
+    ~H"""
+    <button phx-click="save">Save</button>
+    <.live_component module={Editor} id={@editor.id} editor={@editor} />
+    """
+  end
+
   @errors_saving "There were some errors saving the article"
 
   def handle_event("save", %{}, socket) do
@@ -22,6 +29,11 @@ defmodule PhiltreWeb.ArticleLive.New do
         {:error, _changeset} -> put_flash(socket, :error, @errors_saving)
       end
 
+    {:noreply, socket}
+  end
+
+  def handle_info({:emit, event, %module{id: id}, payload}, socket) do
+    send_update(module, event: event, id: id, payload: payload)
     {:noreply, socket}
   end
 

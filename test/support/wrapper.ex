@@ -99,17 +99,15 @@ defmodule EditorTest.Wrapper do
   @doc """
   Retrieve cursor index
   """
-  def cursor_index(%View{} = view) do
-    %Editor{} = editor = get_editor(view)
-    editor.cursor_index
+  def cursor_index(%View{}) do
+    raise "not implemented"
   end
 
   @doc """
   Retrieve active cell id of the editor
   """
-  def active_cell_id(%View{} = view) do
-    %Editor{} = editor = get_editor(view)
-    editor.active_cell_id
+  def active_cell_id(%View{}) do
+    raise "not implemented"
   end
 
   @model %{selection: "[id^=editor__selection__]"}

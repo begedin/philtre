@@ -1,11 +1,10 @@
-defmodule Editor.Block.Blockquote do
+defmodule Editor.Block.Li do
   @moduledoc """
-  Holds logic specific to the BLOCKQUOTE block
+  Handles logic for a "ul" block
   """
-
   use Phoenix.LiveComponent
   use Phoenix.HTML
-  use Editor.ReactiveComponent, events: ["update", "backspace_from_start", "split"]
+  use Editor.ReactiveComponent
 
   alias Editor.Block
   alias Editor.Utils
@@ -16,14 +15,19 @@ defmodule Editor.Block.Blockquote do
 
   def render(%{block: %__MODULE__{}} = assigns) do
     ~H"""
-    <blockquote
-      contenteditable
-      phx-hook="ContentEditable"
-      phx-target={@myself}
-      phx-debounce={500}
-      id={@block.id}
-    ><%= raw(@block.content) %></blockquote>
+    <ul>
+      <li
+        contenteditable
+        id={@block.id}
+        phx-hook="ContentEditable"
+        phx-target={@myself}
+      ><%= raw(@block.content) %></li>
+    </ul>
     """
+  end
+
+  def update(assigns, socket) do
+    {:ok, assign(socket, assigns)}
   end
 
   def handle_event("update", %{"value" => new_content}, socket) do
@@ -38,29 +42,20 @@ defmodule Editor.Block.Blockquote do
 
   def handle_event("split_block", %{"pre" => pre_content, "post" => post_content}, socket) do
     %__MODULE__{} = block = socket.assigns.block
-    old_block = %{block | content: pre_content}
+    old_block = %__MODULE__{block | content: pre_content}
     new_block = %__MODULE__{id: Utils.new_id(), content: post_content}
     emit(socket, "replace", %{block: block, with: [old_block, new_block]})
     {:noreply, socket}
   end
 
   def handle_event("backspace_from_start", _, socket) do
-    %__MODULE__{id: id, content: content} = socket.assigns.block
-    new_block = %Block.P{id: id, content: content}
-    emit(socket, "update", %{block: new_block})
+    %__MODULE__{content: content} = socket.assigns.block
+    new_block = %Block.P{id: Utils.new_id(), content: content}
+    emit(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
     {:noreply, socket}
   end
 
-  @spec serialize(t) :: map
-  def serialize(%__MODULE__{id: id, content: content}) do
-    %{"id" => id, "type" => "blockquote", "content" => content}
-  end
-
-  @spec normalize(map) :: t
-  def normalize(%{"id" => id, "type" => "blockquote", "content" => content}) do
-    %__MODULE__{
-      id: id,
-      content: content
-    }
+  def merge(%__MODULE__{content: content} = this, %_{content: other_content}) do
+    %{this | content: content <> other_content}
   end
 end

@@ -5,17 +5,50 @@ defmodule Editor.Cell do
   Theese tend to change most dynamically. They get split, shuffled around,
   removed, or updated as the user does things.
   """
-  defstruct [:id, :type, :content]
+
+  defstruct id: nil,
+            type: "text",
+            content: "",
+            children: []
 
   @type t :: %__MODULE__{}
   @type id :: String.t()
 
+  use Phoenix.Component
+
+  def cell(%{cell: %__MODULE__{children: [], type: "text", content: content}} = assigns) do
+    ~H"""
+    <%= content %>
+    """
+  end
+
+  def cell(%{cell: %__MODULE__{children: [], type: "span", content: content}} = assigns) do
+    ~H"""
+    <span><%= content %></span>
+    """
+  end
+
+  def cell(%{cell: %__MODULE__{children: [], type: "b", content: content}} = assigns) do
+    ~H"""
+    <b><%= content %></b>
+    """
+  end
+
+  def cell(%{cell: %__MODULE__{children: [], type: "li", content: content}} = assigns) do
+    ~H"""
+    <li><%= content %></li>
+    """
+  end
+
+  def html(%__MODULE__{children: [], content: content}), do: content
+
   @spec new(String.t(), String.t()) :: t
   def new(type \\ "span", content \\ "") do
     %__MODULE__{
+      children: [],
+      content: content,
       id: Editor.Utils.new_id(),
-      type: type,
-      content: content
+      type: type
     }
   end
 
@@ -68,4 +101,18 @@ defmodule Editor.Cell do
   def clone(%__MODULE__{} = cell) do
     %{cell | id: Editor.Utils.new_id()}
   end
+
+  def serialize(%__MODULE__{} = cell) do
+    %{"id" => cell.id, "type" => cell.type, "content" => cell.content}
+  end
+
+  def normalize(%{"id" => id, "type" => type, "content" => content}) do
+    %__MODULE__{
+      id: id,
+      type: type,
+      content: content
+    }
+  end
+
+  def text(%__MODULE__{} = cell), do: cell.content
 end

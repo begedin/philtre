@@ -3,16 +3,73 @@ defmodule Editor.Block.H3 do
   Holds logic specific to the h3 block
   """
 
+  use Phoenix.LiveComponent
+  use Phoenix.HTML
+
   alias Editor.Block
-  alias Editor.Cell
+  alias Editor.Utils
 
-  defdelegate newline(block, cell, index), to: Block
+  use Editor.ReactiveComponent, events: ["update", "backspace_from_start", "split"]
 
-  @doc """
-  Performs backspace operation. Downgrades block to P.
-  """
-  @spec backspace(Editor.t(), Block.t(), Cell.t()) :: Editor.t()
-  def backspace(%Editor{} = editor, %Block{} = block, %Cell{}) do
-    Block.downgrade(editor, block)
+  defstruct [:content, :id]
+
+  @type t :: %__MODULE__{}
+
+  def render(%{block: %__MODULE__{}} = assigns) do
+    ~H"""
+    <h3
+      contenteditable
+      phx-hook="ContentEditable"
+      phx-target={@myself}
+      phx-debounce={500}
+      id={@block.id}
+    ><%= raw(@block.content) %></h3>
+    """
+  end
+
+  def update(assigns, socket) do
+    {:ok, assign(socket, assigns)}
+  end
+
+  def handle_event("update", %{"value" => new_content}, socket) do
+    old_block = socket.assigns.block
+    new_block = %{old_block | content: new_content}
+    emit(socket, "update", %{block: new_block})
+
+    {:noreply, socket}
+  end
+
+  def handle_event("split_line", %{}, socket), do: {:noreply, socket}
+
+  def handle_event("split_block", %{"pre" => pre_content, "post" => post_content}, socket) do
+    %__MODULE__{} = block = socket.assigns.block
+    old_block = %{block | content: pre_content}
+    new_block = %Block.P{id: Utils.new_id(), content: post_content}
+    emit(socket, "replace", %{block: block, with: [old_block, new_block]})
+    {:noreply, socket}
+  end
+
+  def handle_event("backspace_from_start", _, socket) do
+    %__MODULE__{id: id, content: content} = socket.assigns.block
+    new_block = %Block.P{id: id, content: content}
+    emit(socket, "update", %{block: new_block})
+    {:noreply, socket}
+  end
+
+  @spec serialize(t) :: map
+  def serialize(%__MODULE__{id: id, content: content}) do
+    %{"id" => id, "type" => "h3", "content" => content}
+  end
+
+  @spec normalize(map) :: t
+  def normalize(%{"id" => id, "type" => "h3", "content" => content}) do
+    %__MODULE__{
+      id: id,
+      content: content
+    }
+  end
+
+  def merge(%__MODULE__{} = self, %_{content: content}) do
+    %{self | content: self.content <> content}
   end
 end

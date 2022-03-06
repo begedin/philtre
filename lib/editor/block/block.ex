@@ -5,7 +5,6 @@ defmodule Editor.Block do
   """
 
   alias Editor.Block
-  alias Editor.BlockReduction
   alias Editor.Cell
   alias Editor.SplitResult
   alias Editor.Utils
@@ -225,33 +224,6 @@ defmodule Editor.Block do
     }
   end
 
-  @spec backspace(Editor.t(), Block.t(), Cell.t()) :: Editor.t()
-  def backspace(%Editor{} = editor, %Block{cells: [first | _]} = block, %Cell{} = cell)
-      when cell == first do
-    # merge with previous block
-    block_index = Enum.find_index(editor.blocks, &(&1 === block))
-    previous_block_index = block_index - 1
-    %Block{} = previous_block = Enum.at(editor.blocks, previous_block_index)
-
-    %BlockReduction{} =
-      result =
-      block
-      |> join(previous_block)
-      |> BlockReduction.perform(cell.id, 0)
-
-    new_blocks =
-      editor.blocks
-      |> List.delete_at(block_index)
-      |> List.replace_at(previous_block_index, result.new_block)
-
-    %{
-      editor
-      | blocks: new_blocks,
-        active_cell_id: result.active_cell_id,
-        cursor_index: result.cursor_index
-    }
-  end
-
   def backspace(%Editor{} = editor, %Block{} = block, %Cell{} = cell) do
     # merge two cells within a block
     cell_index = Enum.find_index(block.cells, &(&1 === cell))
@@ -270,9 +242,7 @@ defmodule Editor.Block do
 
     %{
       editor
-      | blocks: new_blocks,
-        active_cell_id: merged_cell.id,
-        cursor_index: String.length(previous_cell.content)
+      | blocks: new_blocks
     }
   end
 

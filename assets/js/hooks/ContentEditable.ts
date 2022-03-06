@@ -21,16 +21,6 @@ const splitAtCaret = (element) => {
   return [preContainer.innerHTML, postContainer.innerHTML];
 };
 
-const debounce = (func, timeout = 300) => {
-  let timer;
-  return (...args) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      func.call(args);
-    }, timeout);
-  };
-};
-
 const pushEventTo = (hook, target, event, payload) =>
   new Promise((resolve) => {
     hook.pushEventTo(target, event, payload, resolve);
@@ -55,13 +45,7 @@ const ContentEditable: {
   mounted() {
     const el: HTMLElement = this.el;
 
-    el.addEventListener(
-      'input',
-      debounce(() => {
-        console.log('regular update');
-        pushUpdate(this);
-      }, 300)
-    );
+    el.addEventListener('input', () => pushUpdate(this));
 
     el.addEventListener('keydown', async (event: KeyboardEvent) => {
       if (event.key === 'Backspace') {
@@ -114,14 +98,6 @@ const ContentEditable: {
       return;
     }
     const start = node.textContent.indexOf(FOCUS);
-    console.log({
-      node,
-      children: node.hasChildNodes(),
-      textLength: node.textContent.length,
-      start,
-      end: start + FOCUS.length,
-      text: node.textContent,
-    });
 
     el.focus();
 

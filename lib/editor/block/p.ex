@@ -37,6 +37,7 @@ defmodule Editor.Block.P do
   end
 
   def handle_event("update", %{"value" => new_content}, socket) do
+    IO.inspect("update", label: "p")
     new_content = cleanup(new_content)
     old_block = socket.assigns.block
 
@@ -52,6 +53,7 @@ defmodule Editor.Block.P do
   end
 
   def handle_event("split_line", %{"pre" => pre_content, "post" => post_content}, socket) do
+    IO.inspect("split_line", label: "p")
     %__MODULE__{} = block = socket.assigns.block
 
     %__MODULE__{} = new_block = %{block | content: pre_content <> "<br/>" <> post_content}
@@ -61,6 +63,7 @@ defmodule Editor.Block.P do
   end
 
   def handle_event("split_block", %{"pre" => pre_content, "post" => post_content}, socket) do
+    IO.inspect("split_block", label: "p")
     %__MODULE__{} = block = socket.assigns.block
     old_block = %{block | content: pre_content}
     new_block = %__MODULE__{id: Utils.new_id(), content: post_content}
@@ -69,6 +72,7 @@ defmodule Editor.Block.P do
   end
 
   def handle_event("backspace_from_start", _, socket) do
+    IO.inspect("backspace_from_start", label: "p")
     emit(socket, "merge_previous", %{block: socket.assigns.block})
     {:noreply, socket}
   end
@@ -118,11 +122,11 @@ defmodule Editor.Block.P do
   end
 
   defp transform(%__MODULE__{id: id, content: content}, Block.H2) do
-    %Block.H2{id: id, content: content}
+    %Block.H2{id: id, content: String.replace(content, "## ", "")}
   end
 
   defp transform(%__MODULE__{id: id, content: content}, Block.H3) do
-    %Block.H2{id: id, content: content}
+    %Block.H2{id: id, content: String.replace(content, "### ", "")}
   end
 
   defp transform(%__MODULE__{id: id, content: content}, Block.Pre) do

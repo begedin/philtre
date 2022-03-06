@@ -39,7 +39,6 @@ defmodule Editor.Block.Pre do
   end
 
   def handle_event("split_line", %{"pre" => pre_content, "post" => post_content}, socket) do
-    IO.inspect("split line")
     %__MODULE__{} = block = socket.assigns.block
 
     %__MODULE__{} = new_block = %{block | content: pre_content <> "<br/>" <> post_content}
@@ -49,7 +48,6 @@ defmodule Editor.Block.Pre do
   end
 
   def handle_event("split_block", %{"pre" => pre_content, "post" => post_content}, socket) do
-    IO.inspect("split block")
     %__MODULE__{} = block = socket.assigns.block
     old_block = %{block | content: pre_content}
     new_block = %Block.P{id: Utils.new_id(), content: post_content}

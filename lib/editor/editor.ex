@@ -47,7 +47,6 @@ defmodule Editor do
   @spec update(%{optional(:editor) => t()}, LiveView.Socket.t()) :: {:ok, LiveView.Socket.t()}
 
   def update(%{editor: _} = assigns, socket) do
-    IO.inspect(assigns, label: "update")
     socket = assign(socket, assigns)
     {:ok, socket}
   end
@@ -171,10 +170,6 @@ defmodule Editor do
   defp replace_block(%__MODULE__{} = editor, %{id: _} = block, with_blocks) do
     index = Enum.find_index(editor.blocks, &(&1.id === block.id))
     blocks = editor.blocks |> List.replace_at(index, with_blocks) |> List.flatten()
-
-    IO.inspect(%{index: index, block: block, with: with_blocks, new_blocks: blocks},
-      label: "replace"
-    )
 
     %{editor | blocks: blocks}
   end

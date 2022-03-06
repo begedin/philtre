@@ -30,14 +30,13 @@ defmodule Editor.Block.P do
       contenteditable
       phx-hook="ContentEditable"
       phx-target={@myself}
-      phx-debounce={500}
       id={@block.id}
     ><%= raw(@block.content) %></p>
     """
   end
 
   def handle_event("update", %{"value" => new_content}, socket) do
-    IO.inspect("update", label: "p")
+    IO.inspect("update: #{new_content}", label: "p")
     new_content = cleanup(new_content)
     old_block = socket.assigns.block
 
@@ -47,6 +46,7 @@ defmodule Editor.Block.P do
         other -> transform(%{old_block | content: new_content}, other)
       end
 
+    IO.inspect("emit update: #{new_block.content}", label: "p")
     emit(socket, "update", %{block: new_block})
 
     {:noreply, socket}

@@ -1,4 +1,4 @@
-const FOCUS = '%%%focuspoint%%%';
+const FOCUS = '&focuspoint;';
 
 const splitAtCaret = (element) => {
   const selection = document.getSelection();
@@ -26,12 +26,10 @@ const pushEventTo = (hook, target, event, payload) =>
     hook.pushEventTo(target, event, payload, resolve);
   });
 
-const pushUpdate = (hook) => {
-  const el = hook.el;
-  const [pre, post] = splitAtCaret(el);
-  const value = pre + FOCUS + post;
-  console.log('pushing update', { value, pre, post });
-  return pushEventTo(hook, hook.getTarget(), 'update', { value });
+const setStyles = (el: HTMLElement) => {
+  el.style.outline = 'none';
+  el.style.cursor = 'text';
+  el.style.whiteSpace = 'pre-wrap';
 };
 
 const ContentEditable: {
@@ -44,25 +42,57 @@ const ContentEditable: {
 } = {
   mounted() {
     const el: HTMLElement = this.el;
+    setStyles(el);
 
-    el.addEventListener('input', () => pushUpdate(this));
+    // we store the pending update as a promise to await
+    let pendingUpdate;
+    // we also debounce the pending update and store a ref to the timeout so
+    // we can cancel and keep debouncing
+    let pendingUpdateRef;
+
+    el.addEventListener('input', () => {
+      // debounce
+      if (pendingUpdateRef) {
+        clearTimeout(pendingUpdateRef);
+      }
+
+      // store promise
+      pendingUpdate = new Promise((resolve) => {
+        pendingUpdateRef = setTimeout(async () => {
+          const [pre, post] = splitAtCaret(el);
+          const value = pre + FOCUS + post;
+          await pushEventTo(this, this.getTarget(), 'update', { value });
+          resolve(null);
+        }, 200);
+      });
+    });
 
     el.addEventListener('keydown', async (event: KeyboardEvent) => {
       if (event.key === 'Backspace') {
         const [pre] = splitAtCaret(el);
-        if (pre.length === 0) {
-          event.preventDefault();
 
-          const target = this.getTarget();
-          await pushUpdate(this);
-          pushEventTo(this, target, 'backspace_from_start', null);
+        if (pre.length > 0) {
+          return;
         }
+
+        event.preventDefault();
+
+        if (pendingUpdate) {
+          await pendingUpdate;
+        }
+
+        const target = this.getTarget();
+        pushEventTo(this, target, 'backspace_from_start', null);
       }
     });
 
-    el.addEventListener('keypress', (event: KeyboardEvent) => {
+    el.addEventListener('keypress', async (event: KeyboardEvent) => {
       if (event.key === 'Enter') {
         event.preventDefault();
+
+        if (pendingUpdate) {
+          await pendingUpdate;
+        }
 
         const [pre, post] = splitAtCaret(el);
         const pushEvent = event.shiftKey ? 'split_line' : 'split_block';
@@ -83,12 +113,12 @@ const ContentEditable: {
   },
 
   updated() {
-    console.log('updated');
+    const el: HTMLElement = this.el;
+    setStyles(el);
     this.resolveFocus();
   },
 
   resolveFocus() {
-    console.log('resolveFocus');
     const el: HTMLElement = this.el;
     const node = Array.from(el.childNodes).find((n) =>
       n.textContent.includes(FOCUS)
@@ -106,11 +136,9 @@ const ContentEditable: {
     range.selectNodeContents(node);
     range.setStart(node, start);
     range.setEnd(node, start + FOCUS.length);
-    console.log(range);
+    console.log(node.textContent, range.startOffset, range.endOffset);
     range.deleteContents();
     selection.deleteFromDocument();
-
-    console.log('after focus', el.innerHTML);
   },
 
   getTarget(): string {

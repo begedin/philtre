@@ -125,11 +125,6 @@ nav.admin ul {
   background: #d0d0f5;
 }
 
-[contenteditable] {
-  outline: none;
-  cursor: text;
-}
-
 .philtre__block blockquote {
   margin-left: 0;
   padding-left: 2em;

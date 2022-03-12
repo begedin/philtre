@@ -5,26 +5,15 @@ defmodule PhiltreWeb.ArticleLive.NewTest do
 
   import Phoenix.LiveViewTest
 
+  alias Editor.Block
   alias Philtre.Articles
   alias Philtre.Factories
 
   @editor %Editor{
     blocks: [
-      %Editor.Block{
-        id: "1",
-        type: "h1",
-        cells: [%Editor.Cell{id: "11", type: "span", content: "Foo"}]
-      },
-      %Editor.Block{
-        id: "2",
-        type: "p",
-        cells: [%Editor.Cell{id: "22", type: "span", content: "Bar"}]
-      },
-      %Editor.Block{
-        id: "3",
-        type: "p",
-        cells: [%Editor.Cell{id: "33", type: "span", content: "Baz"}]
-      }
+      %Block.H1{id: "1", pre_caret: "Foo"},
+      %Block.P{id: "2", pre_caret: "Bar"},
+      %Block.P{id: "3", pre_caret: "Baz"}
     ]
   }
 
@@ -104,11 +93,7 @@ defmodule PhiltreWeb.ArticleLive.NewTest do
 
     editor = %Editor{
       blocks: [
-        %Editor.Block{
-          id: "1",
-          type: "h1",
-          cells: [%Editor.Cell{type: "span", content: Articles.Article.title(article)}]
-        }
+        %Block.H1{id: "1", pre_caret: Articles.Article.title(article)}
       ]
     }
 

@@ -6,7 +6,7 @@ defmodule Editor do
   use Phoenix.HTML
 
   use Editor.ReactiveComponent,
-    events: ["update", "replace", "delete", "selection", "merge_previous"]
+    events: ["replace", "delete", "merge_previous"]
 
   alias Editor.Block
   alias Editor.Operations
@@ -29,18 +29,17 @@ defmodule Editor do
       blocks: [
         %Block.H1{
           id: Utils.new_id(),
-          content: "This is the title of your page"
+          active: false,
+          pre_caret: "This is the title of your page",
+          post_caret: ""
         },
         %Block.P{
           id: Utils.new_id(),
-          content: "This is your first paragraph."
+          active: true,
+          pre_caret: "This is your first paragraph.",
+          post_caret: ""
         }
-      ],
-      selection: %{
-        block_id: nil,
-        id: Utils.new_id(),
-        index: nil
-      }
+      ]
     }
   end
 
@@ -119,13 +118,6 @@ defmodule Editor do
     send(self(), {:update, editor})
   end
 
-  defp on(socket, "update", %{block: block}) do
-    editor = replace_block(socket.assigns.editor, block, [block])
-    send(self(), {:update, editor})
-
-    {:ok, socket}
-  end
-
   defp on(socket, "merge_previous", %{block: block}) do
     editor = socket.assigns.editor
     index = Enum.find_index(editor.blocks, &(&1 == block)) - 1
@@ -138,33 +130,6 @@ defmodule Editor do
 
       send(self(), {:update, editor})
     end
-  end
-
-  defp on(socket, "delete", %_{} = block) do
-    %__MODULE__{} = editor = socket.assigns.editor
-    index = Enum.find_index(editor.blocks, &(&1.id === block.id))
-
-    if index >= 1 do
-      %block_type{} = previous_block = Enum.at(editor.blocks, index - 1)
-      merged_block = block_type.merge(previous_block, block)
-
-      active_cell_id = Enum.at(block.cells, 0).id
-
-      blocks =
-        editor.blocks
-        |> List.delete_at(index)
-        |> List.replace_at(index - 1, merged_block)
-
-      editor = %{
-        editor
-        | blocks: blocks,
-          selection: %{id: Utils.new_id(), cell_id: active_cell_id, index: 0}
-      }
-
-      send(self(), {:update, editor})
-    end
-
-    {:ok, socket}
   end
 
   defp replace_block(%__MODULE__{} = editor, %{id: _} = block, with_blocks) do

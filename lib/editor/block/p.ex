@@ -6,15 +6,14 @@ defmodule Editor.Block.P do
   use Phoenix.LiveComponent
   use Phoenix.HTML
 
-  use Editor.ReactiveComponent,
-    events: ["split", "update", "transform", "merge_previous"]
+  use Editor.ReactiveComponent
 
   alias Editor.Block
   alias Editor.Utils
 
   # struct
 
-  defstruct [:content, :id]
+  defstruct active: false, pre_caret: "", post_caret: "", id: Utils.new_id()
 
   @type t :: %__MODULE__{}
 
@@ -31,68 +30,72 @@ defmodule Editor.Block.P do
       phx-hook="ContentEditable"
       phx-target={@myself}
       id={@block.id}
-    ><%= raw(@block.content) %></p>
+    ><.content block={@block} /></p>
     """
   end
 
-  def handle_event("update", %{"value" => new_content}, socket) do
-    IO.inspect("update: #{new_content}", label: "p")
-    new_content = cleanup(new_content)
+  defp content(%{block: %{active: true}} = assigns) do
+    ~H"""
+    <%= raw(@block.pre_caret <> Utils.caret() <> @block.post_caret)  %>
+    """
+  end
+
+  defp content(%{block: %{active: false}} = assigns) do
+    ~H"""
+    <%= raw(@block.pre_caret <> @block.post_caret)  %>
+    """
+  end
+
+  def handle_event("update", %{"pre" => pre_caret, "post" => post_caret}, socket) do
+    pre_caret = cleanup(pre_caret)
+    post_caret = cleanup(post_caret)
+
     old_block = socket.assigns.block
+    new_block = %{old_block | pre_caret: pre_caret, post_caret: post_caret, active: true}
 
     new_block =
-      case transform_type(new_content) do
-        nil -> %{old_block | content: new_content}
-        other -> transform(%{old_block | content: new_content}, other)
+      case transform_type(pre_caret) do
+        nil -> new_block
+        other -> transform(new_block, other)
       end
 
-    IO.inspect("emit update: #{new_block.content}", label: "p")
-    emit(socket, "update", %{block: new_block})
+    emit(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
 
     {:noreply, socket}
   end
 
-  def handle_event("split_line", %{"pre" => pre_content, "post" => post_content}, socket) do
-    IO.inspect("split_line", label: "p")
+  def handle_event("split_line", %{"pre" => pre_caret, "post" => post_caret}, socket) do
     %__MODULE__{} = block = socket.assigns.block
+    pre_caret = cleanup(pre_caret) <> "<br/>"
+    post_caret = cleanup(post_caret)
 
-    %__MODULE__{} = new_block = %{block | content: pre_content <> "<br/>" <> post_content}
+    new_block = %{block | active: true, pre_caret: pre_caret, post_caret: post_caret}
 
     emit(socket, "replace", %{block: block, with: new_block})
     {:noreply, socket}
   end
 
-  def handle_event("split_block", %{"pre" => pre_content, "post" => post_content}, socket) do
-    IO.inspect("split_block", label: "p")
+  def handle_event("split_block", %{"pre" => pre_caret, "post" => post_caret}, socket) do
     %__MODULE__{} = block = socket.assigns.block
-    old_block = %{block | content: pre_content}
-    new_block = %__MODULE__{id: Utils.new_id(), content: post_content}
+    old_block = %{block | active: false, pre_caret: pre_caret, post_caret: ""}
+
+    new_block = %__MODULE__{
+      id: Utils.new_id(),
+      active: true,
+      pre_caret: "",
+      post_caret: post_caret
+    }
+
     emit(socket, "replace", %{block: block, with: [old_block, new_block]})
     {:noreply, socket}
   end
 
   def handle_event("backspace_from_start", _, socket) do
-    IO.inspect("backspace_from_start", label: "p")
     emit(socket, "merge_previous", %{block: socket.assigns.block})
     {:noreply, socket}
   end
 
   # api
-
-  @spec serialize(t) :: map
-  def serialize(%__MODULE__{id: id, content: content}) do
-    %{"id" => id, "type" => "p", "content" => content}
-  end
-
-  @spec normalize(map) :: t
-  def normalize(%{"id" => id, "type" => "p", "content" => content}) do
-    %__MODULE__{
-      id: id,
-      content: content
-    }
-  end
-
-  def html(%__MODULE__{content: content}), do: "<p>#{content}</p>"
 
   defp cleanup(content) do
     content
@@ -109,35 +112,66 @@ defmodule Editor.Block.P do
   defp transform_type("&gt; " <> _), do: Block.Blockquote
   defp transform_type(_), do: nil
 
-  def text(%__MODULE__{content: content}) do
-    content |> Floki.parse_document!() |> Floki.text()
+  def merge(%__MODULE__{} = self, %__MODULE__{} = other) do
+    %{
+      self
+      | active: true,
+        pre_caret: self.pre_caret <> self.post_caret,
+        post_caret: other.pre_caret <> other.post_caret
+    }
   end
 
-  def merge(%__MODULE__{content: content} = this, %__MODULE__{content: other_content}) do
-    %{this | content: content <> other_content}
+  defp transform(%__MODULE__{} = self, Block.H1) do
+    %Block.H1{
+      id: self.id,
+      active: self.active,
+      pre_caret: String.replace(self.pre_caret, "# ", ""),
+      post_caret: self.post_caret
+    }
   end
 
-  defp transform(%__MODULE__{id: id, content: content}, Block.H1) do
-    %Block.H1{id: id, content: String.replace(content, "# ", "")}
+  defp transform(%__MODULE__{} = self, Block.H2) do
+    %Block.H2{
+      id: self.id,
+      active: self.active,
+      pre_caret: String.replace(self.pre_caret, "## ", ""),
+      post_caret: self.post_caret
+    }
   end
 
-  defp transform(%__MODULE__{id: id, content: content}, Block.H2) do
-    %Block.H2{id: id, content: String.replace(content, "## ", "")}
+  defp transform(%__MODULE__{} = self, Block.H3) do
+    %Block.H3{
+      id: self.id,
+      active: self.active,
+      pre_caret: String.replace(self.pre_caret, "### ", ""),
+      post_caret: self.post_caret
+    }
   end
 
-  defp transform(%__MODULE__{id: id, content: content}, Block.H3) do
-    %Block.H2{id: id, content: String.replace(content, "### ", "")}
+  defp transform(%__MODULE__{} = self, Block.Pre) do
+    %Block.Pre{
+      id: self.id,
+      active: self.active,
+      pre_caret: String.replace(self.pre_caret, "```", ""),
+      post_caret: self.post_caret
+    }
   end
 
-  defp transform(%__MODULE__{id: id, content: content}, Block.Pre) do
-    %Block.Pre{id: id, content: String.replace(content, "```", "")}
+  defp transform(%__MODULE__{} = self, Block.Blockquote) do
+    %Block.Blockquote{
+      id: self.id,
+      active: self.active,
+      pre_caret: String.replace(self.pre_caret, "> ", ""),
+      post_caret: self.post_caret
+    }
   end
 
-  defp transform(%__MODULE__{id: id, content: content}, Block.Blockquote) do
-    %Block.Blockquote{id: id, content: String.replace(content, "> ", "")}
-  end
-
-  defp transform(%__MODULE__{id: id, content: content}, Block.Li) do
-    %Block.Li{id: id, content: String.replace(content, "* ", "")}
+  defp transform(%__MODULE__{} = self, Block.Li) do
+    %Block.Li{
+      id: self.id,
+      active: self.active,
+      pre_caret: String.replace(self.pre_caret, "* ", ""),
+      post_caret: self.post_caret
+    }
   end
 end

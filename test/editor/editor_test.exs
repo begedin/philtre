@@ -5,23 +5,13 @@ defmodule EditorTest do
 
   import Phoenix.LiveViewTest
 
+  alias Editor.Block
+
   @editor %Editor{
     blocks: [
-      %Editor.Block{
-        id: "1",
-        type: "h1",
-        cells: [%Editor.Cell{id: "11", type: "span", content: "Foo"}]
-      },
-      %Editor.Block{
-        id: "2",
-        type: "p",
-        cells: [%Editor.Cell{id: "22", type: "span", content: "Bar"}]
-      },
-      %Editor.Block{
-        id: "3",
-        type: "p",
-        cells: [%Editor.Cell{id: "33", type: "span", content: "Baz"}]
-      }
+      %Block.H1{id: "1", pre_caret: "Foo"},
+      %Block.P{id: "2", pre_caret: "Bar"},
+      %Block.P{id: "3", pre_caret: "Baz"}
     ]
   }
 
@@ -47,7 +37,7 @@ defmodule EditorTest do
 
     editor = Wrapper.get_editor(view)
     assert Enum.count(editor.blocks) == 6
-    assert Editor.text(editor) == "FooFooBarBarBaz"
+    assert editor == "FooFooBarBarBaz"
   end
 
   test "can insert block after block", %{conn: conn} do
@@ -150,7 +140,7 @@ defmodule EditorTest do
     Wrapper.push_content(view, :end_of_page, "baz")
 
     assert Wrapper.block_types(view) === ["h1", "ul"]
-    %Editor.Block{type: "ul"} = ul = Wrapper.block_at(view, 1)
+    %Block.Li{} = ul = Wrapper.block_at(view, 1)
     Wrapper.backspace(view, ul, :start_of_first_cell)
 
     assert Wrapper.block_types(view) === ["h1", "p"]
@@ -165,7 +155,7 @@ defmodule EditorTest do
     Wrapper.push_content(view, :end_of_page, "```foo")
 
     assert Wrapper.block_types(view) === ["h1", "pre"]
-    %Editor.Block{type: "pre"} = pre = Wrapper.block_at(view, 1)
+    %Block.Pre{} = pre = Wrapper.block_at(view, 1)
     Wrapper.backspace(view, pre, :start_of_first_cell)
 
     assert Wrapper.block_types(view) === ["h1", "p"]
@@ -184,7 +174,7 @@ defmodule EditorTest do
 
     assert Wrapper.block_types(view) === ["h1", "p", "p", "p"]
 
-    %Editor.Block{type: "p"} = p = Wrapper.block_at(view, 2)
+    %Block.P{} = p = Wrapper.block_at(view, 2)
     Wrapper.backspace(view, p, :start_of_first_cell)
     assert Wrapper.block_types(view) === ["h1", "p", "p"]
     assert Wrapper.block_text(view, 1) === "foobar"
@@ -192,7 +182,7 @@ defmodule EditorTest do
     assert Wrapper.cursor_index(view) === 3
     assert Wrapper.active_cell_id(view) === Wrapper.cell_at(view, 1, 0).id
 
-    %Editor.Block{type: "p"} = p = Wrapper.block_at(view, 1)
+    %Block.P{} = p = Wrapper.block_at(view, 1)
     Wrapper.backspace(view, p, :start_of_first_cell)
     assert Wrapper.block_types(view) === ["h1", "p"]
     assert Wrapper.block_text(view, 0) === "This is the title of your pagefoobar"

@@ -5,14 +5,19 @@ defmodule Editor.Block.Blockquote do
 
   use Phoenix.LiveComponent
   use Phoenix.HTML
-  use Editor.ReactiveComponent, events: ["update", "backspace_from_start", "split"]
+  use Editor.ReactiveComponent
 
   alias Editor.Block
+  alias Editor.BlockEngine
   alias Editor.Utils
 
-  defstruct [:content, :id]
+  defstruct active: false, pre_caret: "", post_caret: "", id: Utils.new_id()
 
   @type t :: %__MODULE__{}
+
+  def update(assigns, socket) do
+    {:ok, assign(socket, assigns)}
+  end
 
   def render(%{block: %__MODULE__{}} = assigns) do
     ~H"""
@@ -20,47 +25,48 @@ defmodule Editor.Block.Blockquote do
       contenteditable
       phx-hook="ContentEditable"
       phx-target={@myself}
-      phx-debounce={500}
       id={@block.id}
-    ><%= raw(@block.content) %></blockquote>
+    ><.content block={@block} /></blockquote>
     """
   end
 
-  def handle_event("update", %{"value" => new_content}, socket) do
-    old_block = socket.assigns.block
-    new_block = %{old_block | content: new_content}
-    emit(socket, "update", %{block: new_block})
+  defp content(%{block: %{active: true}} = assigns) do
+    ~H"""
+    <%= raw(@block.pre_caret <> Utils.caret() <> @block.post_caret)  %>
+    """
+  end
+
+  defp content(%{block: %{}} = assigns) do
+    ~H"""
+    <%= raw(@block.pre_caret <> @block.post_caret)  %>
+    """
+  end
+
+  def handle_event("update", %{"pre" => pre_caret, "post" => post_caret}, socket) do
+    new_block = BlockEngine.update(socket.assigns.block, pre_caret, post_caret)
+    emit(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
 
     {:noreply, socket}
   end
 
-  def handle_event("split_line", %{}, socket), do: {:noreply, socket}
+  def handle_event("split_line", %{"pre" => pre_caret, "post" => post_caret}, socket) do
+    new_block = BlockEngine.split_line(socket.assigns.block, pre_caret, post_caret)
 
-  def handle_event("split_block", %{"pre" => pre_content, "post" => post_content}, socket) do
-    %__MODULE__{} = block = socket.assigns.block
-    old_block = %{block | content: pre_content}
-    new_block = %__MODULE__{id: Utils.new_id(), content: post_content}
-    emit(socket, "replace", %{block: block, with: [old_block, new_block]})
+    emit(socket, "replace", %{block: socket.assigns.block, with: new_block})
     {:noreply, socket}
   end
 
-  def handle_event("backspace_from_start", _, socket) do
-    %__MODULE__{id: id, content: content} = socket.assigns.block
-    new_block = %Block.P{id: id, content: content}
-    emit(socket, "update", %{block: new_block})
+  def handle_event("split_block", %{"pre" => pre_caret, "post" => post_caret}, socket) do
+    new_blocks = BlockEngine.split_block(socket.assigns.block, pre_caret, post_caret)
+
+    emit(socket, "replace", %{block: socket.assigns.block, with: [new_blocks]})
     {:noreply, socket}
   end
 
-  @spec serialize(t) :: map
-  def serialize(%__MODULE__{id: id, content: content}) do
-    %{"id" => id, "type" => "blockquote", "content" => content}
-  end
+  def handle_event("backspace_from_start", %{"pre" => pre_caret, "post" => post_caret}, socket) do
+    new_block = BlockEngine.convert(socket.assigns.block, pre_caret, post_caret, Block.P)
 
-  @spec normalize(map) :: t
-  def normalize(%{"id" => id, "type" => "blockquote", "content" => content}) do
-    %__MODULE__{
-      id: id,
-      content: content
-    }
+    emit(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
+    {:noreply, socket}
   end
 end

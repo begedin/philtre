@@ -10,5 +10,5 @@ defmodule Editor.Utils do
     Ecto.UUID.generate()
   end
 
-  def caret, do: "%%%focuspoint%%%"
+  def caret, do: "|||FOCUS|||"
 end

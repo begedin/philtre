@@ -9,9 +9,9 @@ defmodule Editor.Block.H2 do
   alias Editor.Block
   alias Editor.Utils
 
-  use Editor.ReactiveComponent, events: ["update", "backspace_from_start", "split"]
+  use Editor.ReactiveComponent
 
-  defstruct [:content, :id]
+  defstruct active: false, pre_caret: "", post_caret: "", id: Utils.new_id()
 
   @type t :: %__MODULE__{}
 
@@ -21,9 +21,20 @@ defmodule Editor.Block.H2 do
       contenteditable
       phx-hook="ContentEditable"
       phx-target={@myself}
-      phx-debounce={500}
       id={@block.id}
-    ><%= raw(@block.content) %></h2>
+    ><.content block={@block} /></h2>
+    """
+  end
+
+  defp content(%{block: %{active: true}} = assigns) do
+    ~H"""
+    <%= raw(@block.pre_caret <> Utils.caret() <> @block.post_caret)  %>
+    """
+  end
+
+  defp content(%{block: %{active: false}} = assigns) do
+    ~H"""
+    <%= raw(@block.pre_caret <> @block.post_caret)  %>
     """
   end
 
@@ -33,43 +44,43 @@ defmodule Editor.Block.H2 do
 
   def handle_event("split_line", %{}, socket), do: {:noreply, socket}
 
-  def handle_event("split_block", %{"pre" => pre_content, "post" => post_content}, socket) do
+  def handle_event("split_block", %{"pre" => pre_caret, "post" => post_caret}, socket) do
     %__MODULE__{} = block = socket.assigns.block
-    old_block = %{block | content: pre_content}
-    new_block = %Block.P{id: Utils.new_id(), content: post_content}
+    old_block = %{block | active: false, pre_caret: pre_caret, post_caret: ""}
+
+    new_block = %Block.P{
+      id: Utils.new_id(),
+      active: true,
+      pre_caret: "",
+      post_caret: post_caret
+    }
+
     emit(socket, "replace", %{block: block, with: [old_block, new_block]})
     {:noreply, socket}
   end
 
-  def handle_event("update", %{"value" => new_content}, socket) do
-    old_block = socket.assigns.block
-    new_block = %{old_block | content: new_content}
-    emit(socket, "update", %{block: new_block})
-
-    {:noreply, socket}
-  end
-
-  def handle_event("backspace_from_start", _, socket) do
-    %__MODULE__{id: id, content: content} = socket.assigns.block
-    new_block = %Block.H3{id: id, content: content}
-    emit(socket, "update", %{block: new_block})
-    {:noreply, socket}
-  end
-
-  @spec serialize(t) :: map
-  def serialize(%__MODULE__{id: id, content: content}) do
-    %{"id" => id, "type" => "h2", "content" => content}
-  end
-
-  @spec normalize(map) :: t
-  def normalize(%{"id" => id, "type" => "h1", "content" => content}) do
-    %__MODULE__{
-      id: id,
-      content: content
+  def handle_event("update", %{"pre" => pre_caret, "post" => post_caret}, socket) do
+    new_block = %{
+      socket.assigns.block
+      | active: true,
+        pre_caret: pre_caret,
+        post_caret: post_caret
     }
+
+    emit(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
+
+    {:noreply, socket}
   end
 
-  def merge(%__MODULE__{} = self, %_{content: content}) do
-    %{self | content: self.content <> content}
+  def handle_event("backspace_from_start", %{"pre" => pre_caret, "post" => post_caret}, socket) do
+    new_block = %Block.H3{
+      id: Utils.new_id(),
+      active: true,
+      pre_caret: pre_caret,
+      post_caret: post_caret
+    }
+
+    emit(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
+    {:noreply, socket}
   end
 end

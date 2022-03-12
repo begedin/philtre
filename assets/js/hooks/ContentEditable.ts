@@ -1,4 +1,4 @@
-const FOCUS = '&focuspoint;';
+const FOCUS = '|||FOCUS|||';
 
 const splitAtCaret = (element) => {
   const selection = document.getSelection();
@@ -60,8 +60,8 @@ const ContentEditable: {
       pendingUpdate = new Promise((resolve) => {
         pendingUpdateRef = setTimeout(async () => {
           const [pre, post] = splitAtCaret(el);
-          const value = pre + FOCUS + post;
-          await pushEventTo(this, this.getTarget(), 'update', { value });
+
+          await pushEventTo(this, this.getTarget(), 'update', { pre, post });
           resolve(null);
         }, 200);
       });
@@ -69,7 +69,7 @@ const ContentEditable: {
 
     el.addEventListener('keydown', async (event: KeyboardEvent) => {
       if (event.key === 'Backspace') {
-        const [pre] = splitAtCaret(el);
+        const [pre, post] = splitAtCaret(el);
 
         if (pre.length > 0) {
           return;
@@ -82,7 +82,7 @@ const ContentEditable: {
         }
 
         const target = this.getTarget();
-        pushEventTo(this, target, 'backspace_from_start', null);
+        pushEventTo(this, target, 'backspace_from_start', { pre, post });
       }
     });
 
@@ -97,7 +97,7 @@ const ContentEditable: {
         const [pre, post] = splitAtCaret(el);
         const pushEvent = event.shiftKey ? 'split_line' : 'split_block';
         const target = this.getTarget();
-        pushEventTo(this, target, pushEvent, { pre, post: FOCUS + post });
+        pushEventTo(this, target, pushEvent, { pre, post });
       }
     });
 
@@ -136,7 +136,6 @@ const ContentEditable: {
     range.selectNodeContents(node);
     range.setStart(node, start);
     range.setEnd(node, start + FOCUS.length);
-    console.log(node.textContent, range.startOffset, range.endOffset);
     range.deleteContents();
     selection.deleteFromDocument();
   },

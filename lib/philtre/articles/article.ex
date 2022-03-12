@@ -28,7 +28,7 @@ defmodule Philtre.Articles.Article do
     content =
       editor
       |> Editor.serialize()
-      |> Map.take([:blocks])
+      |> Map.take(["blocks"])
 
     article
     |> Changeset.cast(%{content: content, slug: slug(editor)}, [:content, :slug])

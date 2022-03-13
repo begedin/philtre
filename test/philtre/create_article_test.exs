@@ -3,22 +3,13 @@ defmodule Philtre.Articles.CreateArticleTest do
 
   use Philtre.DataCase
 
+  alias Editor.Block
   alias Philtre.Articles
 
   @params %Editor{
     blocks: [
-      %Editor.Block{
-        id: Editor.Utils.new_id(),
-        type: "h1",
-        cells: [
-          %Editor.Cell{id: Editor.Utils.new_id(), type: "span", content: "My Article"}
-        ]
-      },
-      %Editor.Block{
-        id: Editor.Utils.new_id(),
-        type: "p",
-        cells: [%Editor.Cell{id: Editor.Utils.new_id(), type: "span", content: "My Content"}]
-      }
+      %Block.H1{id: "1", pre_caret: "My Article"},
+      %Block.P{id: "2", pre_caret: "My Content"}
     ]
   }
   test "sets slug" do

@@ -1,21 +1,15 @@
 defmodule Philtre.Articles.UpdateArticleTest do
   @moduledoc false
   use Philtre.DataCase
+
+  alias Editor.Block
   alias Philtre.Articles
   alias Philtre.Factories
 
   @params %Editor{
     blocks: [
-      %Editor.Block{
-        id: Editor.Utils.new_id(),
-        type: "h1",
-        cells: [%Editor.Cell{type: "span", content: "My New Title"}]
-      },
-      %Editor.Block{
-        id: Editor.Utils.new_id(),
-        type: "p",
-        cells: [%Editor.Cell{type: "span", content: "My New Content"}]
-      }
+      %Block.H1{id: Editor.Utils.new_id(), pre_caret: "My New title"},
+      %Block.P{id: Editor.Utils.new_id(), pre_caret: "Bar"}
     ]
   }
 

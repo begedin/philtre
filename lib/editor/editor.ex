@@ -2,73 +2,80 @@ defmodule Editor do
   @moduledoc """
   Shared component used for both creation and editing of an article.
   """
-  use PhiltreWeb, :live_component
+  use Phoenix.LiveComponent
+  use Phoenix.HTML
 
   alias Editor.Block
-  alias Editor.Cell
-  alias Editor.Operations
   alias Editor.Serializer
   alias Editor.Utils
 
-  defstruct active_cell_id: nil,
-            blocks: [],
+  alias Phoenix.LiveView.Socket
+
+  defstruct blocks: [],
             clipboard: nil,
-            cursor_index: nil,
             id: nil,
-            selected_blocks: []
+            selected_blocks: [],
+            selection: nil
 
   @type t :: %__MODULE__{}
 
   def new do
     %__MODULE__{
       id: Utils.new_id(),
-      active_cell_id: nil,
       blocks: [
-        %Block{
-          type: "h1",
+        %Block.H1{
           id: Utils.new_id(),
-          cells: [
-            %Cell{
-              id: Utils.new_id(),
-              type: "span",
-              content: "This is the title of your page"
-            }
-          ]
+          active: false,
+          pre_caret: "This is the title of your page",
+          post_caret: ""
+        },
+        %Block.P{
+          id: Utils.new_id(),
+          active: true,
+          pre_caret: "This is your first paragraph.",
+          post_caret: ""
         }
       ]
     }
   end
 
-  @spec update(%{optional(:editor) => t()}, LiveView.Socket.t()) :: {:ok, LiveView.Socket.t()}
-  def update(%{editor: %__MODULE__{} = editor}, socket) do
-    socket = assign(socket, editor: editor)
-    {:ok, socket}
+  @spec update(%{optional(:editor) => t()}, Socket.t()) :: {:ok, Socket.t()}
+
+  def update(%{editor: _} = assigns, %Socket{} = socket) do
+    {:ok, assign(socket, assigns)}
   end
 
-  def update(%{}, socket) do
-    {:ok, assign(socket, :editor, new())}
+  def render(assigns) do
+    ~H"""
+    <div id={@editor.id}>
+      <.selection editor={@editor} myself={@myself} />
+      <div class="philtre__editor">
+        <%= for %block_module{} = block <- @editor.blocks do %>
+          <.live_component
+            id={block.id}
+            module={block_module}
+            editor={@editor}
+            block={block}
+            selected={block.id in @editor.selected_blocks}
+          />
+        <% end %>
+      </div>
+    </div>
+    """
   end
 
-  @spec handle_event(String.t(), map, LiveView.Socket.t()) :: {:noreply, LiveView.Socket.t()}
-
-  def handle_event("newline", %{"cell_id" => cell_id, "index" => index}, socket) do
-    editor = Operations.newline(socket.assigns.editor, cell_id, index)
-    send(self(), {:update, editor})
-    {:noreply, socket}
+  defp selection(%{editor: _} = assigns) do
+    ~H"""
+    <div
+      class="philtre__selection"
+      id={"editor__selection__#{@editor.id}"}
+      phx-hook="Selection"
+      phx-target={@myself}
+    />
+    """
   end
 
-  def handle_event("update_block", %{"cell_id" => cell_id, "value" => value}, socket) do
-    editor = Operations.update(socket.assigns.editor, cell_id, value)
-    send(self(), {:update, editor})
-    {:noreply, socket}
-  end
-
-  def handle_event("backspace", %{"cell_id" => cell_id}, socket) do
-    editor = Operations.backspace(socket.assigns.editor, cell_id)
-    send(self(), {:update, editor})
-    {:noreply, socket}
-  end
-
+  @spec handle_event(String.t(), map, Socket.t()) :: {:noreply, Socket.t()}
   def handle_event("select_blocks", %{"block_ids" => block_ids}, socket)
       when is_list(block_ids) do
     send(self(), {:update, %{socket.assigns.editor | selected_blocks: block_ids}})
@@ -77,19 +84,12 @@ defmodule Editor do
 
   def handle_event("copy_blocks", %{"block_ids" => block_ids}, socket)
       when is_list(block_ids) do
-    blocks = Enum.filter(socket.assigns.editor.blocks, &(&1.id in block_ids))
+    blocks =
+      socket.assigns.editor.blocks
+      |> Enum.filter(&(&1.id in block_ids))
+      |> Enum.map(&%{&1 | id: Utils.new_id()})
+
     send(self(), {:update, %{socket.assigns.editor | clipboard: blocks}})
-    {:noreply, socket}
-  end
-
-  def handle_event("paste_blocks", %{"cell_id" => cell_id, "index" => index}, socket) do
-    %Editor{} = editor = socket.assigns.editor
-
-    if editor.clipboard != nil do
-      new_editor = Operations.paste_blocks(editor, editor.clipboard, cell_id, index)
-      send(self(), {:update, new_editor})
-    end
-
     {:noreply, socket}
   end
 

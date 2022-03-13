@@ -6,15 +6,17 @@ defmodule Philtre.Factories do
 
   @article_params %Editor{
     blocks: [
-      %Editor.Block{
+      %Editor.Block.H1{
+        active: false,
         id: Editor.Utils.new_id(),
-        type: "h1",
-        cells: [%Editor.Cell{id: Editor.Utils.new_id(), type: "span", content: "My Article"}]
+        post_caret: "",
+        pre_caret: "Fake page"
       },
-      %Editor.Block{
+      %Editor.Block.P{
+        active: true,
         id: Editor.Utils.new_id(),
-        type: "p",
-        cells: [%Editor.Cell{id: Editor.Utils.new_id(), type: "span", content: "My Content"}]
+        post_caret: "",
+        pre_caret: "My content"
       }
     ]
   }
@@ -30,25 +32,28 @@ defmodule Philtre.Factories do
     Enum.map(params, &create_article/1)
   end
 
-  @spec create_articles(pos_integer, map) :: list(Articles.Article.t())
-  def create_articles(count, %Editor{} = editor \\ @article_params)
-      when is_integer(count) and count > 1 do
-    Enum.map(1..count, fn index ->
-      editor = Map.merge(@article_params, editor)
-
-      editor = %{
-        editor
-        | blocks:
-            Enum.map(editor.blocks, fn %Editor.Block{} = block ->
-              %Editor.Block{
-                type: block.type,
-                id: Editor.Utils.new_id(),
-                cells: Enum.map(block.cells, &%{&1 | content: "#{&1.content} #{index}"})
-              }
-            end)
+  @spec create_articles(pos_integer) :: list(Articles.Article.t())
+  def create_articles(count) when is_integer(count) and count > 1 do
+    1..count
+    |> Enum.map(fn index ->
+      %Editor{
+        id: "editor_#{index}",
+        blocks: [
+          %Editor.Block.H1{
+            active: false,
+            id: Editor.Utils.new_id(),
+            post_caret: "",
+            pre_caret: "Fake page #{index}"
+          },
+          %Editor.Block.P{
+            active: true,
+            id: Editor.Utils.new_id(),
+            post_caret: "",
+            pre_caret: "My content"
+          }
+        ]
       }
-
-      create_article(editor)
     end)
+    |> Enum.map(&create_article/1)
   end
 end

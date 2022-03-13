@@ -1,8 +1,7 @@
-defmodule Editor.Block.H3 do
+defmodule Editor.Block.Li do
   @moduledoc """
-  Holds logic specific to the h3 block
+  Handles logic for a "ul" block
   """
-
   use Phoenix.LiveComponent
   use Phoenix.HTML
 
@@ -16,15 +15,16 @@ defmodule Editor.Block.H3 do
 
   def render(%{block: %__MODULE__{}} = assigns) do
     ~H"""
-    <h3
-      class="philtre__block"
-      contenteditable
-      data-block
-      data-selected={@selected}
-      id={@block.id}
-      phx-hook="ContentEditable"
-      phx-target={@myself}
-    ><.content block={@block} /></h3>
+    <ul>
+      <li
+        class="philtre__block"
+        contenteditable
+        data-block
+        data-selected={@selected}
+        id={@block.id}
+        phx-hook="ContentEditable"
+        phx-target={@myself}
+      ><.content block={@block} /></li></ul>
     """
   end
 

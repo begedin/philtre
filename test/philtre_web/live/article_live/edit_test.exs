@@ -5,26 +5,16 @@ defmodule PhiltreWeb.ArticleLive.EditTest do
 
   import Phoenix.LiveViewTest
 
+  alias Editor.Block
   alias Philtre.Articles
   alias Philtre.Factories
 
   @editor %Editor{
+    id: "-1",
     blocks: [
-      %Editor.Block{
-        id: "1",
-        type: "h1",
-        cells: [%Editor.Cell{id: "11", type: "span", content: "Foo"}]
-      },
-      %Editor.Block{
-        id: "2",
-        type: "p",
-        cells: [%Editor.Cell{id: "22", type: "span", content: "Bar"}]
-      },
-      %Editor.Block{
-        id: "3",
-        type: "p",
-        cells: [%Editor.Cell{id: "33", type: "span", content: "Baz"}]
-      }
+      %Block.H1{id: "1", pre_caret: "Foo"},
+      %Block.P{id: "2", pre_caret: "Bar"},
+      %Block.P{id: "3", pre_caret: "Baz"}
     ]
   }
 
@@ -35,10 +25,10 @@ defmodule PhiltreWeb.ArticleLive.EditTest do
 
     dom = Floki.parse_document!(html)
 
-    assert [h1] = Floki.find(dom, "h1 span[contenteditable]")
+    assert [h1] = Floki.find(dom, "h1[contenteditable]")
     assert Floki.text(h1) == Articles.Article.title(article)
 
-    assert [p] = Floki.find(dom, "p span[contenteditable]")
+    assert [p] = Floki.find(dom, "p[contenteditable]")
     assert p |> Floki.text() |> String.trim() == Articles.Article.body(article)
   end
 
@@ -51,30 +41,19 @@ defmodule PhiltreWeb.ArticleLive.EditTest do
 
     assert dom = view |> render() |> Floki.parse_document!()
 
-    assert dom |> Floki.find("h1 span[contenteditable]") |> Floki.text() == "Foo"
-    assert dom |> Floki.find("p span[contenteditable]") |> Floki.text() == "BarBaz"
+    assert dom |> Floki.find("h1[contenteditable]") |> Floki.text() == "Foo"
+    assert dom |> Floki.find("p[contenteditable]") |> Floki.text() == "BarBaz"
 
     assert view |> element("button") |> render_click()
 
     assert {:ok, %{content: content}} = Articles.get_article("foo")
 
     assert content == %{
+             "id" => "-1",
              "blocks" => [
-               %{
-                 "cells" => [%{"content" => "Foo", "id" => "11", "type" => "span"}],
-                 "id" => "1",
-                 "type" => "h1"
-               },
-               %{
-                 "cells" => [%{"content" => "Bar", "id" => "22", "type" => "span"}],
-                 "id" => "2",
-                 "type" => "p"
-               },
-               %{
-                 "cells" => [%{"content" => "Baz", "id" => "33", "type" => "span"}],
-                 "id" => "3",
-                 "type" => "p"
-               }
+               %{"id" => "1", "type" => "h1", "content" => "Foo"},
+               %{"id" => "2", "type" => "p", "content" => "Bar"},
+               %{"id" => "3", "type" => "p", "content" => "Baz"}
              ]
            }
   end
@@ -85,11 +64,11 @@ defmodule PhiltreWeb.ArticleLive.EditTest do
     {:ok, view, _html} = live(conn, "/articles/#{slug}/edit")
 
     editor = %Editor{
+      id: "-1",
       blocks: [
-        %Editor.Block{
+        %Block.H1{
           id: "1",
-          type: "h1",
-          cells: [%Editor.Cell{type: "span", content: Articles.Article.title(article_2)}]
+          pre_caret: Articles.Article.title(article_2)
         }
       ]
     }

@@ -1,100 +1,150 @@
-const ContentEditable = {
+const FOCUS = '|||FOCUS|||';
+
+const splitAtCaret = (element) => {
+  const selection = document.getSelection();
+  const range = selection.getRangeAt(0);
+
+  // generates dom container for selection from start of contenteditable to caret
+  const preCaretRange = range.cloneRange();
+  preCaretRange.selectNodeContents(element);
+  preCaretRange.setEnd(range.endContainer, range.endOffset);
+  const preContainer = document.createElement('div');
+  preContainer.append(preCaretRange.cloneContents());
+
+  // generates dom container for selection from caret to end of contenteditable
+  const postCaretRange = range.cloneRange();
+  postCaretRange.selectNodeContents(element);
+  postCaretRange.setStart(range.startContainer, range.startOffset);
+  const postContainer = document.createElement('div');
+  postContainer.append(postCaretRange.cloneContents());
+
+  return [preContainer.innerHTML, postContainer.innerHTML];
+};
+
+const pushEventTo = (hook, target, event, payload) =>
+  new Promise((resolve) => {
+    hook.pushEventTo(target, event, payload, resolve);
+  });
+
+const setStyles = (el: HTMLElement) => {
+  el.style.outline = 'none';
+  el.style.cursor = 'text';
+  el.style.whiteSpace = 'pre-wrap';
+};
+
+const ContentEditable: {
+  mounted: () => void;
+  updated?: () => void;
+  getTarget: () => string;
+  getId: () => string;
+  resolveFocus: () => void;
+  selectedRange?: Range;
+} = {
   mounted() {
     const el: HTMLElement = this.el;
-    el.style.whiteSpace = 'pre-wrap';
-    el.style.wordBreak = 'break-word';
+    setStyles(el);
+
+    // we store the pending update as a promise to await
+    let pendingUpdate;
+    // we also debounce the pending update and store a ref to the timeout so
+    // we can cancel and keep debouncing
+    let pendingUpdateRef;
 
     el.addEventListener('input', () => {
-      const selection = window.getSelection();
-      const oldIndex = selection.focusOffset;
-      const oldNode = selection.focusNode;
+      // debounce
+      if (pendingUpdateRef) {
+        clearTimeout(pendingUpdateRef);
+      }
 
-      this.pushEventTo(
-        this.getTarget(),
+      // store promise
+      pendingUpdate = new Promise((resolve) => {
+        pendingUpdateRef = setTimeout(async () => {
+          const [pre, post] = splitAtCaret(el);
 
-        'update_block',
-        {
-          cell_id: this.getCellId(),
-          value: el.innerHTML,
-        },
-        () => {
-          if (selection.focusOffset === oldIndex) {
-            return;
-          }
-          const index =
-            oldIndex > el.innerText.length ? el.innerText.length : oldIndex;
-
-          selection.setPosition(oldNode, index);
-        }
-      );
+          await pushEventTo(this, this.getTarget(), 'update', { pre, post });
+          resolve(null);
+        }, 200);
+      });
     });
 
-    el.addEventListener('keydown', (event: KeyboardEvent) => {
+    el.addEventListener('keydown', async (event: KeyboardEvent) => {
       if (event.key === 'Backspace') {
-        const selection = window.getSelection();
-        if (selection.focusOffset === 0) {
-          event.preventDefault();
-          this.pushEventTo(this.getTarget(), 'backspace', {
-            cell_id: this.getCellId(),
-          });
+        const [pre, post] = splitAtCaret(el);
+
+        if (pre.length > 0) {
+          return;
         }
+
+        event.preventDefault();
+
+        if (pendingUpdate) {
+          await pendingUpdate;
+        }
+
+        const target = this.getTarget();
+        pushEventTo(this, target, 'backspace_from_start', { pre, post });
       }
     });
 
-    el.addEventListener('keypress', (event: KeyboardEvent) => {
-      const selection = window.getSelection();
-
+    el.addEventListener('keypress', async (event: KeyboardEvent) => {
       if (event.key === 'Enter') {
         event.preventDefault();
 
-        this.pushEventTo(this.getTarget(), 'newline', {
-          cell_id: this.getCellId(),
-          index: selection.focusOffset,
-        });
+        if (pendingUpdate) {
+          await pendingUpdate;
+        }
+
+        const [pre, post] = splitAtCaret(el);
+        const pushEvent = event.shiftKey ? 'split_line' : 'split_block';
+        const target = this.getTarget();
+        pushEventTo(this, target, pushEvent, { pre, post });
       }
     });
 
     el.addEventListener('paste', (event: ClipboardEvent) => {
-      const selection = window.getSelection();
       event.preventDefault();
-      this.pushEventTo(this.getTarget(), 'paste_blocks', {
-        cell_id: this.getCellId(),
-        index: selection.focusOffset,
-      });
+      const [pre, post] = splitAtCaret(el);
+      const target = this.getTarget();
+      pushEventTo(this, target, 'paste_blocks', { pre, post });
     });
 
     this.resolveFocus();
   },
 
   updated() {
+    const el: HTMLElement = this.el;
+    setStyles(el);
     this.resolveFocus();
   },
 
   resolveFocus() {
-    const active = this.el.dataset.active == '';
-    const cursorIndex = parseInt(this.el.dataset.cursorIndex);
-    if (active && !isNaN(cursorIndex)) {
-      setTimeout(() => this.focus(cursorIndex), 200);
+    const el: HTMLElement = this.el;
+    const node = Array.from(el.childNodes).find((n) =>
+      n.textContent.includes(FOCUS)
+    );
+
+    if (!node) {
+      return;
     }
-  },
+    const start = node.textContent.indexOf(FOCUS);
 
-  focus(cursorIndex: number): void {
-    this.el.focus();
-    const selection = window.getSelection();
+    el.focus();
 
-    selection.setPosition(selection.focusNode, cursorIndex);
+    const selection = document.getSelection();
+    const range = selection.getRangeAt(0);
+    range.selectNodeContents(node);
+    range.setStart(node, start);
+    range.setEnd(node, start + FOCUS.length);
+    range.deleteContents();
+    selection.deleteFromDocument();
   },
 
   getTarget(): string {
     return this.el.getAttribute('phx-target');
   },
 
-  getCellId(): string {
-    return this.el.dataset.cellId;
-  },
-
-  getBlockId(): string {
-    return this.el.dataset.blockId;
+  getId(): string {
+    return this.el.id;
   },
 };
 

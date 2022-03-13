@@ -10,6 +10,7 @@ defmodule PhiltreWeb.ArticleLive.NewTest do
   alias Philtre.Factories
 
   @editor %Editor{
+    id: "-1",
     blocks: [
       %Block.H1{id: "1", pre_caret: "Foo"},
       %Block.P{id: "2", pre_caret: "Bar"},
@@ -24,8 +25,8 @@ defmodule PhiltreWeb.ArticleLive.NewTest do
 
     assert dom = view |> render() |> Floki.parse_document!()
 
-    assert dom |> Floki.find("h1 span[contenteditable]") |> Floki.text() == "Foo"
-    assert dom |> Floki.find("p span[contenteditable]") |> Floki.text() == "BarBaz"
+    assert dom |> Floki.find("h1[contenteditable]") |> Floki.text() == "Foo"
+    assert dom |> Floki.find("p[contenteditable]") |> Floki.text() == "BarBaz"
 
     assert view |> element("button") |> render_click()
 
@@ -33,22 +34,11 @@ defmodule PhiltreWeb.ArticleLive.NewTest do
 
     assert content == %{
              "blocks" => [
-               %{
-                 "cells" => [%{"content" => "Foo", "id" => "11", "type" => "span"}],
-                 "id" => "1",
-                 "type" => "h1"
-               },
-               %{
-                 "cells" => [%{"content" => "Bar", "id" => "22", "type" => "span"}],
-                 "id" => "2",
-                 "type" => "p"
-               },
-               %{
-                 "cells" => [%{"content" => "Baz", "id" => "33", "type" => "span"}],
-                 "id" => "3",
-                 "type" => "p"
-               }
-             ]
+               %{"id" => "1", "type" => "h1", "content" => "Foo"},
+               %{"id" => "2", "type" => "p", "content" => "Bar"},
+               %{"id" => "3", "type" => "p", "content" => "Baz"}
+             ],
+             "id" => "-1"
            }
   end
 
@@ -60,31 +50,32 @@ defmodule PhiltreWeb.ArticleLive.NewTest do
     block_ids = @editor.blocks |> Enum.map(& &1.id) |> Enum.take(2)
 
     view
-    |> element("[id^=editor__selection__]")
+    |> element("[id=editor__selection__#{@editor.id}]")
     |> render_hook("select_blocks", %{"block_ids" => block_ids})
 
     assert %{socket: %{assigns: %{editor: %Editor{} = editor}}} = :sys.get_state(view.pid)
     assert editor.selected_blocks == block_ids
 
     view
-    |> element("[id^=editor__selection__]")
+    |> element("[id=editor__selection__#{@editor.id}]")
     |> render_hook("copy_blocks", %{"block_ids" => block_ids})
 
     assert %{socket: %{assigns: %{editor: %Editor{} = editor}}} = :sys.get_state(view.pid)
-    assert editor.clipboard == Enum.take(@editor.blocks, 2)
+
+    assert [
+             %Editor.Block.H1{active: false, post_caret: "", pre_caret: "Foo"},
+             %Editor.Block.P{active: false, post_caret: "", pre_caret: "Bar"}
+           ] = editor.clipboard
+
+    block = Enum.at(@editor.blocks, 0)
 
     view
-    |> element("[id^=editor__selection__]")
-    |> render_hook("paste_blocks", %{
-      "cell_id" => "11",
-      "block_id" => "1",
-      # pasting right after first "Foo"
-      "index" => 3
-    })
+    |> element("[id^=#{block.id}]")
+    |> render_hook("paste_blocks", %{"pre" => "Fo", "post" => "o"})
 
     assert %{socket: %{assigns: %{editor: %Editor{} = editor}}} = :sys.get_state(view.pid)
     assert Enum.count(editor.blocks) == 6
-    assert Editor.text(editor) == "FooFooBarBarBaz"
+    assert Editor.text(editor) == "FoFooBaroBarBaz"
   end
 
   test "validates validation errors", %{conn: conn} do
@@ -92,6 +83,7 @@ defmodule PhiltreWeb.ArticleLive.NewTest do
     {:ok, view, _html} = live(conn, "/articles/new")
 
     editor = %Editor{
+      id: "100",
       blocks: [
         %Block.H1{id: "1", pre_caret: Articles.Article.title(article)}
       ]

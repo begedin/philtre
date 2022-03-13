@@ -4,7 +4,6 @@ defmodule Editor.Block.Li do
   """
   use Phoenix.LiveComponent
   use Phoenix.HTML
-  use Editor.ReactiveComponent
 
   alias Editor.Block
   alias Editor.Utils
@@ -16,12 +15,15 @@ defmodule Editor.Block.Li do
   def render(%{block: %__MODULE__{}} = assigns) do
     ~H"""
     <ul>
-    <li
-      contenteditable
-      phx-hook="ContentEditable"
-      phx-target={@myself}
-      id={@block.id}
-    ><.content block={@block} /></li></ul>
+      <li
+        class="philtre__block"
+        contenteditable
+        data-block
+        data-selected={@selected}
+        id={@block.id}
+        phx-hook="ContentEditable"
+        phx-target={@myself}
+      ><.content block={@block} /></li></ul>
     """
   end
 
@@ -49,7 +51,7 @@ defmodule Editor.Block.Li do
         post_caret: post_caret
     }
 
-    emit(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
+    Editor.send_event(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
 
     {:noreply, socket}
   end
@@ -67,7 +69,7 @@ defmodule Editor.Block.Li do
       post_caret: post_caret
     }
 
-    emit(socket, "replace", %{block: block, with: [old_block, new_block]})
+    Editor.send_event(socket, "replace", %{block: block, with: [old_block, new_block]})
     {:noreply, socket}
   end
 
@@ -79,7 +81,7 @@ defmodule Editor.Block.Li do
       post_caret: post_caret
     }
 
-    emit(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
+    Editor.send_event(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
     {:noreply, socket}
   end
 end

@@ -76,6 +76,10 @@ defmodule Editor.Serializer do
     %Block.Pre{id: id, pre_caret: content, post_caret: ""}
   end
 
+  def text(%Editor{} = editor) do
+    Enum.map_join(editor.blocks, "", &text/1)
+  end
+
   def text(%_{pre_caret: _, post_caret: _} = block) do
     block |> html |> Floki.parse_document!() |> Floki.text()
   end

@@ -9,8 +9,6 @@ defmodule Editor.Block.H3 do
   alias Editor.Block
   alias Editor.Utils
 
-  use Editor.ReactiveComponent
-
   defstruct active: false, pre_caret: "", post_caret: "", id: Utils.new_id()
 
   @type t :: %__MODULE__{}
@@ -18,10 +16,13 @@ defmodule Editor.Block.H3 do
   def render(%{block: %__MODULE__{}} = assigns) do
     ~H"""
     <h3
+      class="philtre__block"
       contenteditable
+      data-block
+      data-selected={@selected}
+      id={@block.id}
       phx-hook="ContentEditable"
       phx-target={@myself}
-      id={@block.id}
     ><.content block={@block} /></h3>
     """
   end
@@ -50,7 +51,7 @@ defmodule Editor.Block.H3 do
         post_caret: post_caret
     }
 
-    emit(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
+    Editor.send_event(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
 
     {:noreply, socket}
   end
@@ -68,7 +69,7 @@ defmodule Editor.Block.H3 do
       post_caret: post_caret
     }
 
-    emit(socket, "replace", %{block: block, with: [old_block, new_block]})
+    Editor.send_event(socket, "replace", %{block: block, with: [old_block, new_block]})
     {:noreply, socket}
   end
 
@@ -80,7 +81,7 @@ defmodule Editor.Block.H3 do
       post_caret: post_caret
     }
 
-    emit(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
+    Editor.send_event(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
     {:noreply, socket}
   end
 end

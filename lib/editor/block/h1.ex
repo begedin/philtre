@@ -5,9 +5,9 @@ defmodule Editor.Block.H1 do
 
   use Phoenix.LiveComponent
   use Phoenix.HTML
-  use Editor.ReactiveComponent
 
   alias Editor.Block
+  alias Editor.BlockEngine
   alias Editor.Utils
 
   defstruct active: false, pre_caret: "", post_caret: "", id: Utils.new_id()
@@ -21,10 +21,13 @@ defmodule Editor.Block.H1 do
   def render(%{block: %__MODULE__{}} = assigns) do
     ~H"""
     <h1
+      class="philtre__block"
       contenteditable
+      data-block
+      data-selected={@selected}
+      id={@block.id}
       phx-hook="ContentEditable"
       phx-target={@myself}
-      id={@block.id}
     ><.content block={@block} /></h1>
     """
   end
@@ -49,7 +52,7 @@ defmodule Editor.Block.H1 do
         post_caret: post_caret
     }
 
-    emit(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
+    Editor.send_event(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
 
     {:noreply, socket}
   end
@@ -62,7 +65,7 @@ defmodule Editor.Block.H1 do
       post_caret: post_caret
     }
 
-    emit(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
+    Editor.send_event(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
     {:noreply, socket}
   end
 
@@ -79,7 +82,19 @@ defmodule Editor.Block.H1 do
       post_caret: post_caret
     }
 
-    emit(socket, "replace", %{block: block, with: [old_block, new_block]})
+    Editor.send_event(socket, "replace", %{block: block, with: [old_block, new_block]})
+    {:noreply, socket}
+  end
+
+  def handle_event("paste_blocks", %{"pre" => pre_caret, "post" => post_caret}, socket) do
+    blocks =
+      BlockEngine.paste(socket.assigns.block, socket.assigns.editor, %{
+        pre_caret: pre_caret,
+        post_caret: post_caret
+      })
+
+    Editor.send_event(socket, "replace", %{block: socket.assigns.block, with: blocks})
+
     {:noreply, socket}
   end
 end

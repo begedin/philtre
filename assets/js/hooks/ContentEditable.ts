@@ -102,11 +102,10 @@ const ContentEditable: {
     });
 
     el.addEventListener('paste', (event: ClipboardEvent) => {
-      const selection = window.getSelection();
       event.preventDefault();
-      this.pushEventTo(this.getTarget(), 'paste_blocks', {
-        index: selection.anchorOffset,
-      });
+      const [pre, post] = splitAtCaret(el);
+      const target = this.getTarget();
+      pushEventTo(this, target, 'paste_blocks', { pre, post });
     });
 
     this.resolveFocus();

@@ -32,14 +32,28 @@ defmodule Philtre.Factories do
     Enum.map(params, &create_article/1)
   end
 
-  @spec create_articles(pos_integer, map) :: list(Articles.Article.t())
-  def create_articles(count, %Editor{} = editor \\ @article_params)
-      when is_integer(count) and count > 1 do
-    Enum.map(1..count, fn _ ->
-      editor = Map.merge(@article_params, editor)
-      editor = %{editor | blocks: Enum.map(editor.blocks, &%{&1 | id: Editor.Utils.new_id()})}
-
-      create_article(editor)
+  @spec create_articles(pos_integer) :: list(Articles.Article.t())
+  def create_articles(count) when is_integer(count) and count > 1 do
+    1..count
+    |> Enum.map(fn index ->
+      %Editor{
+        id: "editor_#{index}",
+        blocks: [
+          %Editor.Block.H1{
+            active: false,
+            id: Editor.Utils.new_id(),
+            post_caret: "",
+            pre_caret: "Fake page #{index}"
+          },
+          %Editor.Block.P{
+            active: true,
+            id: Editor.Utils.new_id(),
+            post_caret: "",
+            pre_caret: "My content"
+          }
+        ]
+      }
     end)
+    |> Enum.map(&create_article/1)
   end
 end

@@ -25,10 +25,10 @@ defmodule PhiltreWeb.ArticleLive.EditTest do
 
     dom = Floki.parse_document!(html)
 
-    assert [h1] = Floki.find(dom, "h1 span[contenteditable]")
+    assert [h1] = Floki.find(dom, "h1[contenteditable]")
     assert Floki.text(h1) == Articles.Article.title(article)
 
-    assert [p] = Floki.find(dom, "p span[contenteditable]")
+    assert [p] = Floki.find(dom, "p[contenteditable]")
     assert p |> Floki.text() |> String.trim() == Articles.Article.body(article)
   end
 
@@ -41,30 +41,19 @@ defmodule PhiltreWeb.ArticleLive.EditTest do
 
     assert dom = view |> render() |> Floki.parse_document!()
 
-    assert dom |> Floki.find("h1 span[contenteditable]") |> Floki.text() == "Foo"
-    assert dom |> Floki.find("p span[contenteditable]") |> Floki.text() == "BarBaz"
+    assert dom |> Floki.find("h1[contenteditable]") |> Floki.text() == "Foo"
+    assert dom |> Floki.find("p[contenteditable]") |> Floki.text() == "BarBaz"
 
     assert view |> element("button") |> render_click()
 
     assert {:ok, %{content: content}} = Articles.get_article("foo")
 
     assert content == %{
+             "id" => "-1",
              "blocks" => [
-               %{
-                 "cells" => [%{"content" => "Foo", "id" => "11", "type" => "span"}],
-                 "id" => "1",
-                 "type" => "h1"
-               },
-               %{
-                 "cells" => [%{"content" => "Bar", "id" => "22", "type" => "span"}],
-                 "id" => "2",
-                 "type" => "p"
-               },
-               %{
-                 "cells" => [%{"content" => "Baz", "id" => "33", "type" => "span"}],
-                 "id" => "3",
-                 "type" => "p"
-               }
+               %{"id" => "1", "type" => "h1", "content" => "Foo"},
+               %{"id" => "2", "type" => "p", "content" => "Bar"},
+               %{"id" => "3", "type" => "p", "content" => "Baz"}
              ]
            }
   end
@@ -75,6 +64,7 @@ defmodule PhiltreWeb.ArticleLive.EditTest do
     {:ok, view, _html} = live(conn, "/articles/#{slug}/edit")
 
     editor = %Editor{
+      id: "-1",
       blocks: [
         %Block.H1{
           id: "1",

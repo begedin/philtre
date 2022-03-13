@@ -32,11 +32,6 @@ defmodule PhiltreWeb.ArticleLive.New do
     {:noreply, socket}
   end
 
-  def handle_info({:emit, event, %module{id: id}, payload}, socket) do
-    send_update(module, event: event, id: id, payload: payload)
-    {:noreply, socket}
-  end
-
   def handle_info({:update, %Editor{} = editor}, socket) do
     {:noreply, assign(socket, :editor, editor)}
   end

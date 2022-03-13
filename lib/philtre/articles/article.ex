@@ -25,10 +25,7 @@ defmodule Philtre.Articles.Article do
 
   @spec changeset(t, Editor.t()) :: Changeset.t()
   def changeset(%__MODULE__{} = article, %Editor{} = editor) do
-    content =
-      editor
-      |> Editor.serialize()
-      |> Map.take(["blocks"])
+    content = Editor.serialize(editor)
 
     article
     |> Changeset.cast(%{content: content, slug: slug(editor)}, [:content, :slug])

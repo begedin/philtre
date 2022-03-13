@@ -5,7 +5,6 @@ defmodule Editor.Block.Blockquote do
 
   use Phoenix.LiveComponent
   use Phoenix.HTML
-  use Editor.ReactiveComponent
 
   alias Editor.Block
   alias Editor.BlockEngine
@@ -22,10 +21,13 @@ defmodule Editor.Block.Blockquote do
   def render(%{block: %__MODULE__{}} = assigns) do
     ~H"""
     <blockquote
+      class="philtre__block"
       contenteditable
+      data-block
+      data-selected={@selected}
+      id={@block.id}
       phx-hook="ContentEditable"
       phx-target={@myself}
-      id={@block.id}
     ><.content block={@block} /></blockquote>
     """
   end
@@ -44,29 +46,29 @@ defmodule Editor.Block.Blockquote do
 
   def handle_event("update", %{"pre" => pre_caret, "post" => post_caret}, socket) do
     new_block = BlockEngine.update(socket.assigns.block, pre_caret, post_caret)
-    emit(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
+    Editor.send_event(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
 
     {:noreply, socket}
   end
 
   def handle_event("split_line", %{"pre" => pre_caret, "post" => post_caret}, socket) do
     new_block = BlockEngine.split_line(socket.assigns.block, pre_caret, post_caret)
+    Editor.send_event(socket, "replace", %{block: socket.assigns.block, with: new_block})
 
-    emit(socket, "replace", %{block: socket.assigns.block, with: new_block})
     {:noreply, socket}
   end
 
   def handle_event("split_block", %{"pre" => pre_caret, "post" => post_caret}, socket) do
     new_blocks = BlockEngine.split_block(socket.assigns.block, pre_caret, post_caret)
+    Editor.send_event(socket, "replace", %{block: socket.assigns.block, with: [new_blocks]})
 
-    emit(socket, "replace", %{block: socket.assigns.block, with: [new_blocks]})
     {:noreply, socket}
   end
 
   def handle_event("backspace_from_start", %{"pre" => pre_caret, "post" => post_caret}, socket) do
     new_block = BlockEngine.convert(socket.assigns.block, pre_caret, post_caret, Block.P)
+    Editor.send_event(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
 
-    emit(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
     {:noreply, socket}
   end
 end

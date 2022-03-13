@@ -5,15 +5,13 @@ defmodule Editor do
   use Phoenix.LiveComponent
   use Phoenix.HTML
 
-  use Editor.ReactiveComponent,
-    events: ["replace", "delete", "merge_previous"]
-
   alias Editor.Block
-  alias Editor.Operations
+  alias Editor.BlockEngine
   alias Editor.Serializer
   alias Editor.Utils
 
   alias Phoenix.LiveView
+  alias Phoenix.LiveView.Socket
 
   defstruct blocks: [],
             clipboard: nil,
@@ -43,10 +41,14 @@ defmodule Editor do
     }
   end
 
-  @spec update(%{optional(:editor) => t()}, LiveView.Socket.t()) :: {:ok, LiveView.Socket.t()}
+  @spec update(%{optional(:editor) => t()}, Socket.t()) :: {:ok, Socket.t()}
 
-  def update(%{editor: _} = assigns, socket) do
-    socket = assign(socket, assigns)
+  def update(%{editor: _} = assigns, %Socket{} = socket) do
+    {:ok, assign(socket, assigns)}
+  end
+
+  def update(%{event: event, payload: payload}, %Socket{} = socket) do
+    handle_child_event(socket, event, payload)
     {:ok, socket}
   end
 
@@ -61,9 +63,7 @@ defmodule Editor do
             module={block_module}
             editor={@editor}
             block={block}
-            parent={@editor}
-            data-block-id={block.id},
-            data-selected={block.id in @editor.selected_blocks}
+            selected={block.id in @editor.selected_blocks}
           />
         <% end %>
       </div>
@@ -92,19 +92,12 @@ defmodule Editor do
 
   def handle_event("copy_blocks", %{"block_ids" => block_ids}, socket)
       when is_list(block_ids) do
-    blocks = Enum.filter(socket.assigns.editor.blocks, &(&1.id in block_ids))
+    blocks =
+      socket.assigns.editor.blocks
+      |> Enum.filter(&(&1.id in block_ids))
+      |> Enum.map(&%{&1 | id: Utils.new_id()})
+
     send(self(), {:update, %{socket.assigns.editor | clipboard: blocks}})
-    {:noreply, socket}
-  end
-
-  def handle_event("paste_blocks", %{"cell_id" => cell_id, "index" => index}, socket) do
-    %Editor{} = editor = socket.assigns.editor
-
-    if editor.clipboard != nil do
-      new_editor = Operations.paste_blocks(editor, editor.clipboard, cell_id, index)
-      send(self(), {:update, new_editor})
-    end
-
     {:noreply, socket}
   end
 
@@ -113,29 +106,34 @@ defmodule Editor do
   defdelegate text(editor), to: Serializer
   defdelegate html(editor), to: Serializer
 
-  defp on(socket, "replace", %{block: block, with: blocks}) do
-    editor = replace_block(socket.assigns.editor, block, blocks)
+  def send_event(%Socket{} = socket, event, payload) do
+    %Editor{} = editor = socket.assigns.editor
+
+    send_update(Editor, event: event, id: editor.id, payload: payload)
+  end
+
+  defp handle_child_event(%Socket{} = socket, "replace", %{block: block, with: blocks}) do
+    %Editor{} = editor = socket.assigns.editor
+    index = Enum.find_index(editor.blocks, &(&1.id === block.id))
+    blocks = editor.blocks |> List.replace_at(index, blocks) |> List.flatten()
+
+    editor = %{editor | blocks: blocks}
     send(self(), {:update, editor})
   end
 
-  defp on(socket, "merge_previous", %{block: block}) do
+  defp handle_child_event(%Socket{} = socket, "merge_previous", %{block: block}) do
     editor = socket.assigns.editor
     index = Enum.find_index(editor.blocks, &(&1 == block)) - 1
 
     if index >= 0 do
-      %block_module{} = previous_block = Enum.at(editor.blocks, index)
-      merged = block_module.merge(previous_block, block)
+      %_{} = previous_block = Enum.at(editor.blocks, index)
+      merged = BlockEngine.merge(previous_block, block)
       blocks = editor.blocks |> List.delete_at(index + 1) |> List.replace_at(index, merged)
       editor = %{editor | blocks: blocks}
 
       send(self(), {:update, editor})
+    else
+      socket
     end
-  end
-
-  defp replace_block(%__MODULE__{} = editor, %{id: _} = block, with_blocks) do
-    index = Enum.find_index(editor.blocks, &(&1.id === block.id))
-    blocks = editor.blocks |> List.replace_at(index, with_blocks) |> List.flatten()
-
-    %{editor | blocks: blocks}
   end
 end

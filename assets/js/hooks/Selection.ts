@@ -24,11 +24,11 @@ const initCopy = (hook: SelectionHook) => {
       return;
     }
 
-    hook.pushEventTo(hook.getTarget(), 'copy_blocks', {
-      block_ids: Array.from(selected).map((el) => el.dataset.blockId),
-    });
-
     event.preventDefault();
+
+    hook.pushEventTo(hook.getTarget(), 'copy_blocks', {
+      block_ids: Array.from(selected).map((el) => el.id),
+    });
   });
 };
 
@@ -77,8 +77,10 @@ const Selection: SelectionHook = {
         overlaps(block, selection)
       );
 
+      console.log('selecting', results.length);
+
       this.pushEventTo(this.getTarget(), 'select_blocks', {
-        block_ids: results.map((el) => el.dataset.blockId),
+        block_ids: results.map((el) => el.id),
       });
 
       selecting = false;

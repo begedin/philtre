@@ -6,8 +6,6 @@ defmodule Editor.Block.P do
   use Phoenix.LiveComponent
   use Phoenix.HTML
 
-  use Editor.ReactiveComponent
-
   alias Editor.Block
   alias Editor.Utils
 
@@ -26,10 +24,13 @@ defmodule Editor.Block.P do
   def render(%{block: %__MODULE__{}} = assigns) do
     ~H"""
     <p
+      class="philtre__block"
       contenteditable
+      data-block
+      data-selected={@selected}
+      id={@block.id}
       phx-hook="ContentEditable"
       phx-target={@myself}
-      id={@block.id}
     ><.content block={@block} /></p>
     """
   end
@@ -59,7 +60,11 @@ defmodule Editor.Block.P do
         other -> transform(new_block, other)
       end
 
-    emit(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
+    Editor.send_event(
+      socket,
+      "replace",
+      %{block: socket.assigns.block, with: [new_block]}
+    )
 
     {:noreply, socket}
   end
@@ -71,7 +76,7 @@ defmodule Editor.Block.P do
 
     new_block = %{block | active: true, pre_caret: pre_caret, post_caret: post_caret}
 
-    emit(socket, "replace", %{block: block, with: new_block})
+    Editor.send_event(socket, "replace", %{block: block, with: new_block})
     {:noreply, socket}
   end
 
@@ -86,12 +91,27 @@ defmodule Editor.Block.P do
       post_caret: post_caret
     }
 
-    emit(socket, "replace", %{block: block, with: [old_block, new_block]})
+    Editor.send_event(socket, "replace", %{block: block, with: [old_block, new_block]})
+    {:noreply, socket}
+  end
+
+  def handle_event("paste_blocks", %{"pre" => pre_caret, "post" => post_caret}, socket) do
+    %__MODULE__{} = block = socket.assigns.block
+    old_block = %{block | active: false, pre_caret: pre_caret, post_caret: ""}
+
+    new_block = %__MODULE__{
+      id: Utils.new_id(),
+      active: true,
+      pre_caret: "",
+      post_caret: post_caret
+    }
+
+    Editor.send_event(socket, "replace", %{block: block, with: [old_block, new_block]})
     {:noreply, socket}
   end
 
   def handle_event("backspace_from_start", _, socket) do
-    emit(socket, "merge_previous", %{block: socket.assigns.block})
+    Editor.send_event(socket, "merge_previous", %{block: socket.assigns.block})
     {:noreply, socket}
   end
 

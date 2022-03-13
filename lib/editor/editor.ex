@@ -6,11 +6,9 @@ defmodule Editor do
   use Phoenix.HTML
 
   alias Editor.Block
-  alias Editor.BlockEngine
   alias Editor.Serializer
   alias Editor.Utils
 
-  alias Phoenix.LiveView
   alias Phoenix.LiveView.Socket
 
   defstruct blocks: [],
@@ -45,11 +43,6 @@ defmodule Editor do
 
   def update(%{editor: _} = assigns, %Socket{} = socket) do
     {:ok, assign(socket, assigns)}
-  end
-
-  def update(%{event: event, payload: payload}, %Socket{} = socket) do
-    handle_child_event(socket, event, payload)
-    {:ok, socket}
   end
 
   def render(assigns) do
@@ -105,35 +98,4 @@ defmodule Editor do
   defdelegate normalize(editor), to: Serializer
   defdelegate text(editor), to: Serializer
   defdelegate html(editor), to: Serializer
-
-  def send_event(%Socket{} = socket, event, payload) do
-    %Editor{} = editor = socket.assigns.editor
-
-    send_update(Editor, event: event, id: editor.id, payload: payload)
-  end
-
-  defp handle_child_event(%Socket{} = socket, "replace", %{block: block, with: blocks}) do
-    %Editor{} = editor = socket.assigns.editor
-    index = Enum.find_index(editor.blocks, &(&1.id === block.id))
-    blocks = editor.blocks |> List.replace_at(index, blocks) |> List.flatten()
-
-    editor = %{editor | blocks: blocks}
-    send(self(), {:update, editor})
-  end
-
-  defp handle_child_event(%Socket{} = socket, "merge_previous", %{block: block}) do
-    editor = socket.assigns.editor
-    index = Enum.find_index(editor.blocks, &(&1 == block)) - 1
-
-    if index >= 0 do
-      %_{} = previous_block = Enum.at(editor.blocks, index)
-      merged = BlockEngine.merge(previous_block, block)
-      blocks = editor.blocks |> List.delete_at(index + 1) |> List.replace_at(index, merged)
-      editor = %{editor | blocks: blocks}
-
-      send(self(), {:update, editor})
-    else
-      socket
-    end
-  end
 end

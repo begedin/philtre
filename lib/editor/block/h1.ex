@@ -7,7 +7,7 @@ defmodule Editor.Block.H1 do
   use Phoenix.HTML
 
   alias Editor.Block
-  alias Editor.BlockEngine
+  alias Editor.Engine
   alias Editor.Utils
 
   defstruct active: false, pre_caret: "", post_caret: "", id: Utils.new_id()
@@ -44,56 +44,46 @@ defmodule Editor.Block.H1 do
     """
   end
 
-  def handle_event("update", %{"pre" => pre_caret, "post" => post_caret}, socket) do
-    new_block = %{
-      socket.assigns.block
-      | active: true,
-        pre_caret: pre_caret,
-        post_caret: post_caret
-    }
+  def handle_event("update", %{"pre" => pre, "post" => post}, socket) do
+    editor =
+      Engine.update_block(socket.assigns.editor, socket.assigns.block, %{pre: pre, post: post})
 
-    Editor.send_event(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
+    if editor !== socket.assigns.editor do
+      send(self(), {:update, editor})
+    end
 
     {:noreply, socket}
   end
 
-  def handle_event("backspace_from_start", %{"pre" => pre_caret, "post" => post_caret}, socket) do
-    new_block = %Block.H2{
-      id: Utils.new_id(),
-      active: true,
-      pre_caret: pre_caret,
-      post_caret: post_caret
-    }
+  def handle_event("split_line", %{"pre" => _, "post" => _}, socket), do: {:noreply, socket}
 
-    Editor.send_event(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
+  def handle_event("split_block", %{"pre" => pre, "post" => post}, socket) do
+    editor =
+      Engine.split_block(socket.assigns.editor, socket.assigns.block, %{pre: pre, post: post})
+
+    if editor !== socket.assigns.editor do
+      send(self(), {:update, editor})
+    end
+
     {:noreply, socket}
   end
 
-  def handle_event("split_line", %{}, socket), do: {:noreply, socket}
+  def handle_event("paste_blocks", %{"pre" => pre, "post" => post}, socket) do
+    editor = Engine.paste(socket.assigns.editor, socket.assigns.block, %{pre: pre, post: post})
 
-  def handle_event("split_block", %{"pre" => pre_caret, "post" => post_caret}, socket) do
-    %__MODULE__{} = block = socket.assigns.block
-    old_block = %{block | active: false, pre_caret: pre_caret, post_caret: ""}
+    if editor !== socket.assigns.editor do
+      send(self(), {:update, editor})
+    end
 
-    new_block = %Block.P{
-      id: Utils.new_id(),
-      active: true,
-      pre_caret: "",
-      post_caret: post_caret
-    }
-
-    Editor.send_event(socket, "replace", %{block: block, with: [old_block, new_block]})
     {:noreply, socket}
   end
 
-  def handle_event("paste_blocks", %{"pre" => pre_caret, "post" => post_caret}, socket) do
-    blocks =
-      BlockEngine.paste(socket.assigns.block, socket.assigns.editor, %{
-        pre_caret: pre_caret,
-        post_caret: post_caret
-      })
+  def handle_event("backspace_from_start", _, socket) do
+    editor = Engine.convert(socket.assigns.editor, socket.assigns.block, Block.H2)
 
-    Editor.send_event(socket, "replace", %{block: socket.assigns.block, with: blocks})
+    if editor !== socket.assigns.editor do
+      send(self(), {:update, editor})
+    end
 
     {:noreply, socket}
   end

@@ -7,7 +7,7 @@ defmodule Editor.Block.Blockquote do
   use Phoenix.HTML
 
   alias Editor.Block
-  alias Editor.BlockEngine
+  alias Editor.Engine
   alias Editor.Utils
 
   defstruct active: false, pre_caret: "", post_caret: "", id: Utils.new_id()
@@ -44,30 +44,55 @@ defmodule Editor.Block.Blockquote do
     """
   end
 
-  def handle_event("update", %{"pre" => pre_caret, "post" => post_caret}, socket) do
-    new_block = BlockEngine.update(socket.assigns.block, pre_caret, post_caret)
-    Editor.send_event(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
+  def handle_event("update", %{"pre" => pre, "post" => post}, socket) do
+    editor =
+      Engine.update_block(socket.assigns.editor, socket.assigns.block, %{pre: pre, post: post})
+
+    if editor !== socket.assigns.editor do
+      send(self(), {:update, editor})
+    end
 
     {:noreply, socket}
   end
 
-  def handle_event("split_line", %{"pre" => pre_caret, "post" => post_caret}, socket) do
-    new_block = BlockEngine.split_line(socket.assigns.block, pre_caret, post_caret)
-    Editor.send_event(socket, "replace", %{block: socket.assigns.block, with: new_block})
+  def handle_event("split_line", %{"pre" => pre, "post" => post}, socket) do
+    editor =
+      Engine.split_line(socket.assigns.editor, socket.assigns.block, %{pre: pre, post: post})
+
+    if editor !== socket.assigns.editor do
+      send(self(), {:update, editor})
+    end
 
     {:noreply, socket}
   end
 
-  def handle_event("split_block", %{"pre" => pre_caret, "post" => post_caret}, socket) do
-    new_blocks = BlockEngine.split_block(socket.assigns.block, pre_caret, post_caret)
-    Editor.send_event(socket, "replace", %{block: socket.assigns.block, with: [new_blocks]})
+  def handle_event("split_block", %{"pre" => pre, "post" => post}, socket) do
+    editor =
+      Engine.split_block(socket.assigns.editor, socket.assigns.block, %{pre: pre, post: post})
+
+    if editor !== socket.assigns.editor do
+      send(self(), {:update, editor})
+    end
 
     {:noreply, socket}
   end
 
-  def handle_event("backspace_from_start", %{"pre" => pre_caret, "post" => post_caret}, socket) do
-    new_block = BlockEngine.convert(socket.assigns.block, pre_caret, post_caret, Block.P)
-    Editor.send_event(socket, "replace", %{block: socket.assigns.block, with: [new_block]})
+  def handle_event("paste_blocks", %{"pre" => pre, "post" => post}, socket) do
+    editor = Engine.paste(socket.assigns.editor, socket.assigns.block, %{pre: pre, post: post})
+
+    if editor !== socket.assigns.editor do
+      send(self(), {:update, editor})
+    end
+
+    {:noreply, socket}
+  end
+
+  def handle_event("backspace_from_start", _, socket) do
+    editor = Engine.convert(socket.assigns.editor, socket.assigns.block, Block.P)
+
+    if editor !== socket.assigns.editor do
+      send(self(), {:update, editor})
+    end
 
     {:noreply, socket}
   end

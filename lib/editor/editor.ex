@@ -75,8 +75,7 @@ defmodule Editor do
     """
   end
 
-  @spec handle_event(String.t(), map, LiveView.Socket.t()) :: {:noreply, LiveView.Socket.t()}
-
+  @spec handle_event(String.t(), map, Socket.t()) :: {:noreply, Socket.t()}
   def handle_event("select_blocks", %{"block_ids" => block_ids}, socket)
       when is_list(block_ids) do
     send(self(), {:update, %{socket.assigns.editor | selected_blocks: block_ids}})

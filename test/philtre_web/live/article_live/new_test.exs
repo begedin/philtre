@@ -12,9 +12,9 @@ defmodule PhiltreWeb.ArticleLive.NewTest do
   @editor %Editor{
     id: "-1",
     blocks: [
-      %Block.H1{id: "1", pre_caret: "Foo"},
-      %Block.P{id: "2", pre_caret: "Bar"},
-      %Block.P{id: "3", pre_caret: "Baz"}
+      %Block{id: "1", pre_caret: "Foo", type: "h1"},
+      %Block{id: "2", pre_caret: "Bar", type: "p"},
+      %Block{id: "3", pre_caret: "Baz", type: "p"}
     ]
   }
 
@@ -63,8 +63,8 @@ defmodule PhiltreWeb.ArticleLive.NewTest do
     assert %{socket: %{assigns: %{editor: %Editor{} = editor}}} = :sys.get_state(view.pid)
 
     assert [
-             %Editor.Block.H1{active: false, post_caret: "", pre_caret: "Foo"},
-             %Editor.Block.P{active: false, post_caret: "", pre_caret: "Bar"}
+             %Editor.Block{active: false, post_caret: "", pre_caret: "Foo", type: "h1"},
+             %Editor.Block{active: false, post_caret: "", pre_caret: "Bar", type: "p"}
            ] = editor.clipboard
 
     block = Enum.at(@editor.blocks, 0)
@@ -85,7 +85,7 @@ defmodule PhiltreWeb.ArticleLive.NewTest do
     editor = %Editor{
       id: "100",
       blocks: [
-        %Block.H1{id: "1", pre_caret: Articles.Article.title(article)}
+        %Block{id: "1", pre_caret: Articles.Article.title(article), type: "h1"}
       ]
     }
 

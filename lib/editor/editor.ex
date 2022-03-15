@@ -23,17 +23,19 @@ defmodule Editor do
     %__MODULE__{
       id: Utils.new_id(),
       blocks: [
-        %Block.H1{
+        %Block{
           id: Utils.new_id(),
           active: false,
           pre_caret: "This is the title of your page",
-          post_caret: ""
+          post_caret: "",
+          type: "h1"
         },
-        %Block.P{
+        %Block{
           id: Utils.new_id(),
           active: true,
           pre_caret: "This is your first paragraph.",
-          post_caret: ""
+          post_caret: "",
+          type: "p"
         }
       ]
     }
@@ -50,10 +52,10 @@ defmodule Editor do
     <div id={@editor.id}>
       <.selection editor={@editor} myself={@myself} />
       <div class="philtre__editor">
-        <%= for %block_module{} = block <- @editor.blocks do %>
+        <%= for %Block{} = block <- @editor.blocks do %>
           <.live_component
             id={block.id}
-            module={block_module}
+            module={Block}
             editor={@editor}
             block={block}
             selected={block.id in @editor.selected_blocks}

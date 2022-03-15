@@ -8,8 +8,8 @@ defmodule Philtre.Articles.UpdateArticleTest do
 
   @params %Editor{
     blocks: [
-      %Block.H1{id: Editor.Utils.new_id(), pre_caret: "My New title"},
-      %Block.P{id: Editor.Utils.new_id(), pre_caret: "Bar"}
+      %Block{id: Editor.Utils.new_id(), pre_caret: "My New title", type: "h1"},
+      %Block{id: Editor.Utils.new_id(), pre_caret: "Bar", type: "p"}
     ]
   }
 

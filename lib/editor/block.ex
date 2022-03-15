@@ -1,4 +1,4 @@
-defmodule Editor.Block.P do
+defmodule Editor.Block do
   @moduledoc """
   Holds logic specific to the p block
   """
@@ -11,7 +11,7 @@ defmodule Editor.Block.P do
 
   # struct
 
-  defstruct active: false, pre_caret: "", post_caret: "", id: Utils.new_id()
+  defstruct active: false, pre_caret: "", post_caret: "", id: Utils.new_id(), type: "p"
 
   @type t :: %__MODULE__{}
 
@@ -21,7 +21,7 @@ defmodule Editor.Block.P do
     {:ok, assign(socket, assigns)}
   end
 
-  def render(%{block: %__MODULE__{}} = assigns) do
+  def render(%{block: %__MODULE__{type: "p"}} = assigns) do
     ~H"""
     <p
       class="philtre__block"
@@ -32,6 +32,91 @@ defmodule Editor.Block.P do
       phx-hook="ContentEditable"
       phx-target={@myself}
     ><.content block={@block} /></p>
+    """
+  end
+
+  def render(%{block: %__MODULE__{type: "pre"}} = assigns) do
+    ~H"""
+    <pre
+      class="philtre__block"
+      contenteditable
+      data-block
+      data-selected={@selected}
+      id={@block.id}
+      phx-hook="ContentEditable"
+      phx-target={@myself}
+    ><.content block={@block} /></pre>
+    """
+  end
+
+  def render(%{block: %__MODULE__{type: "h1"}} = assigns) do
+    ~H"""
+    <h1
+      class="philtre__block"
+      contenteditable
+      data-block
+      data-selected={@selected}
+      id={@block.id}
+      phx-hook="ContentEditable"
+      phx-target={@myself}
+    ><.content block={@block} /></h1>
+    """
+  end
+
+  def render(%{block: %__MODULE__{type: "h2"}} = assigns) do
+    ~H"""
+    <h2
+      class="philtre__block"
+      contenteditable
+      data-block
+      data-selected={@selected}
+      id={@block.id}
+      phx-hook="ContentEditable"
+      phx-target={@myself}
+    ><.content block={@block} /></h2>
+    """
+  end
+
+  def render(%{block: %__MODULE__{type: "h3"}} = assigns) do
+    ~H"""
+    <h3
+      class="philtre__block"
+      contenteditable
+      data-block
+      data-selected={@selected}
+      id={@block.id}
+      phx-hook="ContentEditable"
+      phx-target={@myself}
+    ><.content block={@block} /></h3>
+    """
+  end
+
+  def render(%{block: %__MODULE__{type: "blockquote"}} = assigns) do
+    ~H"""
+    <blockquote
+      class="philtre__block"
+      contenteditable
+      data-block
+      data-selected={@selected}
+      id={@block.id}
+      phx-hook="ContentEditable"
+      phx-target={@myself}
+    ><.content block={@block} /></blockquote>
+    """
+  end
+
+  def render(%{block: %__MODULE__{type: "li"}} = assigns) do
+    ~H"""
+    <ul>
+      <li
+        class="philtre__block"
+        contenteditable
+        data-block
+        data-selected={@selected}
+        id={@block.id}
+        phx-hook="ContentEditable"
+        phx-target={@myself}
+      ><.content block={@block} /></li></ul>
     """
   end
 
@@ -91,7 +176,7 @@ defmodule Editor.Block.P do
   end
 
   def handle_event("backspace_from_start", _, socket) do
-    editor = Engine.merge_previous(socket.assigns.editor, socket.assigns.block)
+    editor = Engine.backspace_from_start(socket.assigns.editor, socket.assigns.block)
 
     if editor !== socket.assigns.editor do
       send(self(), {:update, editor})

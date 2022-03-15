@@ -12,9 +12,9 @@ defmodule PhiltreWeb.ArticleLive.EditTest do
   @editor %Editor{
     id: "-1",
     blocks: [
-      %Block.H1{id: "1", pre_caret: "Foo"},
-      %Block.P{id: "2", pre_caret: "Bar"},
-      %Block.P{id: "3", pre_caret: "Baz"}
+      %Block{id: "1", pre_caret: "Foo", type: "h1"},
+      %Block{id: "2", pre_caret: "Bar", type: "p"},
+      %Block{id: "3", pre_caret: "Baz", type: "p"}
     ]
   }
 
@@ -66,9 +66,10 @@ defmodule PhiltreWeb.ArticleLive.EditTest do
     editor = %Editor{
       id: "-1",
       blocks: [
-        %Block.H1{
+        %Block{
           id: "1",
-          pre_caret: Articles.Article.title(article_2)
+          pre_caret: Articles.Article.title(article_2),
+          type: "h1"
         }
       ]
     }

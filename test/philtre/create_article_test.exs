@@ -8,8 +8,8 @@ defmodule Philtre.Articles.CreateArticleTest do
 
   @params %Editor{
     blocks: [
-      %Block.H1{id: "1", pre_caret: "My Article"},
-      %Block.P{id: "2", pre_caret: "My Content"}
+      %Block{id: "1", pre_caret: "My Article", type: "h1"},
+      %Block{id: "2", pre_caret: "My Content", type: "p"}
     ]
   }
   test "sets slug" do

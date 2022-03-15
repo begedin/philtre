@@ -6,17 +6,19 @@ defmodule Philtre.Factories do
 
   @article_params %Editor{
     blocks: [
-      %Editor.Block.H1{
+      %Editor.Block{
         active: false,
         id: Editor.Utils.new_id(),
         post_caret: "",
-        pre_caret: "Fake page"
+        pre_caret: "Fake page",
+        type: "h1"
       },
-      %Editor.Block.P{
+      %Editor.Block{
         active: true,
         id: Editor.Utils.new_id(),
         post_caret: "",
-        pre_caret: "My content"
+        pre_caret: "My content",
+        type: "p"
       }
     ]
   }
@@ -39,17 +41,19 @@ defmodule Philtre.Factories do
       %Editor{
         id: "editor_#{index}",
         blocks: [
-          %Editor.Block.H1{
+          %Editor.Block{
             active: false,
             id: Editor.Utils.new_id(),
             post_caret: "",
-            pre_caret: "Fake page #{index}"
+            pre_caret: "Fake page #{index}",
+            type: "h1"
           },
-          %Editor.Block.P{
+          %Editor.Block{
             active: true,
             id: Editor.Utils.new_id(),
             post_caret: "",
-            pre_caret: "My content"
+            pre_caret: "My content",
+            type: "p"
           }
         ]
       }

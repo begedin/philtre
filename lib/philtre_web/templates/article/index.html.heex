@@ -1,6 +1,0 @@
-<%= for article <- @articles do %>
-  <div>
-    <h1><a href={article.slug}><%= Articles.Article.title(article) %></a></h1>
-    <div><%= article |> Articles.Article.body() |> raw() %></div>
-  </div>
-<% end %>

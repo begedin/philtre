@@ -1,0 +1,4 @@
+<div>
+  <h1><%= @conn.path_params["filename"] %></h1>
+  <div><%= Editor.text(@document) %></div>
+</div>

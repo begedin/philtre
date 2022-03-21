@@ -1,7 +1,0 @@
-<div>
-  <%= for article <- @articles do %>
-    <div>
-      <%= live_patch(Articles.Article.title(article), to: "/articles/#{article.slug}/edit") %>
-    </div>
-  <% end %>
-</div>

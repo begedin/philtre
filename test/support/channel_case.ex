@@ -16,7 +16,6 @@ defmodule PhiltreWeb.ChannelCase do
   """
 
   use ExUnit.CaseTemplate
-  alias Ecto.Adapters.SQL
 
   using do
     quote do
@@ -27,11 +26,5 @@ defmodule PhiltreWeb.ChannelCase do
       # The default endpoint for testing
       @endpoint PhiltreWeb.Endpoint
     end
-  end
-
-  setup tags do
-    pid = SQL.Sandbox.start_owner!(Philtre.Repo, shared: not tags[:async])
-    on_exit(fn -> SQL.Sandbox.stop_owner(pid) end)
-    :ok
   end
 end

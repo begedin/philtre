@@ -16,7 +16,6 @@ defmodule PhiltreWeb.ConnCase do
   """
 
   use ExUnit.CaseTemplate
-  alias Ecto.Adapters.SQL
 
   using do
     quote do
@@ -32,9 +31,7 @@ defmodule PhiltreWeb.ConnCase do
     end
   end
 
-  setup tags do
-    pid = SQL.Sandbox.start_owner!(Philtre.Repo, shared: not tags[:async])
-    on_exit(fn -> SQL.Sandbox.stop_owner(pid) end)
+  setup _tags do
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 end

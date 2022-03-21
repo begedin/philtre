@@ -7,7 +7,7 @@ defmodule Editor.Utils do
 
   @spec new_id :: id
   def new_id do
-    Ecto.UUID.generate()
+    UUID.uuid4()
   end
 
   def caret, do: "|||FOCUS|||"

@@ -147,7 +147,7 @@ defmodule Editor.Engine do
     if index >= 0 do
       new_block = %{block | type: type}
       new_blocks = List.replace_at(editor.blocks, index, new_block)
-      %{editor | blocks: new_blocks}
+      %{editor | id: Utils.new_id(), blocks: new_blocks}
     else
       editor
     end
@@ -181,14 +181,12 @@ defmodule Editor.Engine do
     |> String.replace("&gt;", ">", global: true)
   end
 
-  defp resolve_transform(%Block{type: "p"} = p) do
+  defp resolve_transform(%Block{} = p) do
     case transform_type(p.pre_caret) do
       nil -> p
       other -> transform(p, other)
     end
   end
-
-  defp resolve_transform(%Block{} = block), do: block
 
   defp transform_type("# " <> _), do: "h1"
   defp transform_type("## " <> _), do: "h2"
@@ -199,26 +197,41 @@ defmodule Editor.Engine do
   defp transform_type(_), do: nil
 
   defp transform(%Block{} = self, "h1") do
-    %{self | type: "h1", pre_caret: String.replace(self.pre_caret, "# ", "")}
+    %{self | id: Utils.new_id(), type: "h1", pre_caret: String.replace(self.pre_caret, "# ", "")}
   end
 
   defp transform(%Block{} = self, "h2") do
-    %{self | type: "h2", pre_caret: String.replace(self.pre_caret, "## ", "")}
+    %{self | id: Utils.new_id(), type: "h2", pre_caret: String.replace(self.pre_caret, "## ", "")}
   end
 
   defp transform(%Block{} = self, "h3") do
-    %{self | type: "h3", pre_caret: String.replace(self.pre_caret, "### ", "")}
+    %{
+      self
+      | id: Utils.new_id(),
+        type: "h3",
+        pre_caret: String.replace(self.pre_caret, "### ", "")
+    }
   end
 
   defp transform(%Block{} = self, "pre") do
-    %{self | type: "pre", pre_caret: String.replace(self.pre_caret, "```", "")}
+    %{
+      self
+      | id: Utils.new_id(),
+        type: "pre",
+        pre_caret: String.replace(self.pre_caret, "```", "")
+    }
   end
 
   defp transform(%Block{} = self, "blockquote") do
-    %{self | type: "blockquote", pre_caret: String.replace(self.pre_caret, "> ", "")}
+    %{
+      self
+      | id: Utils.new_id(),
+        type: "blockquote",
+        pre_caret: String.replace(self.pre_caret, "> ", "")
+    }
   end
 
   defp transform(%Block{} = self, "li") do
-    %{self | type: "li", pre_caret: String.replace(self.pre_caret, "* ", "")}
+    %{self | id: Utils.new_id(), type: "li", pre_caret: String.replace(self.pre_caret, "* ", "")}
   end
 end

@@ -17,13 +17,13 @@ defmodule PhiltreWeb.Router do
   scope "/", PhiltreWeb do
     pipe_through :browser
 
-    live "/articles", ArticleLive.Index, :index
-    live "/articles/new", ArticleLive.New, :new
-    live "/articles/:slug/edit", ArticleLive.Edit, :edit
-    live "/articles/:slug", ArticleLive.Show, :show
+    live "/documents", DocumentLive.Index, :index
+    live "/documents/new", DocumentLive.New, :new
+    live "/documents/:filename/edit", DocumentLive.Edit, :edit
+    live "/documents/:filename", DocumentLive.Show, :show
 
-    get("/", ArticleController, :index)
-    get("/:slug", ArticleController, :show)
+    get("/", DocumentController, :index)
+    get("/:filename", DocumentController, :show)
   end
 
   # Other scopes may use custom stacks.
@@ -44,18 +44,6 @@ defmodule PhiltreWeb.Router do
     scope "/" do
       pipe_through :browser
       live_dashboard "/dashboard", metrics: PhiltreWeb.Telemetry
-    end
-  end
-
-  # Enables the Swoosh mailbox preview in development.
-  #
-  # Note that preview only shows emails that were sent by the same
-  # node running the Phoenix server.
-  if Mix.env() == :dev do
-    scope "/dev" do
-      pipe_through :browser
-
-      forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
   end
 end

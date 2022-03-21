@@ -1,10 +1,10 @@
-defmodule PhiltreWeb.ArticleLive.Edit do
+defmodule PhiltreWeb.DocumentLive.Edit do
   @moduledoc """
   Implements the page for editing of an existing article.
   """
   use PhiltreWeb, :live_view
 
-  alias Philtre.Articles
+  alias Philtre.Documents
 
   def render(assigns) do
     ~H"""
@@ -14,22 +14,14 @@ defmodule PhiltreWeb.ArticleLive.Edit do
   end
 
   @spec mount(map, PhiltreWeb.session(), LiveView.Socket.t()) :: {:ok, LiveView.Socket.t()}
-  def mount(%{"slug" => slug}, _session, socket) do
-    {:ok, %Articles.Article{} = article} = Articles.get_article(slug)
-    editor = Editor.normalize(article.content)
-    {:ok, assign(socket, %{article: article, editor: editor})}
+  def mount(%{"filename" => filename}, _session, socket) do
+    {:ok, %Editor{} = document} = Documents.get_document(filename)
+    {:ok, assign(socket, %{editor: document, filename: filename})}
   end
 
-  @errors_saving "There were some errors saving the article"
-
   def handle_event("save", %{}, socket) do
-    %Articles.Article{} = article = socket.assigns.article
-    %Editor{} = editor = socket.assigns.editor
-
-    case Articles.update_article(article, editor) do
-      {:ok, _article} -> {:noreply, push_redirect(socket, to: "/articles")}
-      {:error, _changeset} -> {:noreply, put_flash(socket, :error, @errors_saving)}
-    end
+    :ok = Documents.save_document(socket.assigns.editor, socket.assigns.filename)
+    {:noreply, push_redirect(socket, to: "/documents")}
   end
 
   def handle_info({:emit, event, %module{id: id}, payload}, socket) do

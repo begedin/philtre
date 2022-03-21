@@ -7,9 +7,6 @@
 # General application configuration
 import Config
 
-config :philtre,
-  ecto_repos: [Philtre.Repo]
-
 # Configures the endpoint
 config :philtre, PhiltreWeb.Endpoint,
   url: [host: "localhost"],

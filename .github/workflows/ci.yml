@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: "*"
+    branches: ["*"]
   workflow_dispatch:
 
 env:
@@ -18,18 +18,6 @@ jobs:
       matrix:
         elixir: ["1.13.1"]
         otp: [24.1.7]
-
-    services:
-      db:
-        image: postgres:13
-        ports: ["5432:5432"]
-        env:
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
       - uses: actions/checkout@v2
@@ -72,9 +60,6 @@ jobs:
 
       - name: Lint
         run: npm --prefix assets run lint
-
-      - name: Setup db
-        run: mix do ecto.create, ecto.migrate
 
       - name: Run Credo
         run: mix credo --strict

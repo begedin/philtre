@@ -1,5 +1,3 @@
-const FOCUS = '|||FOCUS|||';
-
 const splitAtCaret = (element) => {
   const selection = document.getSelection();
   const range = selection.getRangeAt(0);
@@ -42,7 +40,6 @@ const ContentEditable: {
 } = {
   mounted() {
     const el: HTMLElement = this.el;
-    setStyles(el);
 
     // we store the pending update as a promise to await
     let pendingUpdate;
@@ -108,6 +105,7 @@ const ContentEditable: {
       pushEventTo(this, target, 'paste_blocks', { pre, post });
     });
 
+    setStyles(el);
     this.resolveFocus();
   },
 
@@ -119,24 +117,17 @@ const ContentEditable: {
 
   resolveFocus() {
     const el: HTMLElement = this.el;
-    const node = Array.from(el.childNodes).find((n) =>
-      n.textContent.includes(FOCUS)
-    );
-
-    if (!node) {
+    const focus = el.querySelector('[data-selection-start]');
+    if (!focus) {
       return;
     }
-    const start = node.textContent.indexOf(FOCUS);
 
     el.focus();
 
     const selection = document.getSelection();
     const range = selection.getRangeAt(0);
-    range.selectNodeContents(node);
-    range.setStart(node, start);
-    range.setEnd(node, start + FOCUS.length);
+    range.selectNode(focus);
     range.deleteContents();
-    selection.deleteFromDocument();
   },
 
   getTarget(): string {

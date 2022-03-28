@@ -25,15 +25,14 @@ defmodule Editor do
       blocks: [
         %Block{
           id: Utils.new_id(),
-          active: false,
           pre_caret: "This is the title of your page",
           post_caret: "",
           type: "h1"
         },
         %Block{
           id: Utils.new_id(),
-          active: true,
           pre_caret: "This is your first paragraph.",
+          selection: "",
           post_caret: "",
           type: "p"
         }

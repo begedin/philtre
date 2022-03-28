@@ -71,7 +71,7 @@ defmodule EditorTest.Wrapper do
   """
   def cursor_index(%View{} = view) do
     %Editor{} = editor = get_editor(view)
-    %_{} = block = Enum.find(editor.blocks, & &1.active)
+    %_{} = block = Enum.find(editor.blocks, &(&1.selection != nil))
     String.length(block.pre_caret)
   end
 
@@ -106,14 +106,15 @@ defmodule EditorTest.Wrapper do
   @doc """
   Updates cell at specified location with specified value
   """
-  def trigger_update(%View{} = view, index, %{pre: pre, post: post}) when is_integer(index) do
-    trigger_update(view, block_at(view, index), %{pre: pre, post: post})
+  def trigger_update(%View{} = view, index, %{pre: pre, selection: selection, post: post})
+      when is_integer(index) do
+    trigger_update(view, block_at(view, index), %{pre: pre, selection: selection, post: post})
   end
 
-  def trigger_update(%View{} = view, %_{} = block, %{pre: pre, post: post}) do
+  def trigger_update(%View{} = view, %_{} = block, %{pre: pre, selection: selection, post: post}) do
     view
     |> element("##{block.id}")
-    |> render_hook("update", %{"pre" => pre, "post" => post})
+    |> render_hook("update", %{"pre" => pre, "selection" => selection, "post" => post})
   end
 
   @doc """

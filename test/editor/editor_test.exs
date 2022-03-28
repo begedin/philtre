@@ -33,8 +33,8 @@ defmodule EditorTest do
     editor = Wrapper.get_editor(view)
 
     assert [
-             %Editor.Block{active: false, post_caret: "", pre_caret: "Foo", type: "h1"},
-             %Editor.Block{active: false, post_caret: "", pre_caret: "Bar", type: "p"}
+             %Editor.Block{post_caret: "", pre_caret: "Foo", type: "h1"},
+             %Editor.Block{post_caret: "", pre_caret: "Bar", type: "p"}
            ] = editor.clipboard
 
     # pasting right after first "Foo"
@@ -45,12 +45,12 @@ defmodule EditorTest do
 
     assert %{
              blocks: [
-               %Editor.Block{active: false, post_caret: "", pre_caret: "Fo", type: "h1"},
-               %Editor.Block{active: false, post_caret: "", pre_caret: "Foo", type: "h1"},
-               %Editor.Block{active: false, post_caret: "", pre_caret: "Bar", type: "p"},
-               %Editor.Block{active: true, post_caret: "o", pre_caret: "", type: "p"},
-               %Editor.Block{active: false, post_caret: "", pre_caret: "Bar", type: "p"},
-               %Editor.Block{active: false, post_caret: "", pre_caret: "Baz", type: "p"}
+               %Editor.Block{post_caret: "", pre_caret: "Fo", type: "h1"},
+               %Editor.Block{post_caret: "", pre_caret: "Foo", type: "h1"},
+               %Editor.Block{post_caret: "", pre_caret: "Bar", type: "p"},
+               %Editor.Block{post_caret: "o", pre_caret: "", selection: "", type: "p"},
+               %Editor.Block{post_caret: "", pre_caret: "Bar", type: "p"},
+               %Editor.Block{post_caret: "", pre_caret: "Baz", type: "p"}
              ]
            } = editor
   end
@@ -72,8 +72,8 @@ defmodule EditorTest do
     editor = Wrapper.get_editor(view)
 
     assert [
-             %Editor.Block{active: false, post_caret: "", pre_caret: "Foo", type: "h1"},
-             %Editor.Block{active: false, post_caret: "", pre_caret: "Bar", type: "p"}
+             %Editor.Block{post_caret: "", pre_caret: "Foo", type: "h1"},
+             %Editor.Block{post_caret: "", pre_caret: "Bar", type: "p"}
            ] = editor.clipboard
 
     # pasting right after first "Foo"
@@ -84,11 +84,11 @@ defmodule EditorTest do
 
     assert %{
              blocks: [
-               %Editor.Block{active: false, post_caret: "", pre_caret: "Foo", type: "h1"},
-               %Editor.Block{active: false, post_caret: "", pre_caret: "Foo", type: "h1"},
-               %Editor.Block{active: false, post_caret: "", pre_caret: "Bar", type: "p"},
-               %Editor.Block{active: false, post_caret: "", pre_caret: "Bar", type: "p"},
-               %Editor.Block{active: false, post_caret: "", pre_caret: "Baz", type: "p"}
+               %Editor.Block{post_caret: "", pre_caret: "Foo", type: "h1"},
+               %Editor.Block{post_caret: "", pre_caret: "Foo", type: "h1"},
+               %Editor.Block{post_caret: "", pre_caret: "Bar", type: "p"},
+               %Editor.Block{post_caret: "", pre_caret: "Bar", type: "p"},
+               %Editor.Block{post_caret: "", pre_caret: "Baz", type: "p"}
              ]
            } = editor
   end
@@ -110,7 +110,7 @@ defmodule EditorTest do
     %Block{type: "p"} = p = Wrapper.block_at(view, 1)
     assert %{pre_caret: "", post_caret: ""} = p
 
-    Wrapper.trigger_update(view, p, %{pre: "# ", post: "foo"})
+    Wrapper.trigger_update(view, p, %{pre: "# ", post: "foo", selection: ""})
 
     assert %Block{type: "h1"} = h1 = Wrapper.block_at(view, 1)
     assert %{pre_caret: "", post_caret: "foo"} = h1
@@ -125,7 +125,7 @@ defmodule EditorTest do
     %Block{type: "p"} = p = Wrapper.block_at(view, 1)
     assert %{pre_caret: "", post_caret: ""} = p
 
-    Wrapper.trigger_update(view, p, %{pre: "## ", post: "foo"})
+    Wrapper.trigger_update(view, p, %{pre: "## ", post: "foo", selection: ""})
 
     assert %Block{type: "h2"} = h2 = Wrapper.block_at(view, 1)
     assert %{pre_caret: "", post_caret: "foo"} = h2
@@ -140,7 +140,7 @@ defmodule EditorTest do
     %Block{type: "p"} = p = Wrapper.block_at(view, 1)
     assert %{pre_caret: "", post_caret: ""} = p
 
-    Wrapper.trigger_update(view, p, %{pre: "### ", post: "foo"})
+    Wrapper.trigger_update(view, p, %{pre: "### ", post: "foo", selection: ""})
 
     assert %Block{type: "h3"} = h3 = Wrapper.block_at(view, 1)
     assert %{pre_caret: "", post_caret: "foo"} = h3
@@ -155,7 +155,7 @@ defmodule EditorTest do
     %Block{type: "p"} = p = Wrapper.block_at(view, 1)
     assert %{pre_caret: "", post_caret: ""} = p
 
-    Wrapper.trigger_update(view, p, %{pre: "```", post: "foo"})
+    Wrapper.trigger_update(view, p, %{pre: "```", post: "foo", selection: ""})
 
     assert %Block{type: "pre"} = pre = Wrapper.block_at(view, 1)
     assert %{pre_caret: "", post_caret: "foo"} = pre
@@ -170,7 +170,7 @@ defmodule EditorTest do
     %Block{type: "p"} = p = Wrapper.block_at(view, 1)
     assert %{pre_caret: "", post_caret: ""} = p
 
-    Wrapper.trigger_update(view, p, %{pre: "* ", post: "foo"})
+    Wrapper.trigger_update(view, p, %{pre: "* ", post: "foo", selection: ""})
 
     assert %Block{type: "li"} = li = Wrapper.block_at(view, 1)
     assert %{pre_caret: "", post_caret: "foo"} = li
@@ -193,7 +193,7 @@ defmodule EditorTest do
   test "can downgrade li to p, merging cells", %{conn: conn} do
     {:ok, view, _html} = live_isolated(conn, Wrapper)
 
-    Wrapper.trigger_update(view, 1, %{pre: "* ", post: "foo"})
+    Wrapper.trigger_update(view, 1, %{pre: "* ", post: "foo", selection: ""})
     assert %Block{type: "li"} = Wrapper.block_at(view, 1)
 
     Wrapper.trigger_backspace_from_start(view, 1)
@@ -203,7 +203,7 @@ defmodule EditorTest do
   test "can downgrade pre to p", %{conn: conn} do
     {:ok, view, _html} = live_isolated(conn, Wrapper)
 
-    Wrapper.trigger_update(view, 1, %{pre: "```", post: "foo"})
+    Wrapper.trigger_update(view, 1, %{pre: "```", post: "foo", selection: ""})
     assert %Block{type: "pre"} = Wrapper.block_at(view, 1)
 
     Wrapper.trigger_backspace_from_start(view, 1)

@@ -33,9 +33,9 @@ defmodule PhiltreWeb.DocumentLive.NewTest do
 
     assert %Editor{
              blocks: [
-               %Editor.Block{active: false, post_caret: "", pre_caret: "Foo", type: "h1"},
-               %Editor.Block{active: false, post_caret: "", pre_caret: "Bar", type: "p"},
-               %Editor.Block{active: false, post_caret: "", pre_caret: "Baz", type: "p"}
+               %Editor.Block{post_caret: "", pre_caret: "Foo", type: "h1"},
+               %Editor.Block{post_caret: "", pre_caret: "Bar", type: "p"},
+               %Editor.Block{post_caret: "", pre_caret: "Baz", type: "p"}
              ],
              clipboard: nil,
              selected_blocks: [],
@@ -66,8 +66,8 @@ defmodule PhiltreWeb.DocumentLive.NewTest do
     assert %{socket: %{assigns: %{editor: %Editor{} = editor}}} = :sys.get_state(view.pid)
 
     assert [
-             %Editor.Block{active: false, post_caret: "", pre_caret: "Foo", type: "h1"},
-             %Editor.Block{active: false, post_caret: "", pre_caret: "Bar", type: "p"}
+             %Editor.Block{post_caret: "", pre_caret: "Foo", type: "h1"},
+             %Editor.Block{post_caret: "", pre_caret: "Bar", type: "p"}
            ] = editor.clipboard
 
     block = Enum.at(@editor.blocks, 0)

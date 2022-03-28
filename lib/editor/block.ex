@@ -11,7 +11,11 @@ defmodule Editor.Block do
 
   # struct
 
-  defstruct active: false, pre_caret: "", post_caret: "", id: Utils.new_id(), type: "p"
+  defstruct pre_caret: "",
+            post_caret: "",
+            id: Utils.new_id(),
+            type: "p",
+            selection: nil
 
   @type t :: %__MODULE__{}
 
@@ -120,21 +124,39 @@ defmodule Editor.Block do
     """
   end
 
-  defp content(%{block: %{active: true}} = assigns) do
+  defp content(%{block: %{selection: s} = block} = assigns) when is_binary(s) do
+    content =
+      Enum.join([
+        block.pre_caret,
+        Utils.selection_start(),
+        block.selection,
+        Utils.selection_end(),
+        block.post_caret
+      ])
+
     ~H"""
-    <%= raw(@block.pre_caret <> Utils.caret() <> @block.post_caret)  %>
+    <%= raw(content) %>
+
     """
   end
 
-  defp content(%{block: %{active: false}} = assigns) do
+  defp content(%{block: %{selection: nil}} = assigns) do
     ~H"""
     <%= raw(@block.pre_caret <> @block.post_caret)  %>
     """
   end
 
-  def handle_event("update", %{"pre" => pre, "post" => post}, socket) do
+  def handle_event(
+        "update",
+        %{"pre" => pre_caret, "selection" => selection, "post" => post_caret},
+        socket
+      ) do
     editor =
-      Engine.update_block(socket.assigns.editor, socket.assigns.block, %{pre: pre, post: post})
+      Engine.update_block(socket.assigns.editor, socket.assigns.block, %{
+        pre_caret: pre_caret,
+        post_caret: post_caret,
+        selection: selection
+      })
 
     if editor !== socket.assigns.editor do
       send(self(), {:update, editor})

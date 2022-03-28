@@ -9,13 +9,26 @@ defmodule Editor.Engine do
   Performs action of updating a block within an editor, which is the result of
   a user typing something into the block.
   """
-  def update_block(%Editor{} = editor, %Block{} = block, %{pre: pre, post: post}) do
+  def update_block(%Editor{} = editor, %Block{} = block, %{
+        pre_caret: pre_caret,
+        post_caret: post_caret,
+        selection: selection
+      }) do
     index = Enum.find_index(editor.blocks, &(&1.id === block.id))
 
     if index >= 0 do
-      pre = cleanup(pre)
-      post = cleanup(post)
-      new_block = resolve_transform(%{block | pre_caret: pre, post_caret: post, active: true})
+      pre_caret = cleanup(pre_caret)
+      post_caret = cleanup(post_caret)
+      selection = cleanup(selection)
+
+      new_block =
+        resolve_transform(%{
+          block
+          | pre_caret: pre_caret,
+            post_caret: post_caret,
+            selection: selection
+        })
+
       new_blocks = List.replace_at(editor.blocks, index, new_block)
 
       %{editor | blocks: new_blocks}
@@ -29,15 +42,22 @@ defmodule Editor.Engine do
 
   This is the result of the user usually hitting Shift + Enter.
   """
-  def split_line(%Editor{} = editor, %Block{type: type} = block, %{pre: pre, post: post})
+  def split_line(%Editor{} = editor, %Block{type: type} = block, %{
+        pre: pre,
+        post: post,
+        selection: selection
+      })
       when type in ["p", "pre", "blockquote"] do
     index = Enum.find_index(editor.blocks, &(&1.id === block.id))
 
     if index >= 0 do
       pre = cleanup(pre) <> "<br/>"
       post = cleanup(post)
+      selection = cleanup(selection)
 
-      new_block = resolve_transform(%{block | pre_caret: pre, post_caret: post, active: true})
+      new_block =
+        resolve_transform(%{block | pre_caret: pre, post_caret: post, selection: selection})
+
       new_blocks = List.replace_at(editor.blocks, index, new_block)
 
       %{editor | blocks: new_blocks}
@@ -60,14 +80,14 @@ defmodule Editor.Engine do
     index = Enum.find_index(editor.blocks, &(&1.id === block.id))
 
     if index >= 0 do
-      old_block = %{block | active: false, pre_caret: pre, post_caret: ""}
+      old_block = %{block | pre_caret: pre, post_caret: "", selection: nil}
 
       new_type = if block.type == "li", do: "li", else: "p"
 
       new_block = %Block{
-        active: true,
         id: Utils.new_id(),
         post_caret: post,
+        selection: "",
         pre_caret: "",
         type: new_type
       }
@@ -96,17 +116,17 @@ defmodule Editor.Engine do
       pre = cleanup(pre)
       post = cleanup(post)
 
-      old_block = %{block | active: false, pre_caret: pre, post_caret: ""}
+      old_block = %{block | pre_caret: pre, post_caret: ""}
 
       replace_blocks =
         if post == "" do
           [old_block] ++ editor.clipboard
         else
           new_block = %Block{
-            active: true,
             id: Utils.new_id(),
             post_caret: post,
             pre_caret: "",
+            selection: "",
             type: "p"
           }
 
@@ -169,8 +189,8 @@ defmodule Editor.Engine do
   defp merge_second_into_first(%Block{} = first_block, %Block{} = other_block) do
     %{
       first_block
-      | active: true,
-        pre_caret: first_block.pre_caret <> first_block.post_caret,
+      | pre_caret: first_block.pre_caret <> first_block.post_caret,
+        selection: "",
         post_caret: other_block.pre_caret <> other_block.post_caret
     }
   end

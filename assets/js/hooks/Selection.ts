@@ -77,8 +77,6 @@ const Selection: SelectionHook = {
         overlaps(block, selection)
       );
 
-      console.log('selecting', results.length);
-
       this.pushEventTo(this.getTarget(), 'select_blocks', {
         block_ids: results.map((el) => el.id),
       });

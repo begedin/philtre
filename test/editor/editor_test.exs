@@ -189,7 +189,13 @@ defmodule EditorTest do
 
     Wrapper.trigger_update(view, p, %{
       cells: [cell |> Map.from_struct() |> Map.put(:text, "* foo")],
-      selection: %{start_id: cell.id, end_id: cell.id, start_offset: 4, end_offset: 4}
+      selection:
+        Map.from_struct(%Block.Selection{
+          start_id: cell.id,
+          end_id: cell.id,
+          start_offset: 4,
+          end_offset: 4
+        })
     })
 
     assert %Block{type: "li"} = li = Wrapper.block_at(view, 1)

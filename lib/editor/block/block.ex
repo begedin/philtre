@@ -17,7 +17,7 @@ defmodule Editor.Block do
   defstruct cells: [],
             id: Utils.new_id(),
             type: "p",
-            selection: %{}
+            selection: %Block.Selection{}
 
   @type t :: %__MODULE__{}
 
@@ -37,10 +37,10 @@ defmodule Editor.Block do
       phx-hook="ContentEditable"
       phx-target={@myself}
       data-selected={@selected}
-      data-selection-start-id={@block.selection[:start_id]}
-      data-selection-start-offset={@block.selection[:start_offset]}
-      data-selection-end-id={@block.selection[:end_id]}
-      data-selection-end-offset={@block.selection[:end_offset]}
+      data-selection-start-id={@block.selection.start_id}
+      data-selection-start-offset={@block.selection.start_offset}
+      data-selection-end-id={@block.selection.end_id}
+      data-selection-end-offset={@block.selection.end_offset}
     ><.content block={@block} /></p>
     """
   end
@@ -55,10 +55,10 @@ defmodule Editor.Block do
       phx-target={@myself}
       data-block
       data-selected={@selected}
-      data-selection-start-id={@block.selection[:start_id]}
-      data-selection-start-offset={@block.selection[:start_offset]}
-      data-selection-end-id={@block.selection[:end_id]}
-      data-selection-end-offset={@block.selection[:end_offset]}
+      data-selection-start-id={@block.selection.start_id}
+      data-selection-start-offset={@block.selection.start_offset}
+      data-selection-end-id={@block.selection.end_id}
+      data-selection-end-offset={@block.selection.end_offset}
     ><.content block={@block} /></pre>
     """
   end
@@ -73,10 +73,10 @@ defmodule Editor.Block do
       phx-target={@myself}
       data-block
       data-selected={@selected}
-      data-selection-start-id={@block.selection[:start_id]}
-      data-selection-start-offset={@block.selection[:start_offset]}
-      data-selection-end-id={@block.selection[:end_id]}
-      data-selection-end-offset={@block.selection[:end_offset]}
+      data-selection-start-id={@block.selection.start_id}
+      data-selection-start-offset={@block.selection.start_offset}
+      data-selection-end-id={@block.selection.end_id}
+      data-selection-end-offset={@block.selection.end_offset}
     ><.content block={@block} /></h1>
     """
   end
@@ -91,10 +91,10 @@ defmodule Editor.Block do
       phx-target={@myself}
       data-block
       data-selected={@selected}
-      data-selection-start-id={@block.selection[:start_id]}
-      data-selection-start-offset={@block.selection[:start_offset]}
-      data-selection-end-id={@block.selection[:end_id]}
-      data-selection-end-offset={@block.selection[:end_offset]}
+      data-selection-start-id={@block.selection.start_id}
+      data-selection-start-offset={@block.selection.start_offset}
+      data-selection-end-id={@block.selection.end_id}
+      data-selection-end-offset={@block.selection.end_offset}
     ><.content block={@block} /></h2>
     """
   end
@@ -109,10 +109,10 @@ defmodule Editor.Block do
       phx-target={@myself}
       data-block
       data-selected={@selected}
-      data-selection-start-id={@block.selection[:start_id]}
-      data-selection-start-offset={@block.selection[:start_offset]}
-      data-selection-end-id={@block.selection[:end_id]}
-      data-selection-end-offset={@block.selection[:end_offset]}
+      data-selection-start-id={@block.selection.start_id}
+      data-selection-start-offset={@block.selection.start_offset}
+      data-selection-end-id={@block.selection.end_id}
+      data-selection-end-offset={@block.selection.end_offset}
     ><.content block={@block} /></h3>
     """
   end
@@ -146,10 +146,10 @@ defmodule Editor.Block do
         phx-target={@myself}
         data-block
         data-selected={@selected}
-        data-selection-start-id={@block.selection[:start_id]}
-        data-selection-start-offset={@block.selection[:start_offset]}
-        data-selection-end-id={@block.selection[:end_id]}
-        data-selection-end-offset={@block.selection[:end_offset]}
+        data-selection-start-id={@block.selection.start_id}
+        data-selection-start-offset={@block.selection.start_offset}
+        data-selection-end-id={@block.selection.end_id}
+        data-selection-end-offset={@block.selection.end_offset}
       ><.content block={@block} /></li></ul>
     """
   end

@@ -52,7 +52,7 @@ defmodule Editor.Engine do
       resolve_transform(%{
         block
         | cells: pre_cells ++ post_cells,
-          selection: %{
+          selection: %Block.Selection{
             start_id: start_id,
             end_id: end_id,
             start_offset: start_offset,
@@ -101,7 +101,7 @@ defmodule Editor.Engine do
             %{cell | modifiers: new_modifiers}
           end)
 
-        new_selection = %{
+        new_selection = %Block.Selection{
           start_id: new_cell_left.id,
           end_id: new_cell_right.id,
           start_offset: 0,
@@ -246,7 +246,7 @@ defmodule Editor.Engine do
     block_before = %{
       block_before
       | cells: block_before.cells ++ [cell_before],
-        selection: %{}
+        selection: %Block.Selection{}
     }
 
     after_type =
@@ -259,7 +259,7 @@ defmodule Editor.Engine do
       block_after
       | cells: [cell_after] ++ block_after.cells,
         type: after_type,
-        selection: %{
+        selection: %Block.Selection{
           start_id: cell_after.id,
           end_id: cell_after.id,
           start_offset: 0,
@@ -330,7 +330,7 @@ defmodule Editor.Engine do
   defp empty_block?(%Block{cells: [%{text: ""}]}), do: true
   defp empty_block?(%Block{}), do: false
 
-  @spec split_at_selection_as_block(Block.t(), selection) :: list(Block.t())
+  @spec split_at_selection_as_block(Block.t(), Block.Selection.t()) :: list(Block.t())
   defp split_at_selection_as_block(
          %Block{} = block,
          %{
@@ -453,11 +453,11 @@ defmodule Editor.Engine do
 
       merged = %{
         merged
-        | selection: %{
+        | selection: %Block.Selection{
             start_id: first_cell.id,
             end_id: first_cell.id,
             start_offset: 0,
-            end_offst: 0
+            end_offset: 0
           }
       }
 
@@ -559,14 +559,7 @@ defmodule Editor.Engine do
     [first | rest]
   end
 
-  @type selection :: %{
-          required(:start_id) => Utils.id(),
-          required(:end_id) => Utils.id(),
-          required(:start_offset) => non_neg_integer(),
-          required(:end_offset) => non_neg_integer()
-        }
-
-  @spec shift(selection, integer) :: selection()
+  @spec shift(Block.Selection.t(), integer) :: Block.Selection.t()
   defp shift(
          %{
            start_id: start_id,

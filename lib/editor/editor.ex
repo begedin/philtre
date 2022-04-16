@@ -28,7 +28,7 @@ defmodule Editor do
           cells: [
             %Block.Cell{id: Utils.new_id(), text: "This is the title of your page", modifiers: []}
           ],
-          selection: [],
+          selection: %Block.Selection{},
           type: "h1"
         },
         %Block{
@@ -36,7 +36,7 @@ defmodule Editor do
           cells: [
             %Block.Cell{id: Utils.new_id(), text: "This is your first paragraph.", modifiers: []}
           ],
-          selection: [],
+          selection: %Block.Selection{},
           type: "p"
         }
       ]

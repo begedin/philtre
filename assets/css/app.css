@@ -106,11 +106,13 @@ nav.admin ul {
 /* editor */
 
 .philtre__editor {
-  max-width: 500px;
+  max-width: 700px;
 }
 
-.philtre__block {
+.philtre__block[contenteditable] {
   min-height: 1em;
+  cursor: text;
+  outline: none;
 }
 
 .philtre__block > * {
@@ -129,4 +131,18 @@ nav.admin ul {
   margin-left: 0;
   padding-left: 2em;
   border-left: 0.25em solid gray;
+}
+
+
+.philtre-cell.bold {
+  font-weight: bold;
+}
+
+.philtre-cell.italic {
+  font-style: italic;
+}
+
+.philtre-cell.br {
+  display: block;
+  clear: both;
 }

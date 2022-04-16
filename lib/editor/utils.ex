@@ -10,5 +10,6 @@ defmodule Editor.Utils do
     UUID.uuid4()
   end
 
-  def caret, do: "|||FOCUS|||"
+  def selection_start, do: ~s(<span data-selection-start></span>)
+  def selection_end, do: ~s(<span data-selection-end></span>)
 end

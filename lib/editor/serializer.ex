@@ -22,9 +22,9 @@ defmodule Editor.Serializer do
   ]
 
   @spec serialize(struct) :: map
-  def serialize(%Block{id: id, type: type, pre_caret: pre_caret, post_caret: post_caret})
+  def serialize(%Block{id: id, type: type, cells: cells})
       when type in @types do
-    %{"id" => id, "type" => type, "content" => pre_caret <> post_caret}
+    %{"id" => id, "type" => type, "content" => cells}
   end
 
   def normalize(%{"id" => id, "blocks" => blocks}) when is_binary(id) and is_list(blocks) do
@@ -36,18 +36,26 @@ defmodule Editor.Serializer do
   end
 
   def normalize(%{"id" => id, "type" => type, "content" => content}) when type in @types do
-    %Block{id: id, type: type, pre_caret: content, post_caret: ""}
+    %Block{id: id, type: type, cells: Enum.map(content, &normalize/1)}
+  end
+
+  def normalize(%{"id" => id, "modifiers" => modifiers, "text" => text}) do
+    %{id: id, modifiers: modifiers, text: text}
   end
 
   def text(%Editor{} = editor) do
     Enum.map_join(editor.blocks, "", &text/1)
   end
 
-  def text(%Block{pre_caret: _, post_caret: _} = block) do
+  def text(%Block{cells: _} = block) do
     block |> html |> Floki.parse_document!() |> Floki.text()
   end
 
-  def html(%Block{pre_caret: pre_caret, post_caret: post_caret, type: tag}) do
-    "<#{tag}>" <> pre_caret <> post_caret <> "</#{tag}>"
+  def html(%Block{cells: cells, type: tag}) do
+    "<#{tag}>" <> Enum.map_join(cells, "", &html/1) <> "</#{tag}>"
+  end
+
+  def html(%{id: _id, modifiers: _modifiers, text: text}) do
+    "<span>" <> text <> "</span>"
   end
 end

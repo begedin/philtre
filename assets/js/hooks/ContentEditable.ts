@@ -1,150 +1,203 @@
-const FOCUS = '|||FOCUS|||';
+const findCellParent = (node: Node | HTMLElement): HTMLElement =>
+  'dataset' in node && node.dataset.cellId
+    ? node
+    : findCellParent(node.parentNode || node.parentElement);
 
-const splitAtCaret = (element) => {
+const getPreCaretText = (element): string => {
   const selection = document.getSelection();
   const range = selection.getRangeAt(0);
 
   // generates dom container for selection from start of contenteditable to caret
   const preCaretRange = range.cloneRange();
   preCaretRange.selectNodeContents(element);
-  preCaretRange.setEnd(range.endContainer, range.endOffset);
+  preCaretRange.setEnd(range.startContainer, range.startOffset);
   const preContainer = document.createElement('div');
   preContainer.append(preCaretRange.cloneContents());
-
-  // generates dom container for selection from caret to end of contenteditable
-  const postCaretRange = range.cloneRange();
-  postCaretRange.selectNodeContents(element);
-  postCaretRange.setStart(range.startContainer, range.startOffset);
-  const postContainer = document.createElement('div');
-  postContainer.append(postCaretRange.cloneContents());
-
-  return [preContainer.innerHTML, postContainer.innerHTML];
+  return preContainer.innerText;
 };
 
-const pushEventTo = (hook, target, event, payload) =>
-  new Promise((resolve) => {
-    hook.pushEventTo(target, event, payload, resolve);
-  });
+const isAtStartOfBlock = (element: HTMLElement): boolean =>
+  getPreCaretText(element).length === 0;
 
-const setStyles = (el: HTMLElement) => {
-  el.style.outline = 'none';
-  el.style.cursor = 'text';
-  el.style.whiteSpace = 'pre-wrap';
+const getSelection = () => {
+  const selection = document.getSelection();
+  const startElement = findCellParent(selection.anchorNode);
+  const startId = startElement.dataset.cellId;
+
+  const endElement = findCellParent(selection.focusNode);
+  const endId = endElement.dataset.cellId;
+  const [startOffset, endOffset] =
+    selection.anchorOffset < selection.focusOffset
+      ? [selection.anchorOffset, selection.focusOffset]
+      : [selection.focusOffset, selection.anchorOffset];
+
+  return {
+    start_id: startId,
+    start_offset: startOffset,
+    end_id: endId,
+    end_offset: endOffset,
+  };
+};
+
+type Cell = {
+  id: string;
+  modifiers: ('strong' | 'italic')[];
+  text: string;
+};
+
+const getCells = (el: HTMLElement): Cell[] => {
+  const children = Array.from(el.children) as HTMLElement[];
+
+  return children.map((child) => {
+    const modifiers: ('strong' | 'italic')[] = [];
+
+    if (child.tagName === 'strong') {
+      modifiers.push('strong');
+    }
+
+    if (child.tagName === 'em') {
+      modifiers.push('italic');
+    }
+
+    return {
+      id: child.dataset.cellId,
+      text: child.innerText,
+      modifiers,
+    };
+  });
+};
+
+const resolveCommand = (e: KeyboardEvent) => {
+  if (e.key === 'Backspace') {
+    if (isAtStartOfBlock(e.target as HTMLElement)) {
+      return 'backspace_from_start';
+    }
+  }
+
+  if (e.shiftKey && e.key === 'Enter') {
+    return 'split_line';
+  }
+
+  if (e.key === 'Enter') {
+    return 'split_block';
+  }
+
+  if (e.metaKey && e.key === 'b') {
+    return 'toggle.bold';
+  }
+
+  if (e.metaKey && e.key === 'i') {
+    return 'toggle.italic';
+  }
+};
+
+const restoreSelection = (el: HTMLElement): void => {
+  // if the block is the focused block, the backend will insert these data
+  // attributes onto the containing element
+  const {
+    selectionStartId,
+    selectionEndId,
+    selectionStartOffset,
+    selectionEndOffset,
+  } = el.dataset;
+
+  if (!selectionStartId || !selectionEndId) {
+    return;
+  }
+
+  // we know the element needs to be focused, just not fully clear where yet
+  el.focus();
+
+  const selection = el.ownerDocument.getSelection();
+  selection.removeAllRanges();
+
+  const range = document.createRange();
+
+  const focusStart = el.querySelector(`[data-cell-id="${selectionStartId}"]`);
+  const offsetStart = parseInt(selectionStartOffset);
+  range.setStart(focusStart.childNodes[0], offsetStart);
+
+  const focusEnd = el.querySelector(`[data-cell-id="${selectionEndId}"]`);
+  const offsetEnd = parseInt(selectionEndOffset);
+  range.setEnd(focusEnd.childNodes[0], offsetEnd);
+
+  selection.addRange(range);
 };
 
 const ContentEditable: {
   mounted: () => void;
   updated?: () => void;
   getTarget: () => string;
-  getId: () => string;
-  resolveFocus: () => void;
   selectedRange?: Range;
 } = {
   mounted() {
     const el: HTMLElement = this.el;
-    setStyles(el);
 
-    // we store the pending update as a promise to await
-    let pendingUpdate;
-    // we also debounce the pending update and store a ref to the timeout so
-    // we can cancel and keep debouncing
-    let pendingUpdateRef;
+    let saveRef: null | number = null;
+    let savePromise: Promise<void> | null = null;
 
     el.addEventListener('input', () => {
-      // debounce
-      if (pendingUpdateRef) {
-        clearTimeout(pendingUpdateRef);
+      if (saveRef) {
+        clearTimeout(saveRef);
       }
 
-      // store promise
-      pendingUpdate = new Promise((resolve) => {
-        pendingUpdateRef = setTimeout(async () => {
-          const [pre, post] = splitAtCaret(el);
+      const eventName = 'update';
+      const target = this.getTarget();
 
-          await pushEventTo(this, this.getTarget(), 'update', { pre, post });
-          resolve(null);
-        }, 200);
+      savePromise = new Promise((resolve, reject) => {
+        const selection = getSelection();
+        const cells = getCells(el);
+        const params = { selection, cells };
+
+        saveRef = setTimeout(async () => {
+          this.pushEventTo(
+            target,
+            eventName,
+            params,
+            () => {
+              saveRef = null;
+              savePromise = null;
+              resolve();
+            },
+            reject
+          );
+        });
       });
     });
 
     el.addEventListener('keydown', async (event: KeyboardEvent) => {
-      if (event.key === 'Backspace') {
-        const [pre, post] = splitAtCaret(el);
+      const command = resolveCommand(event);
 
-        if (pre.length > 0) {
-          return;
-        }
-
-        event.preventDefault();
-
-        if (pendingUpdate) {
-          await pendingUpdate;
-        }
-
-        const target = this.getTarget();
-        pushEventTo(this, target, 'backspace_from_start', { pre, post });
+      if (!command) {
+        return;
       }
-    });
 
-    el.addEventListener('keypress', async (event: KeyboardEvent) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
+      event.preventDefault();
 
-        if (pendingUpdate) {
-          await pendingUpdate;
-        }
+      const selection = getSelection();
 
-        const [pre, post] = splitAtCaret(el);
-        const pushEvent = event.shiftKey ? 'split_line' : 'split_block';
-        const target = this.getTarget();
-        pushEventTo(this, target, pushEvent, { pre, post });
+      if (savePromise) {
+        await savePromise;
       }
+
+      this.pushEventTo(this.getTarget(), command, { selection });
     });
 
     el.addEventListener('paste', (event: ClipboardEvent) => {
       event.preventDefault();
-      const [pre, post] = splitAtCaret(el);
       const target = this.getTarget();
-      pushEventTo(this, target, 'paste_blocks', { pre, post });
+      this.pushEventTo(target, 'paste_blocks', { selection: getSelection() });
     });
 
-    this.resolveFocus();
+    restoreSelection(el);
   },
 
   updated() {
-    const el: HTMLElement = this.el;
-    setStyles(el);
-    this.resolveFocus();
-  },
-
-  resolveFocus() {
-    const el: HTMLElement = this.el;
-    const node = Array.from(el.childNodes).find((n) =>
-      n.textContent.includes(FOCUS)
-    );
-
-    if (!node) {
-      return;
-    }
-    const start = node.textContent.indexOf(FOCUS);
-
-    el.focus();
-
-    const selection = document.getSelection();
-    const range = selection.getRangeAt(0);
-    range.selectNodeContents(node);
-    range.setStart(node, start);
-    range.setEnd(node, start + FOCUS.length);
-    range.deleteContents();
-    selection.deleteFromDocument();
+    restoreSelection(this.el);
   },
 
   getTarget(): string {
     return this.el.getAttribute('phx-target');
-  },
-
-  getId(): string {
-    return this.el.id;
   },
 };
 

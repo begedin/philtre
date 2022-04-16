@@ -24,7 +24,11 @@ defmodule Editor.Serializer do
   @spec serialize(struct) :: map
   def serialize(%Block{id: id, type: type, cells: cells})
       when type in @types do
-    %{"id" => id, "type" => type, "content" => cells}
+    %{"id" => id, "type" => type, "content" => Enum.map(cells, &serialize_cell/1)}
+  end
+
+  defp serialize_cell(%Block.Cell{id: id, modifiers: modifiers, text: text}) do
+    %{"id" => id, "modifiers" => modifiers, "text" => text}
   end
 
   def normalize(%{"id" => id, "blocks" => blocks}) when is_binary(id) and is_list(blocks) do
@@ -40,7 +44,7 @@ defmodule Editor.Serializer do
   end
 
   def normalize(%{"id" => id, "modifiers" => modifiers, "text" => text}) do
-    %{id: id, modifiers: modifiers, text: text}
+    %Block.Cell{id: id, modifiers: modifiers, text: text}
   end
 
   def text(%Editor{} = editor) do
@@ -55,7 +59,7 @@ defmodule Editor.Serializer do
     "<#{tag}>" <> Enum.map_join(cells, "", &html/1) <> "</#{tag}>"
   end
 
-  def html(%{id: _id, modifiers: _modifiers, text: text}) do
+  def html(%Block.Cell{id: _id, modifiers: _modifiers, text: text}) do
     "<span>" <> text <> "</span>"
   end
 end

@@ -26,14 +26,16 @@ defmodule Editor do
         %Block{
           id: Utils.new_id(),
           cells: [
-            %{id: Utils.new_id(), text: "This is the title of your page", modifiers: []}
+            %Block.Cell{id: Utils.new_id(), text: "This is the title of your page", modifiers: []}
           ],
           selection: [],
           type: "h1"
         },
         %Block{
           id: Utils.new_id(),
-          cells: [%{id: Utils.new_id(), text: "This is your first paragraph.", modifiers: []}],
+          cells: [
+            %Block.Cell{id: Utils.new_id(), text: "This is your first paragraph.", modifiers: []}
+          ],
           selection: [],
           type: "p"
         }

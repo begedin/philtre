@@ -10,9 +10,9 @@ defmodule EditorTest do
   @editor %Editor{
     id: "-5",
     blocks: [
-      %Block{id: "1", cells: [%{id: "1-1", text: "Foo", modifiers: []}], type: "h1"},
-      %Block{id: "2", cells: [%{id: "2-1", text: "Bar", modifiers: []}], type: "p"},
-      %Block{id: "3", cells: [%{id: "3-1", text: "Baz", modifiers: []}], type: "p"}
+      %Block{id: "1", cells: [%Block.Cell{id: "1-1", text: "Foo", modifiers: []}], type: "h1"},
+      %Block{id: "2", cells: [%Block.Cell{id: "2-1", text: "Bar", modifiers: []}], type: "p"},
+      %Block{id: "3", cells: [%Block.Cell{id: "3-1", text: "Baz", modifiers: []}], type: "p"}
     ]
   }
 
@@ -47,12 +47,12 @@ defmodule EditorTest do
 
     assert %{
              blocks: [
-               %Editor.Block{cells: [%{text: "Fo"}], type: "h1"},
-               %Editor.Block{cells: [%{text: "Foo"}], type: "h1"},
-               %Editor.Block{cells: [%{text: "Bar"}], type: "p"},
-               %Editor.Block{cells: [%{text: "o"}], type: "h1"},
-               %Editor.Block{cells: [%{text: "Bar"}], type: "p"},
-               %Editor.Block{cells: [%{text: "Baz"}], type: "p"}
+               %Block{cells: [%{text: "Fo"}], type: "h1"},
+               %Block{cells: [%{text: "Foo"}], type: "h1"},
+               %Block{cells: [%{text: "Bar"}], type: "p"},
+               %Block{cells: [%{text: "o"}], type: "h1"},
+               %Block{cells: [%{text: "Bar"}], type: "p"},
+               %Block{cells: [%{text: "Baz"}], type: "p"}
              ]
            } = editor
   end
@@ -74,8 +74,8 @@ defmodule EditorTest do
     editor = Wrapper.get_editor(view)
 
     assert [
-             %Editor.Block{cells: [%{text: "Foo"}], type: "h1"},
-             %Editor.Block{cells: [%{text: "Bar"}], type: "p"}
+             %Block{cells: [%{text: "Foo"}], type: "h1"},
+             %Block{cells: [%{text: "Bar"}], type: "p"}
            ] = editor.clipboard
 
     %{cells: [cell]} = block = Wrapper.block_at(view, 0)
@@ -89,11 +89,11 @@ defmodule EditorTest do
 
     assert %{
              blocks: [
-               %Editor.Block{cells: [%{text: "Foo"}], type: "h1"},
-               %Editor.Block{cells: [%{text: "Foo"}], type: "h1"},
-               %Editor.Block{cells: [%{text: "Bar"}], type: "p"},
-               %Editor.Block{cells: [%{text: "Bar"}], type: "p"},
-               %Editor.Block{cells: [%{text: "Baz"}], type: "p"}
+               %Block{cells: [%{text: "Foo"}], type: "h1"},
+               %Block{cells: [%{text: "Foo"}], type: "h1"},
+               %Block{cells: [%{text: "Bar"}], type: "p"},
+               %Block{cells: [%{text: "Bar"}], type: "p"},
+               %Block{cells: [%{text: "Baz"}], type: "p"}
              ]
            } = editor
   end
@@ -116,7 +116,7 @@ defmodule EditorTest do
     assert %{cells: [%{text: ""} = cell]} = p
 
     Wrapper.trigger_update(view, p, %{
-      cells: [%{cell | text: "# "}],
+      cells: [cell |> Map.from_struct() |> Map.put(:text, "# ")],
       selection: %{start_id: cell.id, end_id: cell.id, start_offset: 2, end_offset: 2}
     })
 
@@ -134,7 +134,7 @@ defmodule EditorTest do
     assert %{cells: [%{text: ""} = cell]} = p
 
     Wrapper.trigger_update(view, p, %{
-      cells: [%{cell | text: "## "}],
+      cells: [cell |> Map.from_struct() |> Map.put(:text, "## ")],
       selection: %{start_id: cell.id, end_id: cell.id, start_offset: 3, end_offset: 3}
     })
 
@@ -152,7 +152,7 @@ defmodule EditorTest do
     assert %{cells: [%{text: ""} = cell]} = p
 
     Wrapper.trigger_update(view, p, %{
-      cells: [%{cell | text: "### "}],
+      cells: [cell |> Map.from_struct() |> Map.put(:text, "### ")],
       selection: %{start_id: cell.id, end_id: cell.id, start_offset: 4, end_offset: 4}
     })
 
@@ -170,7 +170,7 @@ defmodule EditorTest do
     assert %{cells: [%{text: ""} = cell]} = p
 
     Wrapper.trigger_update(view, p, %{
-      cells: [%{cell | text: "```"}],
+      cells: [cell |> Map.from_struct() |> Map.put(:text, "```")],
       selection: %{start_id: cell.id, end_id: cell.id, start_offset: 3, end_offset: 3}
     })
 
@@ -188,7 +188,7 @@ defmodule EditorTest do
     assert %{cells: [%{text: ""} = cell]} = p
 
     Wrapper.trigger_update(view, p, %{
-      cells: [%{cell | text: "* foo"}],
+      cells: [cell |> Map.from_struct() |> Map.put(:text, "* foo")],
       selection: %{start_id: cell.id, end_id: cell.id, start_offset: 4, end_offset: 4}
     })
 
@@ -215,7 +215,7 @@ defmodule EditorTest do
     %Block{cells: [cell]} = block = Wrapper.block_at(view, 1)
 
     Wrapper.trigger_update(view, block, %{
-      cells: [%{cell | text: "* foo"}],
+      cells: [cell |> Map.from_struct() |> Map.put(:text, "* fooo")],
       selection: %{start_id: cell.id, end_id: cell.id, start_offset: 4, end_offset: 4}
     })
 
@@ -231,7 +231,7 @@ defmodule EditorTest do
     %{cells: [cell]} = block = Wrapper.block_at(view, 1)
 
     Wrapper.trigger_update(view, block, %{
-      cells: [%{cell | text: "```"}],
+      cells: [cell |> Map.from_struct() |> Map.put(:text, "```")],
       selection: %{start_id: cell.id, end_id: cell.id, start_offset: 3, end_offset: 3}
     })
 

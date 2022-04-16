@@ -7,6 +7,7 @@ defmodule Editor.Block do
   use Phoenix.HTML
 
   alias Editor.Engine
+  alias Editor.Block
   alias Editor.Utils
 
   require Logger
@@ -157,7 +158,7 @@ defmodule Editor.Block do
     ~H"<%= for cell <- @block.cells do %><.cell cell={cell} /><% end %>"
   end
 
-  defp cell(%{cell: %{id: id, modifiers: modifiers, text: text}} = assigns) do
+  defp cell(%{cell: %Block.Cell{id: id, modifiers: modifiers, text: text}} = assigns) do
     classes = ["philtre-cell"] |> Enum.concat(modifiers) |> Enum.join(" ") |> String.trim()
 
     ~H"""

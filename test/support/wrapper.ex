@@ -134,12 +134,17 @@ defmodule EditorTest.Wrapper do
     trigger_backspace_from_start(view, block_at(view, index))
   end
 
-  def trigger_backspace_from_start(%View{} = view, %_{} = block) do
+  def trigger_backspace_from_start(
+        %View{} = view,
+        %Block{cells: [%Block.Cell{} = cell | _]} = block
+      ) do
     view
     |> element("##{block.id}")
     |> render_hook("backspace_from_start", %{
-      "pre" => "",
-      "post" => block.cells
+      start_id: cell.id,
+      end_id: cell.id,
+      start_offset: 0,
+      end_offset: 0
     })
   end
 

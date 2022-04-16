@@ -21,13 +21,18 @@ defmodule Editor.Engine do
       }) do
     old_cells = block.cells
 
-    new_ids = Enum.map(new_cells, & &1["id"])
+    new_cells =
+      Enum.map(new_cells, fn %{"id" => id, "modifiers" => modifiers, "text" => text} ->
+        %Block.Cell{id: id, modifiers: modifiers, text: text}
+      end)
+
+    new_ids = Enum.map(new_cells, & &1.id)
     remaining_cells = Enum.filter(old_cells, &(&1.id in new_ids))
 
     updated_cells =
-      Enum.map(remaining_cells, fn cell ->
-        params = Enum.find(new_cells, &(&1["id"] === cell.id))
-        %{cell | modifiers: params["modifiers"], text: params["text"]}
+      Enum.map(remaining_cells, fn %Block.Cell{} = cell ->
+        %Block.Cell{} = params = Enum.find(new_cells, &(&1.id === cell.id))
+        %{cell | modifiers: params.modifiers, text: params.text}
       end)
 
     start_cell = Enum.find(remaining_cells, &(&1.id === start_id))
@@ -202,8 +207,8 @@ defmodule Editor.Engine do
     end
   end
 
-  @spec split_cell(cell, non_neg_integer()) :: {cell, cell}
-  defp split_cell(%{id: _, modifiers: _, text: _} = cell, index) do
+  @spec split_cell(Block.Cell.t(), non_neg_integer()) :: {Block.Cell.t(), Block.Cell.t()}
+  defp split_cell(%Block.Cell{id: _, modifiers: _, text: _} = cell, index) do
     {text_before, text_after} = String.split_at(cell.text, index)
     cell_before = %{cell | text: text_before}
     cell_after = %{cell | id: Utils.new_id(), text: text_after}
@@ -383,7 +388,7 @@ defmodule Editor.Engine do
     ]
   end
 
-  @spec split_cell(cell, non_neg_integer(), non_neg_integer()) :: list(cell)
+  @spec split_cell(Block.Cell.t(), non_neg_integer(), non_neg_integer()) :: list(Block.Cell.t())
   defp split_cell(%{id: _, text: _, modifiers: _} = cell, start_offset, end_offset)
        when start_offset == end_offset do
     {text_before, text_after} = String.split_at(cell.text, start_offset)
@@ -548,13 +553,7 @@ defmodule Editor.Engine do
 
   defp replace_leading([], _, _), do: []
 
-  @type cell :: %{
-          required(:id) => Utils.id(),
-          modifiers: list(String.t()),
-          text: String.t()
-        }
-
-  @spec replace_leading(list(cell), String.t(), String.t()) :: list(cell)
+  @spec replace_leading(list(Block.Cell.t()), String.t(), String.t()) :: list(Block.Cell.t())
   defp replace_leading([first | rest], from, to) do
     first = %{first | text: String.replace(first.text, from, to)}
     [first | rest]

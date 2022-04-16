@@ -11,11 +11,11 @@ defmodule Editor.Engine do
           %{required(:selection) => map, required(:cells) => list(map)}
         ) :: Editor.t()
   def update(%Editor{} = editor, %Block{} = block, %{
-        selection: %{
-          "start_id" => start_id,
-          "end_id" => end_id,
-          "start_offset" => start_offset,
-          "end_offset" => end_offset
+        selection: %Block.Selection{
+          start_id: start_id,
+          end_id: end_id,
+          start_offset: start_offset,
+          end_offset: end_offset
         },
         cells: new_cells
       }) do
@@ -72,11 +72,11 @@ defmodule Editor.Engine do
           }
         ) :: Editor.t()
   def toggle_style_on_selection(%Editor{} = editor, %Block{} = block, %{
-        selection: %{
-          "start_id" => start_id,
-          "end_id" => end_id,
-          "start_offset" => start_offset,
-          "end_offset" => end_offset
+        selection: %Block.Selection{
+          start_id: start_id,
+          end_id: end_id,
+          start_offset: start_offset,
+          end_offset: end_offset
         },
         style: style
       }) do
@@ -163,11 +163,11 @@ defmodule Editor.Engine do
   """
   @spec split_line(Editor.t(), Block.t(), %{required(:selection) => map}) :: Editor.t()
   def split_line(%Editor{} = editor, %Block{type: type} = block, %{
-        selection: %{
-          "start_id" => start_id,
-          "end_id" => end_id,
-          "start_offset" => start_offset,
-          "end_offset" => end_offset
+        selection: %Block.Selection{
+          start_id: start_id,
+          end_id: end_id,
+          start_offset: start_offset,
+          end_offset: end_offset
         }
       })
       when type in ["p", "pre", "blockquote"] do
@@ -181,7 +181,7 @@ defmodule Editor.Engine do
 
     {cells_before, [^cell | cells_after]} = Enum.split(cells, cell_index)
 
-    br_cell = %{id: Utils.new_id(), modifiers: ["br"], text: ""}
+    br_cell = %Block.Cell{id: Utils.new_id(), modifiers: ["br"], text: ""}
 
     new_cells = cells_before ++ [cell_before, br_cell, cell_after] ++ cells_after
 
@@ -224,11 +224,11 @@ defmodule Editor.Engine do
   """
   @spec split_block(Editor.t(), Block.t(), %{required(:selection) => map}) :: Editor.t()
   def split_block(%Editor{} = editor, %Block{cells: cells} = block, %{
-        selection: %{
-          "start_id" => start_id,
-          "end_id" => end_id,
-          "start_offset" => start_offset,
-          "end_offset" => end_offset
+        selection: %Block.Selection{
+          start_id: start_id,
+          end_id: end_id,
+          start_offset: start_offset,
+          end_offset: end_offset
         }
       }) do
     if start_id !== end_id, do: raise("selection is not 0")
@@ -291,11 +291,11 @@ defmodule Editor.Engine do
   def paste(%Editor{clipboard: nil} = editor, %Block{} = _block, %{}), do: editor
 
   def paste(%Editor{} = editor, %Block{} = block, %{
-        selection: %{
-          "start_id" => start_id,
-          "end_id" => end_id,
-          "start_offset" => start_offset,
-          "end_offset" => end_offset
+        selection: %Block.Selection{
+          start_id: start_id,
+          end_id: end_id,
+          start_offset: start_offset,
+          end_offset: end_offset
         }
       }) do
     [%{cells: [first_cell | _]} = first_block | rest] =

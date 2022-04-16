@@ -93,7 +93,7 @@ defmodule Editor.Block do
 
     editor =
       Engine.update(socket.assigns.editor, socket.assigns.block, %{
-        selection: selection,
+        selection: Block.Selection.normalize!(selection),
         cells: cells
       })
 
@@ -110,7 +110,7 @@ defmodule Editor.Block do
 
     editor =
       Engine.toggle_style_on_selection(socket.assigns.editor, socket.assigns.block, %{
-        selection: selection,
+        selection: Block.Selection.normalize!(selection),
         style: style
       })
 
@@ -125,7 +125,9 @@ defmodule Editor.Block do
     Logger.info("split_line: #{inspect(attrs)}")
 
     editor =
-      Engine.split_line(socket.assigns.editor, socket.assigns.block, %{selection: selection})
+      Engine.split_line(socket.assigns.editor, socket.assigns.block, %{
+        selection: Block.Selection.normalize!(selection)
+      })
 
     if editor !== socket.assigns.editor do
       send(self(), {:update, editor})
@@ -138,7 +140,9 @@ defmodule Editor.Block do
     Logger.info("split_block: #{inspect(attrs)}")
 
     editor =
-      Engine.split_block(socket.assigns.editor, socket.assigns.block, %{selection: selection})
+      Engine.split_block(socket.assigns.editor, socket.assigns.block, %{
+        selection: Block.Selection.normalize!(selection)
+      })
 
     if editor !== socket.assigns.editor do
       send(self(), {:update, editor})
@@ -160,7 +164,11 @@ defmodule Editor.Block do
 
   def handle_event("paste_blocks", %{"selection" => selection} = attrs, socket) do
     Logger.info("paste_blocks: #{inspect(attrs)}")
-    editor = Engine.paste(socket.assigns.editor, socket.assigns.block, %{selection: selection})
+
+    editor =
+      Engine.paste(socket.assigns.editor, socket.assigns.block, %{
+        selection: Block.Selection.normalize!(selection)
+      })
 
     if editor !== socket.assigns.editor do
       send(self(), {:update, editor})

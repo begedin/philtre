@@ -11,9 +11,9 @@ defmodule PhiltreWeb.DocumentLive.EditTest do
   @editor %Editor{
     id: "-1",
     blocks: [
-      %Block{id: "1", cells: [%{id: "1-1", text: "Foo", modifiers: []}], type: "h1"},
-      %Block{id: "2", cells: [%{id: "2-1", text: "Bar", modifiers: []}], type: "p"},
-      %Block{id: "3", cells: [%{id: "3-1", text: "Baz", modifiers: []}], type: "p"}
+      %Block{id: "1", cells: [%Block.Cell{id: "1-1", text: "Foo", modifiers: []}], type: "h1"},
+      %Block{id: "2", cells: [%Block.Cell{id: "2-1", text: "Bar", modifiers: []}], type: "p"},
+      %Block{id: "3", cells: [%Block.Cell{id: "3-1", text: "Baz", modifiers: []}], type: "p"}
     ]
   }
 

@@ -11,9 +11,9 @@ defmodule PhiltreWeb.DocumentLive.NewTest do
   @editor %Editor{
     id: "-1",
     blocks: [
-      %Block{id: "1", cells: [%{id: "1-1", text: "Foo", modifiers: []}], type: "h1"},
-      %Block{id: "2", cells: [%{id: "2-1", text: "Bar", modifiers: []}], type: "p"},
-      %Block{id: "3", cells: [%{id: "3-1", text: "Baz", modifiers: []}], type: "p"}
+      %Block{id: "1", cells: [%Block.Cell{id: "1-1", text: "Foo", modifiers: []}], type: "h1"},
+      %Block{id: "2", cells: [%Block.Cell{id: "2-1", text: "Bar", modifiers: []}], type: "p"},
+      %Block{id: "3", cells: [%Block.Cell{id: "3-1", text: "Baz", modifiers: []}], type: "p"}
     ]
   }
 
@@ -66,8 +66,8 @@ defmodule PhiltreWeb.DocumentLive.NewTest do
     assert %{socket: %{assigns: %{editor: %Editor{} = editor}}} = :sys.get_state(view.pid)
 
     assert [
-             %Editor.Block{cells: [%{text: "Foo"}], type: "h1"},
-             %Editor.Block{cells: [%{text: "Bar"}], type: "p"}
+             %Block{cells: [%{text: "Foo"}], type: "h1"},
+             %Block{cells: [%{text: "Bar"}], type: "p"}
            ] = editor.clipboard
 
     block = Enum.at(@editor.blocks, 0)

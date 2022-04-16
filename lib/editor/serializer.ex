@@ -52,7 +52,7 @@ defmodule Editor.Serializer do
   end
 
   def html(%Block{cells: cells, type: tag}) do
-    "<#{tag}>" <> (cells |> Enum.map(&html/1) |> Enum.join("")) <> "</#{tag}>"
+    "<#{tag}>" <> Enum.map_join(cells, "", &html/1) <> "</#{tag}>"
   end
 
   def html(%{id: _id, modifiers: _modifiers, text: text}) do

@@ -10,8 +10,8 @@ defmodule EditorTest.Wrapper do
   import Phoenix.LiveView.Helpers
   import Phoenix.LiveViewTest
 
-  alias Phoenix.LiveViewTest.View
   alias Editor.Block
+  alias Phoenix.LiveViewTest.View
 
   @doc false
   @impl Phoenix.LiveView

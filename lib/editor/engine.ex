@@ -66,7 +66,10 @@ defmodule Editor.Engine do
   @spec toggle_style_on_selection(
           Editor.t(),
           Block.t(),
-          %{required(:selection) => map, required(:style) => String.t()}
+          %{
+            required(:selection) => map,
+            required(:style) => String.t()
+          }
         ) :: Editor.t()
   def toggle_style_on_selection(%Editor{} = editor, %Block{} = block, %{
         selection: %{
@@ -301,7 +304,7 @@ defmodule Editor.Engine do
       Enum.map(editor.clipboard, &Map.put(&1, :id, Utils.new_id()))
 
     first_block =
-      Map.put(first_block, :selection, %{
+      Map.put(first_block, :selection, %Block.Selection{
         start_id: first_cell.id,
         end_id: first_cell.id,
         start_offset: 0,
@@ -311,7 +314,7 @@ defmodule Editor.Engine do
     clipboard_blocks = [first_block | rest]
 
     [block_before, block_after] =
-      case split_at_selection_as_block(block, %{
+      case split_at_selection_as_block(block, %Block.Selection{
              start_id: start_id,
              end_id: end_id,
              start_offset: start_offset,
@@ -333,7 +336,7 @@ defmodule Editor.Engine do
   @spec split_at_selection_as_block(Block.t(), Block.Selection.t()) :: list(Block.t())
   defp split_at_selection_as_block(
          %Block{} = block,
-         %{
+         %Block.Selection{
            start_id: start_id,
            end_id: end_id,
            start_offset: start_offset,
@@ -571,6 +574,12 @@ defmodule Editor.Engine do
        ) do
     end_offset = Kernel.max(end_offset + amount, 0)
     start_offset = Kernel.max(start_offset + amount, 0)
-    %{start_id: start_id, end_id: end_id, start_offset: start_offset, end_offset: end_offset}
+
+    %Block.Selection{
+      start_id: start_id,
+      end_id: end_id,
+      start_offset: start_offset,
+      end_offset: end_offset
+    }
   end
 end

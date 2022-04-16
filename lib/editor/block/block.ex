@@ -6,8 +6,8 @@ defmodule Editor.Block do
   use Phoenix.LiveComponent
   use Phoenix.HTML
 
-  alias Editor.Engine
   alias Editor.Block
+  alias Editor.Engine
   alias Editor.Utils
 
   require Logger
@@ -37,10 +37,7 @@ defmodule Editor.Block do
       phx-hook="ContentEditable"
       phx-target={@myself}
       data-selected={@selected}
-      data-selection-start-id={@block.selection.start_id}
-      data-selection-start-offset={@block.selection.start_offset}
-      data-selection-end-id={@block.selection.end_id}
-      data-selection-end-offset={@block.selection.end_offset}
+      {selection(@block.selection)}
     ><.content block={@block} /></p>
     """
   end
@@ -55,10 +52,7 @@ defmodule Editor.Block do
       phx-target={@myself}
       data-block
       data-selected={@selected}
-      data-selection-start-id={@block.selection.start_id}
-      data-selection-start-offset={@block.selection.start_offset}
-      data-selection-end-id={@block.selection.end_id}
-      data-selection-end-offset={@block.selection.end_offset}
+      {selection(@block.selection)}
     ><.content block={@block} /></pre>
     """
   end
@@ -73,10 +67,7 @@ defmodule Editor.Block do
       phx-target={@myself}
       data-block
       data-selected={@selected}
-      data-selection-start-id={@block.selection.start_id}
-      data-selection-start-offset={@block.selection.start_offset}
-      data-selection-end-id={@block.selection.end_id}
-      data-selection-end-offset={@block.selection.end_offset}
+      {selection(@block.selection)}
     ><.content block={@block} /></h1>
     """
   end
@@ -91,10 +82,7 @@ defmodule Editor.Block do
       phx-target={@myself}
       data-block
       data-selected={@selected}
-      data-selection-start-id={@block.selection.start_id}
-      data-selection-start-offset={@block.selection.start_offset}
-      data-selection-end-id={@block.selection.end_id}
-      data-selection-end-offset={@block.selection.end_offset}
+      {selection(@block.selection)}
     ><.content block={@block} /></h2>
     """
   end
@@ -109,10 +97,7 @@ defmodule Editor.Block do
       phx-target={@myself}
       data-block
       data-selected={@selected}
-      data-selection-start-id={@block.selection.start_id}
-      data-selection-start-offset={@block.selection.start_offset}
-      data-selection-end-id={@block.selection.end_id}
-      data-selection-end-offset={@block.selection.end_offset}
+      {selection(@block.selection)}
     ><.content block={@block} /></h3>
     """
   end
@@ -127,10 +112,7 @@ defmodule Editor.Block do
       phx-target={@myself}
       data-block
       data-selected={@selected}
-      data-selection-start-id={@block.selection[:start_id]}
-      data-selection-start-offset={@block.selection[:start_offset]}
-      data-selection-end-id={@block.selection[:end_id]}
-      data-selection-end-offset={@block.selection[:end_offset]}
+      {selection(@block.selection)}
     ><.content block={@block} /></blockquote>
     """
   end
@@ -146,10 +128,7 @@ defmodule Editor.Block do
         phx-target={@myself}
         data-block
         data-selected={@selected}
-        data-selection-start-id={@block.selection.start_id}
-        data-selection-start-offset={@block.selection.start_offset}
-        data-selection-end-id={@block.selection.end_id}
-        data-selection-end-offset={@block.selection.end_offset}
+        {selection(@block.selection)}
       ><.content block={@block} /></li></ul>
     """
   end
@@ -164,6 +143,15 @@ defmodule Editor.Block do
     ~H"""
     <span data-cell-id={id} class={classes}><%= text %></span>
     """
+  end
+
+  defp selection(%Block.Selection{} = selection) do
+    %{
+      "data-selection-start-id" => selection.start_id,
+      "data-selection-start-offset" => selection.start_offset,
+      "data-selection-end-id" => selection.end_id,
+      "data-selection-end-offset" => selection.end_offset
+    }
   end
 
   def handle_event("update", %{"selection" => selection, "cells" => cells} = attrs, socket) do

@@ -19,7 +19,14 @@ defmodule Editor.Block do
             type: "p",
             selection: %Block.Selection{}
 
-  @type t :: %__MODULE__{}
+  @type id :: String.t()
+
+  @type t :: %__MODULE__{
+          id: id,
+          cells: list(Block.Cell.t()),
+          type: String.t(),
+          selection: Block.Selection.t()
+        }
 
   # component
 
@@ -28,109 +35,31 @@ defmodule Editor.Block do
   end
 
   def render(%{block: %__MODULE__{type: "p"}} = assigns) do
-    ~H"""
-    <p
-      class="philtre__block"
-      contenteditable
-      data-block
-      id={@block.id}
-      phx-hook="ContentEditable"
-      phx-target={@myself}
-      data-selected={@selected}
-      {selection(@block.selection)}
-    ><.content block={@block} /></p>
-    """
+    ~H"<p {attrs(@block, @selected, @myself)}><.content block={@block} /></p>"
   end
 
   def render(%{block: %__MODULE__{type: "pre"}} = assigns) do
-    ~H"""
-    <pre
-      class="philtre__block"
-      contenteditable
-      id={@block.id}
-      phx-hook="ContentEditable"
-      phx-target={@myself}
-      data-block
-      data-selected={@selected}
-      {selection(@block.selection)}
-    ><.content block={@block} /></pre>
-    """
+    ~H"<pre {attrs(@block, @selected, @myself)}><.content block={@block} /></pre>"
   end
 
   def render(%{block: %__MODULE__{type: "h1"}} = assigns) do
-    ~H"""
-    <h1
-      class="philtre__block"
-      contenteditable
-      id={@block.id}
-      phx-hook="ContentEditable"
-      phx-target={@myself}
-      data-block
-      data-selected={@selected}
-      {selection(@block.selection)}
-    ><.content block={@block} /></h1>
-    """
+    ~H"<h1 {attrs(@block, @selected, @myself)}><.content block={@block} /></h1>"
   end
 
   def render(%{block: %__MODULE__{type: "h2"}} = assigns) do
-    ~H"""
-    <h2
-      class="philtre__block"
-      contenteditable
-      id={@block.id}
-      phx-hook="ContentEditable"
-      phx-target={@myself}
-      data-block
-      data-selected={@selected}
-      {selection(@block.selection)}
-    ><.content block={@block} /></h2>
-    """
+    ~H"<h2 {attrs(@block, @selected, @myself)}><.content block={@block} /></h2>"
   end
 
   def render(%{block: %__MODULE__{type: "h3"}} = assigns) do
-    ~H"""
-    <h3
-      class="philtre__block"
-      contenteditable
-      id={@block.id}
-      phx-hook="ContentEditable"
-      phx-target={@myself}
-      data-block
-      data-selected={@selected}
-      {selection(@block.selection)}
-    ><.content block={@block} /></h3>
-    """
+    ~H"<h3 {attrs(@block, @selected, @myself)}><.content block={@block} /></h3>"
   end
 
   def render(%{block: %__MODULE__{type: "blockquote"}} = assigns) do
-    ~H"""
-    <blockquote
-      class="philtre__block"
-      contenteditable
-      id={@block.id}
-      phx-hook="ContentEditable"
-      phx-target={@myself}
-      data-block
-      data-selected={@selected}
-      {selection(@block.selection)}
-    ><.content block={@block} /></blockquote>
-    """
+    ~H"<blockquote {attrs(@block, @selected, @myself)}><.content block={@block} /></blockquote>"
   end
 
   def render(%{block: %__MODULE__{type: "li"}} = assigns) do
-    ~H"""
-    <ul>
-      <li
-        class="philtre__block"
-        contenteditable
-        id={@block.id}
-        phx-hook="ContentEditable"
-        phx-target={@myself}
-        data-block
-        data-selected={@selected}
-        {selection(@block.selection)}
-      ><.content block={@block} /></li></ul>
-    """
+    ~H"<ul><li {attrs(@block, @selected, @myself)}><.content block={@block} /></li></ul>"
   end
 
   defp content(assigns) do
@@ -140,17 +69,22 @@ defmodule Editor.Block do
   defp cell(%{cell: %Block.Cell{id: id, modifiers: modifiers, text: text}} = assigns) do
     classes = ["philtre-cell"] |> Enum.concat(modifiers) |> Enum.join(" ") |> String.trim()
 
-    ~H"""
-    <span data-cell-id={id} class={classes}><%= text %></span>
-    """
+    ~H"<span data-cell-id={id} class={classes}><%= text %></span>"
   end
 
-  defp selection(%Block.Selection{} = selection) do
+  defp attrs(%Block{} = block, selected, myself) when is_boolean(selected) do
     %{
-      "data-selection-start-id" => selection.start_id,
-      "data-selection-start-offset" => selection.start_offset,
-      "data-selection-end-id" => selection.end_id,
-      "data-selection-end-offset" => selection.end_offset
+      class: "philtre__block",
+      contenteditable: true,
+      data_block: true,
+      data_selected: selected,
+      data_selection_end_id: block.selection.end_id,
+      data_selection_end_offset: block.selection.end_offset,
+      data_selection_start_id: block.selection.start_id,
+      data_selection_start_offset: block.selection.start_offset,
+      id: block.id,
+      phx_hook: "ContentEditable",
+      phx_target: myself
     }
   end
 
@@ -170,7 +104,8 @@ defmodule Editor.Block do
     {:noreply, socket}
   end
 
-  def handle_event("toggle." <> style, %{"selection" => selection} = attrs, socket) do
+  def handle_event("toggle." <> style, %{"selection" => selection} = attrs, socket)
+      when style in ["bold", "italic"] do
     Logger.info("toggle.#{style}: #{inspect(attrs)}")
 
     editor =

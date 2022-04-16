@@ -60,7 +60,7 @@ defmodule Editor.Engine do
           }
       })
 
-    replace_block(editor, block, new_block)
+    replace_block(editor, block, [new_block])
   end
 
   @spec toggle_style_on_selection(
@@ -185,16 +185,12 @@ defmodule Editor.Engine do
 
     new_cells = cells_before ++ [cell_before, br_cell, cell_after] ++ cells_after
 
-    replace_block(editor, block, %{block | cells: new_cells})
+    replace_block(editor, block, [%{block | cells: new_cells}])
   end
 
   def split_line(%Editor{} = editor, %Block{}, %{}), do: editor
 
-  @spec replace_block(Editor.t(), Block.t(), Block.t() | list(Block.t())) :: Editor.t()
-  defp replace_block(%Editor{} = editor, %Block{} = block, %Block{} = new_block) do
-    replace_block(editor, block, [new_block])
-  end
-
+  @spec replace_block(Editor.t(), Block.t(), list(Block.t())) :: Editor.t()
   defp replace_block(%Editor{} = editor, %Block{} = block, new_blocks) when is_list(new_blocks) do
     case Enum.find_index(editor.blocks, &(&1.id === block.id)) do
       nil ->
@@ -227,7 +223,7 @@ defmodule Editor.Engine do
   The second block is usually a P block.
   """
   @spec split_block(Editor.t(), Block.t(), %{required(:selection) => map}) :: Editor.t()
-  def split_block(%Editor{} = editor, %Block{} = block, %{
+  def split_block(%Editor{} = editor, %Block{cells: cells} = block, %{
         selection: %{
           "start_id" => start_id,
           "end_id" => end_id,
@@ -238,19 +234,20 @@ defmodule Editor.Engine do
     if start_id !== end_id, do: raise("selection is not 0")
     if start_offset !== end_offset, do: raise("selection is not 0")
 
-    cells = block.cells
     cell_index = Enum.find_index(cells, &(&1.id === start_id))
-    cell = Enum.at(cells, cell_index)
+    %Block.Cell{} = cell = Enum.at(cells, cell_index)
 
-    {cell_before, cell_after} = split_cell(cell, start_offset)
+    {%Block.Cell{} = cell_before, %Block.Cell{} = cell_after} = split_cell(cell, start_offset)
 
-    {block_before, block_after} = do_split_block(block, cell_index)
+    {%Editor.Block{} = block_before, %Editor.Block{} = block_after} =
+      do_split_block(block, cell_index)
 
-    block_before = %{
-      block_before
-      | cells: block_before.cells ++ [cell_before],
-        selection: %Block.Selection{}
-    }
+    %Editor.Block{} =
+      block_before = %{
+        block_before
+        | cells: block_before.cells ++ [cell_before],
+          selection: %Block.Selection{}
+      }
 
     after_type =
       case block.type do
@@ -258,17 +255,18 @@ defmodule Editor.Engine do
         _other -> "p"
       end
 
-    block_after = %{
-      block_after
-      | cells: [cell_after] ++ block_after.cells,
-        type: after_type,
-        selection: %Block.Selection{
-          start_id: cell_after.id,
-          end_id: cell_after.id,
-          start_offset: 0,
-          end_offset: 0
-        }
-    }
+    %Editor.Block{} =
+      block_after = %Editor.Block{
+        block_after
+        | cells: [cell_after] ++ block_after.cells,
+          type: after_type,
+          selection: %Block.Selection{
+            start_id: cell_after.id,
+            end_id: cell_after.id,
+            start_offset: 0,
+            end_offset: 0
+          }
+      }
 
     replace_block(editor, block, [block_before, block_after])
   end

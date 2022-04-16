@@ -23,9 +23,9 @@ defmodule Editor.Block.Selection do
   defstruct [:start_id, :end_id, :start_offset, :end_offset]
 
   @type t :: %__MODULE__{
-          start_id: Block.Cell.id(),
-          end_id: Block.Cell.id(),
-          start_offset: non_neg_integer(),
-          end_offset: non_neg_integer()
+          start_id: Block.Cell.id() | nil,
+          end_id: Block.Cell.id() | nil,
+          start_offset: non_neg_integer() | nil,
+          end_offset: non_neg_integer() | nil
         }
 end

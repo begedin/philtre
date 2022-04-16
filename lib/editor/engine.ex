@@ -5,36 +5,147 @@ defmodule Editor.Engine do
   alias Editor.Block
   alias Editor.Utils
 
-  @doc """
-  Performs action of updating a block within an editor, which is the result of
-  a user typing something into the block.
-  """
-  def update_block(%Editor{} = editor, %Block{} = block, %{
-        pre_caret: pre_caret,
-        post_caret: post_caret,
-        selection: selection
+  @spec update(
+          Editor.t(),
+          Block.t(),
+          %{required(:selection) => map, required(:cells) => list(map)}
+        ) :: Editor.t()
+  def update(%Editor{} = editor, %Block{} = block, %{
+        selection: %{
+          "start_id" => start_id,
+          "end_id" => end_id,
+          "start_offset" => start_offset,
+          "end_offset" => end_offset
+        },
+        cells: new_cells
       }) do
-    index = Enum.find_index(editor.blocks, &(&1.id === block.id))
+    old_cells = block.cells
 
-    if index >= 0 do
-      pre_caret = cleanup(pre_caret)
-      post_caret = cleanup(post_caret)
-      selection = cleanup(selection)
+    new_ids = Enum.map(new_cells, & &1["id"])
+    remaining_cells = Enum.filter(old_cells, &(&1.id in new_ids))
 
-      new_block =
-        resolve_transform(%{
+    updated_cells =
+      Enum.map(remaining_cells, fn cell ->
+        params = Enum.find(new_cells, &(&1["id"] === cell.id))
+        %{cell | modifiers: params["modifiers"], text: params["text"]}
+      end)
+
+    start_cell = Enum.find(remaining_cells, &(&1.id === start_id))
+    end_cell = Enum.find(remaining_cells, &(&1.id === end_id))
+
+    pre_cells =
+      updated_cells
+      |> Enum.split_with(&(&1.id === start_cell.id))
+      |> Kernel.elem(0)
+
+    post_cells =
+      updated_cells
+      |> Enum.split_with(&(&1.id === end_cell.id))
+      |> Kernel.elem(1)
+
+    new_block =
+      resolve_transform(%{
+        block
+        | cells: pre_cells ++ post_cells,
+          selection: %{
+            start_id: start_id,
+            end_id: end_id,
+            start_offset: start_offset,
+            end_offset: end_offset
+          }
+      })
+
+    replace_block(editor, block, new_block)
+  end
+
+  @spec toggle_style_on_selection(
+          Editor.t(),
+          Block.t(),
+          %{required(:selection) => map, required(:style) => String.t()}
+        ) :: Editor.t()
+  def toggle_style_on_selection(%Editor{} = editor, %Block{} = block, %{
+        selection: %{
+          "start_id" => start_id,
+          "end_id" => end_id,
+          "start_offset" => start_offset,
+          "end_offset" => end_offset
+        },
+        style: style
+      }) do
+    cells = block.cells
+    start_cell_index = Enum.find_index(cells, &(&1.id === start_id))
+
+    new_block =
+      if start_id !== end_id do
+        {cells_before, [start_cell | remaining_cells]} = Enum.split(cells, start_cell_index)
+
+        end_cell_index = Enum.find_index(remaining_cells, &(&1.id === end_id))
+        {cells_between, [end_cell | cells_after]} = Enum.split(remaining_cells, end_cell_index)
+
+        {start_text_left, start_text_right} = String.split_at(start_cell.text, start_offset)
+        start_cell = %{start_cell | text: start_text_left}
+        new_cell_left = %{start_cell | id: Utils.new_id(), text: start_text_right}
+
+        {end_text_left, end_text_right} = String.split_at(end_cell.text, end_offset)
+        end_cell = %{end_cell | text: end_text_right}
+        new_cell_right = %{end_cell | id: Utils.new_id(), text: end_text_left}
+
+        new_cells =
+          Enum.map([new_cell_left] ++ cells_between ++ [new_cell_right], fn cell ->
+            new_modifiers = cell.modifiers |> Enum.concat([style]) |> Enum.dedup() |> Enum.sort()
+            %{cell | modifiers: new_modifiers}
+          end)
+
+        new_selection = %{
+          start_id: new_cell_left.id,
+          end_id: new_cell_right.id,
+          start_offset: 0,
+          end_offset: String.length(new_cell_right.text)
+        }
+
+        %{
           block
-          | pre_caret: pre_caret,
-            post_caret: post_caret,
-            selection: selection
-        })
+          | cells: cells_before ++ new_cells ++ cells_after,
+            selection: new_selection
+        }
+      else
+        {cells_before, [start_cell | cells_after]} = Enum.split(cells, start_cell_index)
 
-      new_blocks = List.replace_at(editor.blocks, index, new_block)
+        {text_left, remaining_text} = String.split_at(start_cell.text, start_offset)
+        {text_between, text_right} = String.split_at(remaining_text, end_offset - start_offset)
 
-      %{editor | blocks: new_blocks}
-    else
-      editor
-    end
+        new_modifiers =
+          if style in start_cell.modifiers do
+            List.delete(start_cell.modifiers, style)
+          else
+            start_cell.modifiers |> Enum.concat([style]) |> Enum.sort()
+          end
+
+        [_, selected_cell, _] =
+          new_cells = [
+            %{start_cell | text: text_left},
+            %{start_cell | id: Utils.new_id(), text: text_between, modifiers: new_modifiers},
+            %{start_cell | id: Utils.new_id(), text: text_right}
+          ]
+
+        new_selection = %{
+          start_id: selected_cell.id,
+          end_id: selected_cell.id,
+          start_offset: 0,
+          end_offset: String.length(selected_cell.text)
+        }
+
+        %{
+          block
+          | cells: cells_before ++ new_cells ++ cells_after,
+            selection: new_selection
+        }
+      end
+
+    index = Enum.find_index(editor.blocks, &(&1.id === block.id))
+    new_blocks = List.replace_at(editor.blocks, index, new_block)
+
+    %{editor | blocks: new_blocks}
   end
 
   @doc """
@@ -42,31 +153,62 @@ defmodule Editor.Engine do
 
   This is the result of the user usually hitting Shift + Enter.
   """
+  @spec split_line(Editor.t(), Block.t(), %{required(:selection) => map}) :: Editor.t()
   def split_line(%Editor{} = editor, %Block{type: type} = block, %{
-        pre: pre,
-        post: post,
-        selection: selection
+        selection: %{
+          "start_id" => start_id,
+          "end_id" => end_id,
+          "start_offset" => start_offset,
+          "end_offset" => end_offset
+        }
       })
       when type in ["p", "pre", "blockquote"] do
-    index = Enum.find_index(editor.blocks, &(&1.id === block.id))
+    if start_id !== end_id, do: raise("selection is not 0")
+    if start_offset !== end_offset, do: raise("selection is not 0")
+    cells = block.cells
+    cell_index = Enum.find_index(cells, &(&1.id === start_id))
+    cell = Enum.at(cells, cell_index)
 
-    if index >= 0 do
-      pre = cleanup(pre) <> "<br/>"
-      post = cleanup(post)
-      selection = cleanup(selection)
+    {cell_before, cell_after} = split_cell(cell, start_offset)
 
-      new_block =
-        resolve_transform(%{block | pre_caret: pre, post_caret: post, selection: selection})
+    {cells_before, [^cell | cells_after]} = Enum.split(cells, cell_index)
 
-      new_blocks = List.replace_at(editor.blocks, index, new_block)
+    br_cell = %{id: Utils.new_id(), modifiers: ["br"], text: ""}
 
-      %{editor | blocks: new_blocks}
-    else
-      editor
+    new_cells = cells_before ++ [cell_before, br_cell, cell_after] ++ cells_after
+
+    replace_block(editor, block, %{block | cells: new_cells})
+  end
+
+  def split_line(%Editor{} = editor, %Block{}, %{}), do: editor
+
+  @spec replace_block(Editor.t(), Block.t(), Block.t() | list(Block.t())) :: Editor.t()
+  defp replace_block(%Editor{} = editor, %Block{} = block, %Block{} = new_block) do
+    replace_block(editor, block, [new_block])
+  end
+
+  defp replace_block(%Editor{} = editor, %Block{} = block, new_blocks) when is_list(new_blocks) do
+    case Enum.find_index(editor.blocks, &(&1.id === block.id)) do
+      nil ->
+        editor
+
+      index when is_integer(index) ->
+        new_blocks =
+          editor.blocks
+          |> List.replace_at(index, new_blocks)
+          |> List.flatten()
+
+        %{editor | blocks: new_blocks}
     end
   end
 
-  def split_line(%Editor{} = editor, %Block{}), do: editor
+  @spec split_cell(cell, non_neg_integer()) :: {cell, cell}
+  defp split_cell(%{id: _, modifiers: _, text: _} = cell, index) do
+    {text_before, text_after} = String.split_at(cell.text, index)
+    cell_before = %{cell | text: text_before}
+    cell_after = %{cell | id: Utils.new_id(), text: text_after}
+    {cell_before, cell_after}
+  end
 
   @doc """
   Performs action of splitting a block into two separate blocks at current cursor position.
@@ -76,74 +218,195 @@ defmodule Editor.Engine do
   The first block retains the type of the original.
   The second block is usually a P block.
   """
-  def split_block(%Editor{} = editor, %_{} = block, %{pre: pre, post: post}) do
-    index = Enum.find_index(editor.blocks, &(&1.id === block.id))
+  @spec split_block(Editor.t(), Block.t(), %{required(:selection) => map}) :: Editor.t()
+  def split_block(%Editor{} = editor, %Block{} = block, %{
+        selection: %{
+          "start_id" => start_id,
+          "end_id" => end_id,
+          "start_offset" => start_offset,
+          "end_offset" => end_offset
+        }
+      }) do
+    if start_id !== end_id, do: raise("selection is not 0")
+    if start_offset !== end_offset, do: raise("selection is not 0")
 
-    if index >= 0 do
-      old_block = %{block | pre_caret: pre, post_caret: "", selection: nil}
+    cells = block.cells
+    cell_index = Enum.find_index(cells, &(&1.id === start_id))
+    cell = Enum.at(cells, cell_index)
 
-      new_type = if block.type == "li", do: "li", else: "p"
+    {cell_before, cell_after} = split_cell(cell, start_offset)
 
-      new_block = %Block{
-        id: Utils.new_id(),
-        post_caret: post,
-        selection: "",
-        pre_caret: "",
-        type: new_type
-      }
+    {block_before, block_after} = do_split_block(block, cell_index)
 
-      new_blocks =
-        editor.blocks |> List.replace_at(index, [old_block, new_block]) |> List.flatten()
+    block_before = %{
+      block_before
+      | cells: block_before.cells ++ [cell_before],
+        selection: %{}
+    }
 
-      %{editor | blocks: new_blocks}
-    else
-      editor
-    end
+    after_type =
+      case block.type do
+        "ul" -> "ul"
+        _other -> "p"
+      end
+
+    block_after = %{
+      block_after
+      | cells: [cell_after] ++ block_after.cells,
+        type: after_type,
+        selection: %{
+          start_id: cell_after.id,
+          end_id: cell_after.id,
+          start_offset: 0,
+          end_offset: 0
+        }
+    }
+
+    replace_block(editor, block, [block_before, block_after])
+  end
+
+  @spec do_split_block(Block.t(), non_neg_integer()) :: {Block.t(), Block.t()}
+  defp do_split_block(%Block{} = block, cell_index) do
+    cells = block.cells
+
+    {cells_before, [_removed_cell | cells_after]} = Enum.split(cells, cell_index)
+
+    block_before = %{block | cells: cells_before}
+    block_after = %{block | id: Utils.new_id(), cells: cells_after}
+
+    {block_before, block_after}
   end
 
   @doc """
   Splits block into two at cursor, then pastes in the current
   cliboard contents of the editor, between the two.
   """
-  def paste(%Editor{clipboard: nil} = editor, %Block{} = _block, %{pre_caret: _, post_caret: _}) do
-    editor
+  @spec paste(Editor.t(), Block.t(), map) :: Editor.t()
+  def paste(%Editor{clipboard: nil} = editor, %Block{} = _block, %{}), do: editor
+
+  def paste(%Editor{} = editor, %Block{} = block, %{
+        selection: %{
+          "start_id" => start_id,
+          "end_id" => end_id,
+          "start_offset" => start_offset,
+          "end_offset" => end_offset
+        }
+      }) do
+    [%{cells: [first_cell | _]} = first_block | rest] =
+      Enum.map(editor.clipboard, &Map.put(&1, :id, Utils.new_id()))
+
+    first_block =
+      Map.put(first_block, :selection, %{
+        start_id: first_cell.id,
+        end_id: first_cell.id,
+        start_offset: 0,
+        end_offset: 0
+      })
+
+    clipboard_blocks = [first_block | rest]
+
+    [block_before, block_after] =
+      case split_at_selection_as_block(block, %{
+             start_id: start_id,
+             end_id: end_id,
+             start_offset: start_offset,
+             end_offset: end_offset
+           }) do
+        [block_before, _block_in, block_after] -> [block_before, block_after]
+        [block_before, block_after] -> [block_before, block_after]
+      end
+
+    new_blocks = Enum.reject([block_before] ++ clipboard_blocks ++ [block_after], &empty_block?/1)
+
+    replace_block(editor, block, new_blocks)
   end
 
-  def paste(%Editor{} = editor, %Block{} = block, %{pre: pre, post: post}) do
-    index = Enum.find_index(editor.blocks, &(&1.id === block.id))
+  @spec empty_block?(Block.t()) :: boolean
+  defp empty_block?(%Block{cells: [%{text: ""}]}), do: true
+  defp empty_block?(%Block{}), do: false
 
-    if index >= 0 do
-      pre = cleanup(pre)
-      post = cleanup(post)
+  @spec split_at_selection_as_block(Block.t(), selection) :: list(Block.t())
+  defp split_at_selection_as_block(
+         %Block{} = block,
+         %{
+           start_id: start_id,
+           end_id: end_id,
+           start_offset: start_offset,
+           end_offset: end_offset
+         }
+       )
+       when start_id == end_id do
+    cells = block.cells
 
-      old_block = %{block | pre_caret: pre, post_caret: ""}
+    cell_index = Enum.find_index(cells, &(&1.id === start_id))
+    {cells_before, [cell | cells_after]} = Enum.split(cells, cell_index)
 
-      replace_blocks =
-        if post == "" do
-          [old_block] ++ editor.clipboard
-        else
-          new_block = %Block{
-            id: Utils.new_id(),
-            post_caret: post,
-            pre_caret: "",
-            selection: "",
-            type: "p"
-          }
+    case split_cell(cell, start_offset, end_offset) do
+      [cell_before, cell_after] ->
+        [
+          %{block | cells: cells_before ++ [cell_before] ++ cells_after},
+          %{block | id: Utils.new_id(), cells: [cell_after] ++ cells_after}
+        ]
 
-          [old_block] ++ editor.clipboard ++ [new_block]
-        end
-
-      new_blocks =
-        editor.blocks
-        |> List.replace_at(index, replace_blocks)
-        |> List.flatten()
-
-      %{editor | blocks: new_blocks}
-    else
-      editor
+      [cell_before, cell_in, cell_after] ->
+        [
+          %{block | cells: cells_before ++ [cell_before] ++ cells_after},
+          %{block | id: Utils.new_id(), cells: [cell_in]},
+          %{block | id: Utils.new_id(), cells: [cell_after] ++ cells_after}
+        ]
     end
   end
 
+  defp split_at_selection_as_block(
+         %Block{} = block,
+         %{
+           start_id: start_id,
+           end_id: end_id,
+           start_offset: start_offset,
+           end_offset: end_offset
+         }
+       ) do
+    cells = block.cells
+    start_index = Enum.find_index(cells, &(&1.id === start_id))
+
+    {cells_before, [start_cell | rest]} = Enum.split(cells, start_index)
+    [start_cell_in, start_cell_out] = split_cell(start_cell, start_offset, start_offset)
+
+    end_index = Enum.find_index(rest, &(&1.id === end_id))
+    {cells_in, [end_cell | cells_after]} = Enum.split(rest, end_index)
+    [end_cell_in, end_cell_out] = split_cell(end_cell, end_offset, end_offset)
+
+    [
+      %{block | cells: cells_before ++ [start_cell_in]},
+      %{block | id: Utils.new_id(), cells: [start_cell_out] ++ cells_in ++ [end_cell_in]},
+      %{block | id: Utils.new_id(), cells: [end_cell_out] ++ cells_after}
+    ]
+  end
+
+  @spec split_cell(cell, non_neg_integer(), non_neg_integer()) :: list(cell)
+  defp split_cell(%{id: _, text: _, modifiers: _} = cell, start_offset, end_offset)
+       when start_offset == end_offset do
+    {text_before, text_after} = String.split_at(cell.text, start_offset)
+
+    [
+      %{cell | text: text_before},
+      %{cell | id: Utils.new_id(), text: text_after}
+    ]
+  end
+
+  defp split_cell(%{id: _, text: _, modifiers: _} = cell, start_offset, end_offset)
+       when start_offset < end_offset do
+    {text_before, rest} = String.split_at(cell.text, start_offset)
+    {text_in, text_after} = String.split_at(rest, end_offset - start_offset)
+
+    [
+      %{cell | text: text_before},
+      %{cell | id: Utils.new_id(), text: text_in},
+      %{cell | id: Utils.new_id(), text: text_after}
+    ]
+  end
+
+  @spec backspace_from_start(Editor.t(), Block.t()) :: Editor.t()
   def backspace_from_start(%Editor{} = editor, %Block{type: "p"} = block) do
     merge_previous(editor, block)
   end
@@ -160,6 +423,7 @@ defmodule Editor.Engine do
     convert(editor, block, "p")
   end
 
+  @spec convert(Editor.t(), Block.t(), String.t()) :: Editor.t()
   defp convert(%Editor{} = editor, %Block{} = block, type)
        when type in ["p", "h1", "h2", "h3"] do
     index = Enum.find_index(editor.blocks, &(&1.id === block.id))
@@ -179,6 +443,19 @@ defmodule Editor.Engine do
     if index >= 0 do
       %_{} = previous_block = Enum.at(editor.blocks, index)
       merged = %{merge_second_into_first(previous_block, block) | id: Utils.new_id()}
+
+      first_cell = Enum.at(block.cells, 0)
+
+      merged = %{
+        merged
+        | selection: %{
+            start_id: first_cell.id,
+            end_id: first_cell.id,
+            start_offset: 0,
+            end_offst: 0
+          }
+      }
+
       blocks = editor.blocks |> List.delete_at(index + 1) |> List.replace_at(index, merged)
       %{editor | blocks: blocks}
     else
@@ -186,28 +463,20 @@ defmodule Editor.Engine do
     end
   end
 
+  @spec merge_second_into_first(Block.t(), Block.t()) :: Block.t()
   defp merge_second_into_first(%Block{} = first_block, %Block{} = other_block) do
-    %{
-      first_block
-      | pre_caret: first_block.pre_caret <> first_block.post_caret,
-        selection: "",
-        post_caret: other_block.pre_caret <> other_block.post_caret
-    }
+    %{first_block | cells: first_block.cells ++ other_block.cells}
   end
 
-  defp cleanup(content) do
-    content
-    |> String.replace("&nbsp;", " ", global: true)
-    |> String.replace("&gt;", ">", global: true)
-  end
-
+  @spec resolve_transform(Block.t()) :: Block.t()
   defp resolve_transform(%Block{} = p) do
-    case transform_type(p.pre_caret) do
+    case p.cells |> Enum.at(0) |> Map.get(:text) |> transform_type() do
       nil -> p
       other -> transform(p, other)
     end
   end
 
+  @spec transform_type(String.t()) :: String.t() | nil
   defp transform_type("# " <> _), do: "h1"
   defp transform_type("## " <> _), do: "h2"
   defp transform_type("### " <> _), do: "h3"
@@ -216,12 +485,25 @@ defmodule Editor.Engine do
   defp transform_type("> " <> _), do: "blockquote"
   defp transform_type(_), do: nil
 
+  @spec transform(Block.t(), String.t()) :: Block.t()
   defp transform(%Block{} = self, "h1") do
-    %{self | id: Utils.new_id(), type: "h1", pre_caret: String.replace(self.pre_caret, "# ", "")}
+    %{
+      self
+      | id: Utils.new_id(),
+        type: "h1",
+        cells: replace_leading(self.cells, "# ", ""),
+        selection: shift(self.selection, -2)
+    }
   end
 
   defp transform(%Block{} = self, "h2") do
-    %{self | id: Utils.new_id(), type: "h2", pre_caret: String.replace(self.pre_caret, "## ", "")}
+    %{
+      self
+      | id: Utils.new_id(),
+        type: "h2",
+        cells: replace_leading(self.cells, "## ", ""),
+        selection: shift(self.selection, -3)
+    }
   end
 
   defp transform(%Block{} = self, "h3") do
@@ -229,7 +511,8 @@ defmodule Editor.Engine do
       self
       | id: Utils.new_id(),
         type: "h3",
-        pre_caret: String.replace(self.pre_caret, "### ", "")
+        cells: replace_leading(self.cells, "### ", ""),
+        selection: shift(self.selection, -4)
     }
   end
 
@@ -238,7 +521,8 @@ defmodule Editor.Engine do
       self
       | id: Utils.new_id(),
         type: "pre",
-        pre_caret: String.replace(self.pre_caret, "```", "")
+        cells: replace_leading(self.cells, "```", ""),
+        selection: shift(self.selection, -3)
     }
   end
 
@@ -247,11 +531,54 @@ defmodule Editor.Engine do
       self
       | id: Utils.new_id(),
         type: "blockquote",
-        pre_caret: String.replace(self.pre_caret, "> ", "")
+        cells: replace_leading(self.cells, "> ", ""),
+        selection: shift(self.selection, -2)
     }
   end
 
   defp transform(%Block{} = self, "li") do
-    %{self | id: Utils.new_id(), type: "li", pre_caret: String.replace(self.pre_caret, "* ", "")}
+    %{
+      self
+      | id: Utils.new_id(),
+        type: "li",
+        cells: replace_leading(self.cells, "* ", ""),
+        selection: shift(self.selection, -2)
+    }
+  end
+
+  defp replace_leading([], _, _), do: []
+
+  @type cell :: %{
+          required(:id) => Utils.id(),
+          modifiers: list(String.t()),
+          text: String.t()
+        }
+
+  @spec replace_leading(list(cell), String.t(), String.t()) :: list(cell)
+  defp replace_leading([first | rest], from, to) do
+    first = %{first | text: String.replace(first.text, from, to)}
+    [first | rest]
+  end
+
+  @type selection :: %{
+          required(:start_id) => Utils.id(),
+          required(:end_id) => Utils.id(),
+          required(:start_offset) => non_neg_integer(),
+          required(:end_offset) => non_neg_integer()
+        }
+
+  @spec shift(selection, integer) :: selection()
+  defp shift(
+         %{
+           start_id: start_id,
+           end_id: end_id,
+           start_offset: start_offset,
+           end_offset: end_offset
+         },
+         amount
+       ) do
+    end_offset = Kernel.max(end_offset + amount, 0)
+    start_offset = Kernel.max(start_offset + amount, 0)
+    %{start_id: start_id, end_id: end_id, start_offset: start_offset, end_offset: end_offset}
   end
 end

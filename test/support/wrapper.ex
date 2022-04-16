@@ -11,6 +11,7 @@ defmodule EditorTest.Wrapper do
   import Phoenix.LiveViewTest
 
   alias Phoenix.LiveViewTest.View
+  alias Editor.Block
 
   @doc false
   @impl Phoenix.LiveView
@@ -72,7 +73,7 @@ defmodule EditorTest.Wrapper do
   def cursor_index(%View{} = view) do
     %Editor{} = editor = get_editor(view)
     %_{} = block = Enum.find(editor.blocks, &(&1.selection != nil))
-    String.length(block.pre_caret)
+    String.length(block.cells)
   end
 
   @doc """
@@ -88,33 +89,42 @@ defmodule EditorTest.Wrapper do
   @doc """
   Sends newline command at the location
   """
-  def trigger_split_block(%View{} = view, %_{pre_caret: _, post_caret: _} = block, :end) do
-    trigger_split_block(view, block, %{pre: block.pre_caret <> block.post_caret, post: ""})
+  def trigger_split_block(%View{} = view, %_{cells: _} = block, :end) do
+    end_cell = Enum.at(block.cells, -1)
+
+    trigger_split_block(view, block, %{
+      selection: %{
+        start_id: end_cell.id,
+        end_id: end_cell.id,
+        start_offset: String.length(end_cell.text),
+        end_offset: String.length(end_cell.text)
+      }
+    })
   end
 
-  def trigger_split_block(%View{} = view, index, %{pre: pre, post: post})
+  def trigger_split_block(%View{} = view, index, %{selection: selection})
       when is_integer(index) do
-    trigger_split_block(view, block_at(view, index), %{pre: pre, post: post})
+    trigger_split_block(view, block_at(view, index), %{selection: selection})
   end
 
-  def trigger_split_block(%View{} = view, %_{} = block, %{pre: pre, post: post}) do
+  def trigger_split_block(%View{} = view, %_{} = block, %{selection: selection}) do
     view
     |> element("##{block.id}")
-    |> render_hook("split_block", %{"pre" => pre, "post" => post})
+    |> render_hook("split_block", %{"selection" => selection})
   end
 
   @doc """
   Updates cell at specified location with specified value
   """
-  def trigger_update(%View{} = view, index, %{pre: pre, selection: selection, post: post})
+  def trigger_update(%View{} = view, index, %{selection: selection, cells: cells})
       when is_integer(index) do
-    trigger_update(view, block_at(view, index), %{pre: pre, selection: selection, post: post})
+    trigger_update(view, block_at(view, index), %{selection: selection, cells: cells})
   end
 
-  def trigger_update(%View{} = view, %_{} = block, %{pre: pre, selection: selection, post: post}) do
+  def trigger_update(%View{} = view, %_{} = block, %{selection: selection, cells: cells}) do
     view
     |> element("##{block.id}")
-    |> render_hook("update", %{"pre" => pre, "selection" => selection, "post" => post})
+    |> render_hook("update", %{"selection" => selection, "cells" => cells})
   end
 
   @doc """
@@ -129,7 +139,7 @@ defmodule EditorTest.Wrapper do
     |> element("##{block.id}")
     |> render_hook("backspace_from_start", %{
       "pre" => "",
-      "post" => block.pre_caret <> block.post_caret
+      "post" => block.cells
     })
   end
 
@@ -154,14 +164,14 @@ defmodule EditorTest.Wrapper do
   @doc """
   Simulates paste action of selected blocks
   """
-  def paste_blocks(%View{} = view, index, %{pre: pre, post: post}) when is_integer(index) do
-    paste_blocks(view, block_at(view, index), %{pre: pre, post: post})
+  def paste_blocks(%View{} = view, index, %{selection: selection}) when is_integer(index) do
+    paste_blocks(view, block_at(view, index), %{selection: selection})
   end
 
-  def paste_blocks(%View{} = view, %_{} = block, %{pre: pre, post: post}) do
+  def paste_blocks(%View{} = view, %Block{} = block, %{selection: selection}) do
     view
     |> element("##{block.id}")
-    |> render_hook("paste_blocks", %{"pre" => pre, "post" => post})
+    |> render_hook("paste_blocks", %{"selection" => selection})
   end
 
   def block_text(%View{} = view, index) when is_integer(index) do

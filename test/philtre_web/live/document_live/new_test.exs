@@ -11,9 +11,9 @@ defmodule PhiltreWeb.DocumentLive.NewTest do
   @editor %Editor{
     id: "-1",
     blocks: [
-      %Block{id: "1", pre_caret: "Foo", type: "h1"},
-      %Block{id: "2", pre_caret: "Bar", type: "p"},
-      %Block{id: "3", pre_caret: "Baz", type: "p"}
+      %Block{id: "1", cells: [%{id: "1-1", text: "Foo", modifiers: []}], type: "h1"},
+      %Block{id: "2", cells: [%{id: "2-1", text: "Bar", modifiers: []}], type: "p"},
+      %Block{id: "3", cells: [%{id: "3-1", text: "Baz", modifiers: []}], type: "p"}
     ]
   }
 
@@ -33,9 +33,9 @@ defmodule PhiltreWeb.DocumentLive.NewTest do
 
     assert %Editor{
              blocks: [
-               %Editor.Block{post_caret: "", pre_caret: "Foo", type: "h1"},
-               %Editor.Block{post_caret: "", pre_caret: "Bar", type: "p"},
-               %Editor.Block{post_caret: "", pre_caret: "Baz", type: "p"}
+               %Block{id: "1", cells: [%{id: "1-1", text: "Foo", modifiers: []}], type: "h1"},
+               %Block{id: "2", cells: [%{id: "2-1", text: "Bar", modifiers: []}], type: "p"},
+               %Block{id: "3", cells: [%{id: "3-1", text: "Baz", modifiers: []}], type: "p"}
              ],
              clipboard: nil,
              selected_blocks: [],
@@ -66,18 +66,25 @@ defmodule PhiltreWeb.DocumentLive.NewTest do
     assert %{socket: %{assigns: %{editor: %Editor{} = editor}}} = :sys.get_state(view.pid)
 
     assert [
-             %Editor.Block{post_caret: "", pre_caret: "Foo", type: "h1"},
-             %Editor.Block{post_caret: "", pre_caret: "Bar", type: "p"}
+             %Editor.Block{cells: [%{text: "Foo"}], type: "h1"},
+             %Editor.Block{cells: [%{text: "Bar"}], type: "p"}
            ] = editor.clipboard
 
     block = Enum.at(@editor.blocks, 0)
 
     view
     |> element("[id^=#{block.id}]")
-    |> render_hook("paste_blocks", %{"pre" => "Fo", "post" => "o"})
+    |> render_hook("paste_blocks", %{
+      "selection" => %{
+        "start_id" => "1-1",
+        "end_id" => "1-1",
+        "start_offset" => 1,
+        "end_offset" => 1
+      }
+    })
 
     assert %{socket: %{assigns: %{editor: %Editor{} = editor}}} = :sys.get_state(view.pid)
     assert Enum.count(editor.blocks) == 6
-    assert Editor.text(editor) == "FoFooBaroBarBaz"
+    assert Editor.text(editor) == "FFooBarooBarBaz"
   end
 end

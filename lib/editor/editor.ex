@@ -25,15 +25,16 @@ defmodule Editor do
       blocks: [
         %Block{
           id: Utils.new_id(),
-          pre_caret: "This is the title of your page",
-          post_caret: "",
+          cells: [
+            %{id: Utils.new_id(), text: "This is the title of your page", modifiers: []}
+          ],
+          selection: [],
           type: "h1"
         },
         %Block{
           id: Utils.new_id(),
-          pre_caret: "This is your first paragraph.",
-          selection: "",
-          post_caret: "",
+          cells: [%{id: Utils.new_id(), text: "This is your first paragraph.", modifiers: []}],
+          selection: [],
           type: "p"
         }
       ]

@@ -32,61 +32,104 @@ const initCopy = (hook: SelectionHook) => {
   });
 };
 
+type SelectionState = {
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+  selecting: boolean;
+};
+
+const getWidth = (state: SelectionState): number =>
+  Math.abs(state.toX - state.fromX);
+
+const getHeight = (state: SelectionState): number =>
+  Math.abs(state.toY - state.fromY);
+
+const getLeft = (state: SelectionState): number =>
+  Math.min(state.fromX, state.toX);
+
+const getTop = (state: SelectionState): number =>
+  Math.min(state.fromY, state.toY);
+
+const showDOM = (selection: HTMLElement): void => {
+  selection.style.display = 'none';
+  selection.style.background = 'rgba(0,0,255,0.1)';
+  selection.style.position = 'fixed';
+  selection.style.display = 'block';
+};
+
+const updateDOM = (selection: HTMLElement, state: SelectionState): void => {
+  selection.style.left = `${getLeft(state)}px`;
+  selection.style.top = `${getTop(state)}px`;
+  selection.style.width = `${getWidth(state)}px`;
+  selection.style.height = `${getHeight(state)}px`;
+};
+
+const resetDOM = (selection: HTMLElement, state: SelectionState) => {
+  selection.style.left = `${getLeft(state)}px`;
+  selection.style.top = `${getTop(state)}px`;
+  selection.style.width = `0px`;
+  selection.style.height = `0px`;
+};
+
+const hideDOM = (selection: HTMLElement): void => {
+  selection.style.display = 'none';
+};
+
 const Selection: SelectionHook = {
   mounted() {
     initCopy(this);
 
     const selection: HTMLElement = this.el;
 
-    let selecting = false;
-    const initial = { x: 0, y: 0 };
+    const selectionState: SelectionState = {
+      fromX: 0,
+      fromY: 0,
+      toX: 0,
+      toY: 0,
+      selecting: false,
+    };
 
     document.addEventListener('mousedown', (event: MouseEvent) => {
-      selection.style.display = 'none';
-      selection.style.background = 'rgba(0,0,255,0.1)';
-      selection.style.position = 'fixed';
+      selectionState.selecting = true;
+      selectionState.fromX = event.x;
+      selectionState.fromY = event.y;
 
-      selecting = true;
-
-      initial.x = event.x;
-      initial.y = event.y;
-
-      selection.style.display = 'block';
+      showDOM(selection);
     });
 
     document.addEventListener('mousemove', (event) => {
-      if (!selecting) {
+      if (!selectionState.selecting) {
         return;
       }
 
-      const width = Math.abs(event.x - initial.x);
-      const height = Math.abs(event.y - initial.y);
+      selectionState.toX = event.x;
+      selectionState.toY = event.y;
 
-      const left = initial.x < event.x ? initial.x : event.x;
-      const top = initial.y < event.y ? initial.y : event.y;
-
-      selection.style.left = `${left}px`;
-      selection.style.top = `${top}px`;
-      selection.style.width = `${width}px`;
-      selection.style.height = `${height}px`;
+      updateDOM(selection, selectionState);
     });
 
     document.addEventListener('mouseup', () => {
+      selectionState.selecting = false;
+
+      if (getWidth(selectionState) < 5 || getHeight(selectionState) < 5) {
+        return;
+      }
+
       const allBlocks = document.querySelectorAll<HTMLElement>('[data-block]');
+
       const results = Array.from(allBlocks).filter((block) =>
         overlaps(block, selection)
       );
 
-      this.pushEventTo(this.getTarget(), 'select_blocks', {
+      const payload = {
         block_ids: results.map((el) => el.id),
-      });
+      };
+      resetDOM(selection, selectionState);
+      hideDOM(selection);
 
-      selecting = false;
-      selection.style.display = 'none';
-      selection.style.left = `${initial.x}px`;
-      selection.style.top = `${initial.y}px`;
-      selection.style.width = '0';
-      selection.style.height = '0';
+      this.pushEventTo(this.getTarget(), 'select_blocks', payload);
     });
   },
 

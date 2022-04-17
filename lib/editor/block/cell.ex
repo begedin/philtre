@@ -6,6 +6,9 @@ defmodule Editor.Block.Cell do
   The logic of a block is such that there is no nesting of cells so everything
   is just one level, separated purely to support styling.
   """
+
+  alias Editor.Utils
+
   defstruct [:id, :modifiers, :text]
 
   @type id :: String.t()
@@ -15,4 +18,12 @@ defmodule Editor.Block.Cell do
           modifiers: list(String.t()),
           text: String.t()
         }
+
+  def new do
+    %__MODULE__{
+      id: Utils.new_id(),
+      modifiers: [],
+      text: ""
+    }
+  end
 end

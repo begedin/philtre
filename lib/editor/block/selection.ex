@@ -60,4 +60,26 @@ defmodule Editor.Block.Selection do
   def normalize!(%{"end_offset" => value}) when not is_integer(value) do
     raise "selection end_offset must be a valid number, got: #{value}"
   end
+
+  def new_empty, do: %__MODULE__{}
+
+  def new_start_of(%Block.Cell{id: id}) do
+    %__MODULE__{
+      start_id: id,
+      end_id: id,
+      start_offset: 0,
+      end_offset: 0
+    }
+  end
+
+  def new_end_of(%Block.Cell{id: id, text: text}) do
+    offset = String.length(text)
+
+    %__MODULE__{
+      start_id: id,
+      end_id: id,
+      start_offset: offset,
+      end_offset: offset
+    }
+  end
 end

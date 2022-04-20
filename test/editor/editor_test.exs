@@ -281,4 +281,46 @@ defmodule EditorTest do
              %{text: "This is your first paragraph."}
            ] = cells
   end
+
+  test "can undo and redo", %{conn: conn} do
+    {:ok, view, _html} = live_isolated(conn, Wrapper)
+
+    %{blocks: [block, _]} = Wrapper.get_editor(view)
+    %{cells: [cell]} = block
+
+    Wrapper.trigger_split_block(view, block, %{
+      selection: %{start_id: cell.id, end_id: cell.id, start_offset: 4, end_offset: 4}
+    })
+
+    Wrapper.flush(view)
+
+    assert [{"h1", _, _} = h1, {"p", _, _} = p_1, {"p", _, _} = p_2] =
+             view
+             |> render()
+             |> Floki.parse_document!()
+             |> Floki.find("[data-block]")
+
+    assert Floki.text(h1) == "This"
+    assert Floki.text(p_1) == " is the title of your page"
+    assert Floki.text(p_2) == "This is your first paragraph."
+
+    assert [{"h1", _, _} = h1, {"p", _, _} = p] =
+             view
+             |> Wrapper.trigger_undo()
+             |> Floki.parse_document!()
+             |> Floki.find("[data-block]")
+
+    assert Floki.text(h1) == "This is the title of your page"
+    assert Floki.text(p) == "This is your first paragraph."
+
+    assert [{"h1", _, _} = h1, {"p", _, _} = p_1, {"p", _, _} = p_2] =
+             view
+             |> Wrapper.trigger_redo()
+             |> Floki.parse_document!()
+             |> Floki.find("[data-block]")
+
+    assert Floki.text(h1) == "This"
+    assert Floki.text(p_1) == " is the title of your page"
+    assert Floki.text(p_2) == "This is your first paragraph."
+  end
 end

@@ -27,12 +27,13 @@ import { LiveSocket } from 'phoenix_live_view';
 import topbar from 'topbar';
 import ContentEditable from './hooks/ContentEditable';
 import Selection from './hooks/Selection';
+import { History } from './hooks/History';
 
 const csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute('content');
 const liveSocket = new LiveSocket('/live', Socket, {
-  hooks: { ContentEditable, Selection },
+  hooks: { ContentEditable, Selection, History },
   params: { _csrf_token: csrfToken },
 });
 

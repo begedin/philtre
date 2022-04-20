@@ -48,7 +48,12 @@ defmodule EditorTest.Wrapper do
   """
   def get_editor(%View{} = view) do
     %{socket: %{assigns: %{editor: %Editor{} = editor}}} = :sys.get_state(view.pid)
+
     editor
+  end
+
+  def flush(%View{} = view) do
+    :sys.get_state(view.pid)
   end
 
   @doc """
@@ -60,23 +65,6 @@ defmodule EditorTest.Wrapper do
   end
 
   @doc """
-  Retrieves block by specified id
-  """
-  def get_block_by_id(%View{} = view, block_id) do
-    %Editor{blocks: blocks} = get_editor(view)
-    Enum.find(blocks, &(&1.id === block_id))
-  end
-
-  @doc """
-  Retrieve cursor index
-  """
-  def cursor_index(%View{} = view) do
-    %Editor{} = editor = get_editor(view)
-    %_{} = block = Enum.find(editor.blocks, &(&1.selection != nil))
-    String.length(block.cells)
-  end
-
-  @doc """
   Sends newline command at the location
   """
   def trigger_split_block(%View{} = view, :end_of_page) do
@@ -84,7 +72,7 @@ defmodule EditorTest.Wrapper do
     trigger_split_block(view, List.last(editor.blocks), :end)
   end
 
-  @model %{selection: "[id^=editor__selection__]"}
+  @model %{selection: "[id^=editor__selection__]", history: "[id^=editor__history__]"}
 
   @doc """
   Sends newline command at the location
@@ -146,6 +134,18 @@ defmodule EditorTest.Wrapper do
       start_offset: 0,
       end_offset: 0
     })
+  end
+
+  def trigger_undo(%View{} = view) do
+    view
+    |> element(@model.history)
+    |> render_hook("undo")
+  end
+
+  def trigger_redo(%View{} = view) do
+    view
+    |> element(@model.history)
+    |> render_hook("redo")
   end
 
   @doc """

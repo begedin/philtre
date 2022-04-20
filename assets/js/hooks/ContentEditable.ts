@@ -21,6 +21,26 @@ const isAtStartOfBlock = (element: HTMLElement): boolean =>
 
 const getSelection = () => {
   const selection = document.getSelection();
+
+  // a blank block with an empty cell will have
+  // itself as the anchor node
+  if ('dataset' in selection.anchorNode) {
+    const startElement = (
+      selection.anchorNode as HTMLElement
+    ).querySelector<HTMLElement>('[data-cell-id]');
+    const startId = startElement.dataset.cellId;
+    const endId = startElement.dataset.cellId;
+    const startOffset = 0;
+    const endOffset = 0;
+
+    return {
+      start_id: startId,
+      start_offset: startOffset,
+      end_id: endId,
+      end_offset: endOffset,
+    };
+  }
+
   const startElement = findCellParent(selection.anchorNode);
   const startId = startElement.dataset.cellId;
 
@@ -115,7 +135,14 @@ const restoreSelection = (el: HTMLElement): void => {
 
   const focusStart = el.querySelector(`[data-cell-id="${selectionStartId}"]`);
   const offsetStart = parseInt(selectionStartOffset);
-  range.setStart(focusStart.childNodes[0], offsetStart);
+
+  if (focusStart.childNodes[0]) {
+    range.setStart(focusStart.childNodes[0], offsetStart);
+  } else {
+    range.selectNode(focusStart);
+    selection.addRange(range);
+    return;
+  }
 
   const focusEnd = el.querySelector(`[data-cell-id="${selectionEndId}"]`);
   const offsetEnd = parseInt(selectionEndOffset);

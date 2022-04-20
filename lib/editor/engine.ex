@@ -163,29 +163,27 @@ defmodule Editor.Engine do
   """
   @spec split_line(Editor.t(), Block.t(), %{required(:selection) => map}) :: Editor.t()
   def split_line(%Editor{} = editor, %Block{type: type} = block, %{
-        selection: %Block.Selection{
-          start_id: start_id,
-          end_id: end_id,
-          start_offset: start_offset,
-          end_offset: end_offset
-        }
+        selection: %Block.Selection{} = selection
       })
       when type in ["p", "pre", "blockquote"] do
-    if start_id !== end_id, do: raise("selection is not 0")
-    if start_offset !== end_offset, do: raise("selection is not 0")
-    cells = block.cells
-    cell_index = Enum.find_index(cells, &(&1.id === start_id))
-    cell = Enum.at(cells, cell_index)
-
-    {cell_before, cell_after} = split_cell(cell, start_offset)
-
-    {cells_before, [^cell | cells_after]} = Enum.split(cells, cell_index)
+    [%Block{cells: cells_before}, %Block{cells: cells_after}] =
+      block
+      |> set_selection(selection)
+      |> remove_selection()
+      |> split_at_selection()
 
     br_cell = %Block.Cell{id: Utils.new_id(), modifiers: ["br"], text: ""}
 
-    new_cells = cells_before ++ [cell_before, br_cell, cell_after] ++ cells_after
+    new_cells =
+      cells_before
+      |> Enum.concat([br_cell])
+      |> Enum.concat(cells_after)
 
-    replace_block(editor, block, [%{block | cells: new_cells}])
+    [%Block.Cell{} = cell | _] = cells_after
+
+    new_block = %{block | cells: new_cells, selection: Block.Selection.new_start_of(cell)}
+
+    replace_block(editor, block, [new_block])
   end
 
   def split_line(%Editor{} = editor, %Block{}, %{}), do: editor
@@ -206,14 +204,6 @@ defmodule Editor.Engine do
     end
   end
 
-  @spec split_cell(Block.Cell.t(), non_neg_integer()) :: {Block.Cell.t(), Block.Cell.t()}
-  defp split_cell(%Block.Cell{id: _, modifiers: _, text: _} = cell, index) do
-    {text_before, text_after} = String.split_at(cell.text, index)
-    cell_before = %{cell | text: text_before}
-    cell_after = %{cell | id: Utils.new_id(), text: text_after}
-    {cell_before, cell_after}
-  end
-
   @doc """
   Performs action of splitting a block into two separate blocks at current cursor position.
 
@@ -223,64 +213,149 @@ defmodule Editor.Engine do
   The second block is usually a P block.
   """
   @spec split_block(Editor.t(), Block.t(), %{required(:selection) => map}) :: Editor.t()
-  def split_block(%Editor{} = editor, %Block{cells: cells} = block, %{
-        selection: %Block.Selection{
-          start_id: start_id,
-          end_id: end_id,
-          start_offset: start_offset,
-          end_offset: end_offset
-        }
-      }) do
-    if start_id !== end_id, do: raise("selection is not 0")
-    if start_offset !== end_offset, do: raise("selection is not 0")
+  def split_block(
+        %Editor{} = editor,
+        %Block{} = block,
+        %{selection: %Block.Selection{} = selection}
+      ) do
+    [block_before, block_after] =
+      block
+      |> set_selection(selection)
+      |> remove_selection()
+      |> split_at_selection()
 
-    cell_index = Enum.find_index(cells, &(&1.id === start_id))
-    %Block.Cell{} = cell = Enum.at(cells, cell_index)
-
-    {%Block.Cell{} = cell_before, %Block.Cell{} = cell_after} = split_cell(cell, start_offset)
-
-    {%Editor.Block{} = block_before, %Editor.Block{} = block_after} =
-      do_split_block(block, cell_index)
-
-    %Editor.Block{} =
-      block_before = %{
-        block_before
-        | cells: block_before.cells ++ [cell_before],
-          selection: %Block.Selection{}
-      }
-
-    after_type =
+    new_type =
       case block.type do
         "ul" -> "ul"
-        _other -> "p"
+        _ -> "p"
       end
 
-    %Editor.Block{} =
-      block_after = %Editor.Block{
-        block_after
-        | cells: [cell_after] ++ block_after.cells,
-          type: after_type,
-          selection: %Block.Selection{
-            start_id: cell_after.id,
-            end_id: cell_after.id,
-            start_offset: 0,
-            end_offset: 0
-          }
-      }
+    block_after = %{block_after | type: new_type}
 
     replace_block(editor, block, [block_before, block_after])
   end
 
-  @spec do_split_block(Block.t(), non_neg_integer()) :: {Block.t(), Block.t()}
-  defp do_split_block(%Block{} = block, cell_index) do
-    cells = block.cells
+  defp set_selection(%Block{} = block, %Block.Selection{} = selection) do
+    Map.put(block, :selection, selection)
+  end
 
-    {cells_before, [_removed_cell | cells_after]} = Enum.split(cells, cell_index)
+  defp remove_selection(
+         %Block{
+           selection: %Block.Selection{
+             start_id: id,
+             end_id: end_id,
+             start_offset: offset,
+             end_offset: end_offset
+           }
+         } = block
+       )
+       when id == end_id and offset == end_offset do
+    block
+  end
 
-    block_before = %{block | cells: cells_before}
-    block_after = %{block | id: Utils.new_id(), cells: cells_after}
+  defp remove_selection(
+         %Block{
+           selection: %Block.Selection{
+             start_id: id,
+             end_id: end_id,
+             start_offset: start_offset,
+             end_offset: end_offset
+           }
+         } = block
+       )
+       when id == end_id and start_offset < end_offset do
+    index = Enum.find_index(block.cells, &(&1.id === id))
+    {cells_before, [cell | cells_after]} = Enum.split(block.cells, index)
+    {cell_before, _cell_in, cell_after} = split_cell(cell, start_offset, end_offset)
 
-    {block_before, block_after}
+    new_cells =
+      cells_before
+      |> Enum.concat([cell_before, cell_after])
+      |> Enum.concat(cells_after)
+
+    %{block | cells: new_cells, selection: Block.Selection.new_start_of(cell_after)}
+  end
+
+  defp remove_selection(
+         %Block{
+           selection: %Block.Selection{
+             start_id: start_id,
+             end_id: end_id,
+             start_offset: start_offset,
+             end_offset: end_offset
+           }
+         } = block
+       )
+       when start_id != end_id and start_offset != end_offset do
+    index = Enum.find_index(block.cells, &(&1.id === start_id))
+    {cells_before, [start_cell | rest]} = Enum.split(block.cells, index)
+    {start_cell_before, _start_cell_after} = split_cell(start_cell, start_offset)
+
+    index = Enum.find_index(rest, &(&1.id === end_id))
+    {_end_cells_before, [end_cell | cells_after]} = Enum.split(rest, index)
+
+    {_end_cell_before, end_cell_after} = split_cell(end_cell, end_offset)
+
+    cells_before =
+      cells_before
+      |> Enum.concat([start_cell_before])
+      |> Enum.reject(&empty_cell?/1)
+
+    [%Block.Cell{} = cell_after | _] =
+      cells_after =
+      [end_cell_after]
+      |> Enum.concat(cells_after)
+      |> Enum.reject(&empty_cell?/1)
+
+    new_cells = Enum.concat(cells_before, cells_after)
+
+    %{block | cells: new_cells, selection: Block.Selection.new_start_of(cell_after)}
+  end
+
+  defp split_at_selection(
+         %Block{
+           selection: %Block.Selection{
+             start_id: id,
+             end_id: end_id,
+             start_offset: offset,
+             end_offset: end_offset
+           }
+         } = block
+       )
+       when id == end_id and offset == end_offset do
+    index = Enum.find_index(block.cells, &(&1.id === id))
+    {cells_before, [cell | cells_after]} = Enum.split(block.cells, index)
+
+    {cell_before, cell_after} = split_cell(cell, offset)
+
+    cells_before =
+      cells_before
+      |> Enum.concat([cell_before])
+      |> Enum.reject(&empty_cell?/1)
+
+    cells_after =
+      [cell_after]
+      |> Enum.concat(cells_after)
+      |> Enum.reject(&empty_cell?/1)
+
+    cells_after =
+      if cells_after == [] do
+        [Block.Cell.new()]
+      else
+        cells_after
+      end
+
+    selected_cell = Enum.at(cells_after, 0)
+
+    [
+      %{block | cells: cells_before, selection: Block.Selection.new_empty()},
+      %{
+        block
+        | cells: cells_after,
+          id: Utils.new_id(),
+          selection: Block.Selection.new_start_of(selected_cell)
+      }
+    ]
   end
 
   @doc """
@@ -291,12 +366,7 @@ defmodule Editor.Engine do
   def paste(%Editor{clipboard: nil} = editor, %Block{} = _block, %{}), do: editor
 
   def paste(%Editor{} = editor, %Block{} = block, %{
-        selection: %Block.Selection{
-          start_id: start_id,
-          end_id: end_id,
-          start_offset: start_offset,
-          end_offset: end_offset
-        }
+        selection: %Block.Selection{} = selection
       }) do
     [%{cells: [first_cell | _]} = first_block | rest] =
       Enum.map(editor.clipboard, &Map.put(&1, :id, Utils.new_id()))
@@ -312,15 +382,10 @@ defmodule Editor.Engine do
     clipboard_blocks = [first_block | rest]
 
     [block_before, block_after] =
-      case split_at_selection_as_block(block, %Block.Selection{
-             start_id: start_id,
-             end_id: end_id,
-             start_offset: start_offset,
-             end_offset: end_offset
-           }) do
-        [block_before, _block_in, block_after] -> [block_before, block_after]
-        [block_before, block_after] -> [block_before, block_after]
-      end
+      block
+      |> set_selection(selection)
+      |> remove_selection()
+      |> split_at_selection()
 
     new_blocks = Enum.reject([block_before] ++ clipboard_blocks ++ [block_after], &empty_block?/1)
 
@@ -331,85 +396,33 @@ defmodule Editor.Engine do
   defp empty_block?(%Block{cells: [%{text: ""}]}), do: true
   defp empty_block?(%Block{}), do: false
 
-  @spec split_at_selection_as_block(Block.t(), Block.Selection.t()) :: list(Block.t())
-  defp split_at_selection_as_block(
-         %Block{} = block,
-         %Block.Selection{
-           start_id: start_id,
-           end_id: end_id,
-           start_offset: start_offset,
-           end_offset: end_offset
-         }
-       )
-       when start_id == end_id do
-    cells = block.cells
-
-    cell_index = Enum.find_index(cells, &(&1.id === start_id))
-    {cells_before, [cell | cells_after]} = Enum.split(cells, cell_index)
-
-    case split_cell(cell, start_offset, end_offset) do
-      [cell_before, cell_after] ->
-        [
-          %{block | cells: cells_before ++ [cell_before] ++ cells_after},
-          %{block | id: Utils.new_id(), cells: [cell_after] ++ cells_after}
-        ]
-
-      [cell_before, cell_in, cell_after] ->
-        [
-          %{block | cells: cells_before ++ [cell_before] ++ cells_after},
-          %{block | id: Utils.new_id(), cells: [cell_in]},
-          %{block | id: Utils.new_id(), cells: [cell_after] ++ cells_after}
-        ]
-    end
+  defp empty_cell?(%Block.Cell{text: t, modifiers: m}) when t in ["", nil] and m != ["br"] do
+    true
   end
 
-  defp split_at_selection_as_block(
-         %Block{} = block,
-         %{
-           start_id: start_id,
-           end_id: end_id,
-           start_offset: start_offset,
-           end_offset: end_offset
-         }
-       ) do
-    cells = block.cells
-    start_index = Enum.find_index(cells, &(&1.id === start_id))
+  defp empty_cell?(%Block.Cell{}), do: false
 
-    {cells_before, [start_cell | rest]} = Enum.split(cells, start_index)
-    [start_cell_in, start_cell_out] = split_cell(start_cell, start_offset, start_offset)
-
-    end_index = Enum.find_index(rest, &(&1.id === end_id))
-    {cells_in, [end_cell | cells_after]} = Enum.split(rest, end_index)
-    [end_cell_in, end_cell_out] = split_cell(end_cell, end_offset, end_offset)
-
-    [
-      %{block | cells: cells_before ++ [start_cell_in]},
-      %{block | id: Utils.new_id(), cells: [start_cell_out] ++ cells_in ++ [end_cell_in]},
-      %{block | id: Utils.new_id(), cells: [end_cell_out] ++ cells_after}
-    ]
+  @spec split_cell(Block.Cell.t(), non_neg_integer()) :: {Block.Cell.t(), Block.Cell.t()}
+  defp split_cell(%Block.Cell{id: _, modifiers: _, text: _} = cell, index) do
+    {text_before, text_after} = String.split_at(cell.text, index)
+    cell_before = %{cell | text: text_before}
+    cell_after = %{cell | id: Utils.new_id(), text: text_after}
+    {cell_before, cell_after}
   end
 
-  @spec split_cell(Block.Cell.t(), non_neg_integer(), non_neg_integer()) :: list(Block.Cell.t())
-  defp split_cell(%{id: _, text: _, modifiers: _} = cell, start_offset, end_offset)
-       when start_offset == end_offset do
-    {text_before, text_after} = String.split_at(cell.text, start_offset)
-
-    [
-      %{cell | text: text_before},
-      %{cell | id: Utils.new_id(), text: text_after}
-    ]
-  end
+  @spec split_cell(Block.Cell.t(), non_neg_integer(), non_neg_integer()) ::
+          {Block.Cell.t(), Block.Cell.t(), Block.Cell.t()}
 
   defp split_cell(%{id: _, text: _, modifiers: _} = cell, start_offset, end_offset)
        when start_offset < end_offset do
     {text_before, rest} = String.split_at(cell.text, start_offset)
     {text_in, text_after} = String.split_at(rest, end_offset - start_offset)
 
-    [
+    {
       %{cell | text: text_before},
       %{cell | id: Utils.new_id(), text: text_in},
       %{cell | id: Utils.new_id(), text: text_after}
-    ]
+    }
   end
 
   @spec backspace_from_start(Editor.t(), Block.t()) :: Editor.t()
@@ -449,18 +462,10 @@ defmodule Editor.Engine do
     if index >= 0 do
       %_{} = previous_block = Enum.at(editor.blocks, index)
       merged = %{merge_second_into_first(previous_block, block) | id: Utils.new_id()}
+      last_cell = Enum.at(merged.cells, -1)
+      selection = Block.Selection.new_end_of(last_cell)
 
-      first_cell = Enum.at(block.cells, 0)
-
-      merged = %{
-        merged
-        | selection: %Block.Selection{
-            start_id: first_cell.id,
-            end_id: first_cell.id,
-            start_offset: 0,
-            end_offset: 0
-          }
-      }
+      merged = set_selection(merged, selection)
 
       blocks = editor.blocks |> List.delete_at(index + 1) |> List.replace_at(index, merged)
       %{editor | blocks: blocks}
@@ -471,7 +476,12 @@ defmodule Editor.Engine do
 
   @spec merge_second_into_first(Block.t(), Block.t()) :: Block.t()
   defp merge_second_into_first(%Block{} = first_block, %Block{} = other_block) do
-    %{first_block | cells: first_block.cells ++ other_block.cells}
+    new_cells =
+      first_block.cells
+      |> Enum.concat(other_block.cells)
+      |> Enum.reject(&empty_cell?/1)
+
+    %{first_block | cells: new_cells}
   end
 
   @spec resolve_transform(Block.t()) :: Block.t()

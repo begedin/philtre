@@ -10,6 +10,12 @@ defmodule Editor.Engine do
           Block.t(),
           %{required(:selection) => map, required(:cells) => list(map)}
         ) :: Editor.t()
+  def update(%Editor{} = editor, %Block{} = block, %{selection: nil, cells: []}) do
+    %Block.Cell{} = cell = Block.Cell.new()
+    %Block{} = new_block = %{block | cells: [cell], selection: Block.Selection.new_start_of(cell)}
+    replace_block(editor, block, [new_block])
+  end
+
   def update(%Editor{} = editor, %Block{} = block, %{
         selection: %Block.Selection{
           start_id: start_id,

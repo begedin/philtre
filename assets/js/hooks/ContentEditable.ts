@@ -1,7 +1,46 @@
-const findCellParent = (node: Node | HTMLElement): HTMLElement =>
-  'dataset' in node && node.dataset.cellId
-    ? node
-    : findCellParent(node.parentNode || node.parentElement);
+const resolveCell = (node: Node | HTMLElement): HTMLElement => {
+  // the current node is the cell we are looking for
+  if ('dataset' in node && node.dataset.cellId) {
+    return node;
+  }
+
+  // the current node is the block container. if we got here, means we (probably)
+  // only have one cell to pick
+  if ('dataset' in node && 'block' in node.dataset) {
+    return node.querySelector('[data-cell-id]');
+  }
+
+  // the current node is a fragment child node of the cell
+  if (node.parentElement.dataset.cellId) {
+    return node.parentElement;
+  }
+};
+
+const applyFixes = (el: HTMLElement) => {
+  const zeroth = el.childNodes[0];
+
+  // this means we had a blank cell. since we can't put a carret into black inline elements, it was
+  // placed on an extra text node outside in the block, but before the first cell
+  if (zeroth?.nodeName === '#text') {
+    // we first have to remove the text log
+    el.removeChild(zeroth);
+
+    // then we prepend the content of the removed text node into the actual first cell element
+    el.childNodes[0].textContent = zeroth.textContent.concat(
+      el.childNodes[0].textContent
+    );
+
+    // finally, since the caret was at the end of that node, we move it into the node
+    const selection = document.getSelection();
+    const range = selection.getRangeAt(0);
+    range.selectNode(el.childNodes[0]);
+    selection.collapseToEnd();
+  }
+
+  if (zeroth?.nodeName === 'BR') {
+    el.removeChild(zeroth);
+  }
+};
 
 const getPreCaretText = (element): string => {
   const selection = document.getSelection();
@@ -22,29 +61,13 @@ const isAtStartOfBlock = (element: HTMLElement): boolean =>
 const getSelection = () => {
   const selection = document.getSelection();
 
-  // a blank block with an empty cell will have
-  // itself as the anchor node
-  if ('dataset' in selection.anchorNode) {
-    const startElement = (
-      selection.anchorNode as HTMLElement
-    ).querySelector<HTMLElement>('[data-cell-id]');
-    const startId = startElement.dataset.cellId;
-    const endId = startElement.dataset.cellId;
-    const startOffset = 0;
-    const endOffset = 0;
-
-    return {
-      start_id: startId,
-      start_offset: startOffset,
-      end_id: endId,
-      end_offset: endOffset,
-    };
+  const startElement = resolveCell(selection.anchorNode);
+  if (!startElement) {
+    return null;
   }
-
-  const startElement = findCellParent(selection.anchorNode);
   const startId = startElement.dataset.cellId;
 
-  const endElement = findCellParent(selection.focusNode);
+  const endElement = resolveCell(selection.focusNode);
   const endId = endElement.dataset.cellId;
   const [startOffset, endOffset] =
     selection.anchorOffset < selection.focusOffset
@@ -136,18 +159,14 @@ const restoreSelection = (el: HTMLElement): void => {
   const focusStart = el.querySelector(`[data-cell-id="${selectionStartId}"]`);
   const offsetStart = parseInt(selectionStartOffset);
 
-  if (focusStart.childNodes[0]) {
-    range.setStart(focusStart.childNodes[0], offsetStart);
-  } else {
-    range.selectNode(focusStart);
-    selection.addRange(range);
-    return;
+  if (!focusStart.childNodes[0]) {
+    focusStart.appendChild(document.createTextNode(''));
   }
+  range.setStart(focusStart.childNodes[0], offsetStart);
 
   const focusEnd = el.querySelector(`[data-cell-id="${selectionEndId}"]`);
   const offsetEnd = parseInt(selectionEndOffset);
   range.setEnd(focusEnd.childNodes[0], offsetEnd);
-
   selection.addRange(range);
 };
 
@@ -172,8 +191,9 @@ const ContentEditable: {
       const target = this.getTarget();
 
       savePromise = new Promise((resolve, reject) => {
-        const selection = getSelection();
+        applyFixes(el);
         const cells = getCells(el);
+        const selection = getSelection();
         const params = { selection, cells };
 
         saveRef = setTimeout(async () => {
@@ -203,7 +223,7 @@ const ContentEditable: {
 
       const selection = getSelection();
 
-      if (savePromise) {
+      if (savePromise && command) {
         await savePromise;
       }
 

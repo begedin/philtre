@@ -29,6 +29,8 @@ defmodule Editor.Block.Selection do
           end_offset: non_neg_integer() | nil
         }
 
+  def normalize!(nil), do: nil
+
   def normalize!(%{
         "start_id" => start_id,
         "end_id" => end_id,

@@ -63,7 +63,9 @@ defmodule Philtre.MixProject do
   defp aliases do
     [
       setup: ["deps.get", "cmd npm --prefix assets install"],
-      "assets.deploy": ["cmd npm --prefix assets run deploy"]
+      "assets.deploy": ["cmd npm --prefix assets run deploy"],
+      "test.e2e": ["cmd mix phx.server & npm --prefix assets run test:e2e"],
+      "test.e2e.ci": ["cmd mix phx.server & npm --prefix assets run test:e2e:ci"]
     ]
   end
 end

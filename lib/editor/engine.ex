@@ -232,7 +232,7 @@ defmodule Editor.Engine do
 
     new_type =
       case block.type do
-        "ul" -> "ul"
+        "li" -> "li"
         _ -> "p"
       end
 

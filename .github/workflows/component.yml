@@ -1,4 +1,4 @@
-name: Build and Test
+name: Build and Test (Component)
 
 on:
   push:
@@ -46,13 +46,6 @@ jobs:
           path: assets/node_modules
           key: ${{ runner.os }}-mix-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/assets/package-lock.json') }}-v2
 
-      - name: Restore cypress binary cache
-        id: cypress-cache
-        uses: actions/cache@v3
-        with:
-          path: /home/runner/.cache/Cypress
-          key: cypress-${{ runner.os }}-mix-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/assets/package-lock.json') }}-v2
-
       - name: Restore build cache
         id: build-cache
         uses: actions/cache@v3
@@ -61,14 +54,8 @@ jobs:
           key: cache-${{ runner.os }}-dialyzer_build-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}-v2
       
       - name: Install NPM Dependencies
-        if: steps.npm-cache.outputs.cache-hit != 'true' || steps.cypress-cache.outputs.cache-hit != 'true'
+        if: steps.npm-cache.outputs.cache-hit != 'true'
         run: npm --prefix assets ci
-
-      # check the Cypress binary
-      - name: Check cypress binary
-        run: |
-          npx cypress cache path
-          npx cypress cache list
 
       - name: Install Mix Dependencies
         if: steps.mix-cache.outputs.cache-hit != 'true'
@@ -77,14 +64,7 @@ jobs:
           mix local.hex --force
           mix deps.get
 
-      - name: Compile Test
-        env:
-          MIX_ENV: test
-        run: mix deps.compile; mix compile --force --warnings-as-errors
-
-      - name: Compile Dev
-        env:
-          MIX_ENV: dev
+      - name: Compile with Warnings Check
         run: mix deps.compile; mix compile --force --warnings-as-errors
            
       - name: Create Artifacts
@@ -93,10 +73,10 @@ jobs:
           tar czf $GITHUB_WORKSPACE/artifacts/build.tgz --directory=_build/ .
           tar czf $GITHUB_WORKSPACE/artifacts/deps.tgz --directory=deps .
           tar czf $GITHUB_WORKSPACE/artifacts/node_modules.tgz --directory=assets/node_modules/ .
-          tar czf $GITHUB_WORKSPACE/artifacts/cypress.tgz --directory=/home/runner/.cache/Cypress .
           tar czf $GITHUB_WORKSPACE/artifacts/static.tgz --directory=priv/static/ .
 
-      - uses: "actions/upload-artifact@v2"
+      - name: "Upload Artifacts"
+        uses: "actions/upload-artifact@v2"
         with:
           name: build-env
           path: "${{ github.workspace }}/artifacts"
@@ -258,53 +238,3 @@ jobs:
 
       - name: Run dialyzer
         run: mix dialyzer --halt-exit-status
-
-  # runs cypress acceptance/e2e tests
-  acceptance:
-    name: "Acceptance/E2E tests"
-    runs-on: "ubuntu-latest"
-    needs: build-env
-    env: 
-      MIX_ENV: dev
-    strategy: 
-      fail-fast: true
-      matrix: 
-        elixir: ["1.13.3"]
-        otp: ["24.2.2"]
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Set up Elixir
-        uses: erlef/setup-beam@v1
-        with:
-          elixir-version: ${{ matrix.elixir }} 
-          otp-version: ${{ matrix.otp }}
-          
-      - name: Install Rebar / Hex
-        run: |
-          mix local.rebar --force
-          mix local.hex --force
-
-      - name: Download artifacts
-        uses: "actions/download-artifact@v2"
-        with:
-          name: build-env
-          path: "${{ github.workspace }}/artifacts"
-      - run: |
-          mkdir -p ./_build
-          mkdir -p ./deps
-          mkdir -p ./assets/node_modules
-          mkdir -p /home/runner/.cache/Cypress
-          mkdir -p ./priv/static
-          tar xzf $GITHUB_WORKSPACE/artifacts/build.tgz --directory=./_build
-          tar xzf $GITHUB_WORKSPACE/artifacts/deps.tgz --directory=./deps
-          tar xzf $GITHUB_WORKSPACE/artifacts/node_modules.tgz --directory=./assets/node_modules
-          tar xzf $GITHUB_WORKSPACE/artifacts/cypress.tgz --directory=/home/runner/.cache/Cypress
-          tar xzf $GITHUB_WORKSPACE/artifacts/static.tgz --directory=./priv/static
-      
-      - name: E2E tests
-        run: |
-          mix phx.server &
-          npm --prefix assets run test:e2e:ci
-
-      

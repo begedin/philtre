@@ -39,8 +39,8 @@ defmodule Philtre.MixProject do
       "assets.deploy": ["cmd npm --prefix assets run deploy"],
       "test.e2e": ["cmd mix phx.server & npm --prefix assets run test:e2e"],
       "test.e2e.ci": ["cmd mix phx.server & npm --prefix assets run test:e2e:ci"],
-      test: ["test", "cmd cd test-app && mix test"],
-      "deps.get": ["deps.get", "cmd cd test-app && mix deps.get"]
+      test: ["test", "cmd cd playground && mix test"],
+      "deps.get": ["deps.get", "cmd cd playground && mix deps.get"]
     ]
   end
 end

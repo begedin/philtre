@@ -1,9 +1,9 @@
-defmodule Philtre.MixProject do
+defmodule Playground.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :philtre,
+      app: :playground,
       version: "0.7.1",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -14,6 +14,13 @@ defmodule Philtre.MixProject do
       preferred_cli_env: [
         "test.watch": :test
       ]
+    ]
+  end
+
+  def application do
+    [
+      mod: {Playground.Application, []},
+      extra_applications: [:logger, :runtime_tools]
     ]
   end
 
@@ -28,8 +35,12 @@ defmodule Philtre.MixProject do
       {:jason, "~> 1.2"},
       {:mix_test_watch, "~> 1.0", only: [:test]},
       {:phoenix_html, "~> 3.0"},
+      {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 0.17.6"},
-      {:uuid, "~> 1.1"}
+      {:phoenix, "~> 1.6.2"},
+      {:plug_cowboy, "~> 2.5"},
+      {:uuid, "~> 1.1"},
+      {:philtre, path: "../"}
     ]
   end
 
@@ -38,9 +49,7 @@ defmodule Philtre.MixProject do
       setup: ["deps.get", "cmd npm --prefix assets install"],
       "assets.deploy": ["cmd npm --prefix assets run deploy"],
       "test.e2e": ["cmd mix phx.server & npm --prefix assets run test:e2e"],
-      "test.e2e.ci": ["cmd mix phx.server & npm --prefix assets run test:e2e:ci"],
-      test: ["test", "cmd cd test-app && mix test"],
-      "deps.get": ["deps.get", "cmd cd test-app && mix deps.get"]
+      "test.e2e.ci": ["cmd mix phx.server & npm --prefix assets run test:e2e:ci"]
     ]
   end
 end

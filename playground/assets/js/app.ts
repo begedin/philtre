@@ -25,9 +25,7 @@ import 'phoenix_html';
 import { Socket } from 'phoenix';
 import { LiveSocket } from 'phoenix_live_view';
 import topbar from 'topbar';
-import ContentEditable from './hooks/ContentEditable';
-import Selection from './hooks/Selection';
-import { History } from './hooks/History';
+import { ContentEditable, History, Selection } from 'philtre';
 
 const csrfToken = document
   .querySelector("meta[name='csrf-token']")

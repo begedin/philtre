@@ -1,4 +1,7 @@
-const resolveCell = (node: Node | HTMLElement): HTMLElement => {
+import { ViewHook } from './types';
+import { getTarget } from './utils';
+
+const resolveCell = (node: Node | HTMLElement): HTMLElement | null => {
   // the current node is the cell we are looking for
   if ('dataset' in node && node.dataset.cellId) {
     return node;
@@ -11,27 +14,37 @@ const resolveCell = (node: Node | HTMLElement): HTMLElement => {
   }
 
   // the current node is a fragment child node of the cell
-  if (node.parentElement.dataset.cellId) {
+  if (node.parentElement?.dataset.cellId) {
     return node.parentElement;
   }
+
+  return null;
 };
 
 const applyFixes = (el: HTMLElement) => {
   const zeroth = el.childNodes[0];
 
+  if (!zeroth) {
+    return;
+  }
+
   // this means we had a blank cell. since we can't put a carret into black inline elements, it was
   // placed on an extra text node outside in the block, but before the first cell
-  if (zeroth?.nodeName === '#text') {
+  if (zeroth.nodeName === '#text') {
     // we first have to remove the text log
     el.removeChild(zeroth);
 
     // then we prepend the content of the removed text node into the actual first cell element
-    el.childNodes[0].textContent = zeroth.textContent.concat(
-      el.childNodes[0].textContent
+    el.childNodes[0].textContent = (zeroth.textContent || '').concat(
+      el.childNodes[0].textContent || ''
     );
 
     // finally, since the caret was at the end of that node, we move it into the node
     const selection = document.getSelection();
+    if (!selection) {
+      return;
+    }
+
     const range = selection.getRangeAt(0);
     range.selectNode(el.childNodes[0]);
     selection.collapseToEnd();
@@ -42,8 +55,11 @@ const applyFixes = (el: HTMLElement) => {
   }
 };
 
-const getPreCaretText = (element): string => {
+const getPreCaretText = (element: HTMLElement): string => {
   const selection = document.getSelection();
+  if (!selection) {
+    return '';
+  }
   const range = selection.getRangeAt(0);
 
   // generates dom container for selection from start of contenteditable to caret
@@ -60,15 +76,24 @@ const isAtStartOfBlock = (element: HTMLElement): boolean =>
 
 const getSelection = () => {
   const selection = document.getSelection();
+  if (!selection || !selection.anchorNode || !selection.focusNode) {
+    return;
+  }
 
   const startElement = resolveCell(selection.anchorNode);
+  const endElement = resolveCell(selection.focusNode);
+
   if (!startElement) {
     return null;
   }
-  const startId = startElement.dataset.cellId;
 
-  const endElement = resolveCell(selection.focusNode);
+  if (!endElement) {
+    return null;
+  }
+
+  const startId = startElement.dataset.cellId;
   const endId = endElement.dataset.cellId;
+
   const [startOffset, endOffset] =
     selection.anchorOffset < selection.focusOffset
       ? [selection.anchorOffset, selection.focusOffset]
@@ -103,7 +128,7 @@ const getCells = (el: HTMLElement): Cell[] => {
     }
 
     return {
-      id: child.dataset.cellId,
+      id: child.dataset.cellId || '',
       text: child.innerText,
       modifiers,
     };
@@ -144,7 +169,12 @@ const restoreSelection = (el: HTMLElement): void => {
     selectionEndOffset,
   } = el.dataset;
 
-  if (!selectionStartId || !selectionEndId) {
+  if (
+    !selectionStartId ||
+    !selectionEndId ||
+    !selectionStartOffset ||
+    !selectionEndOffset
+  ) {
     return;
   }
 
@@ -152,11 +182,18 @@ const restoreSelection = (el: HTMLElement): void => {
   el.focus();
 
   const selection = el.ownerDocument.getSelection();
+  if (!selection) {
+    return;
+  }
   selection.removeAllRanges();
 
   const range = document.createRange();
 
   const focusStart = el.querySelector(`[data-cell-id="${selectionStartId}"]`);
+  if (!focusStart) {
+    return;
+  }
+
   const offsetStart = parseInt(selectionStartOffset);
 
   if (!focusStart.childNodes[0]) {
@@ -165,19 +202,17 @@ const restoreSelection = (el: HTMLElement): void => {
   range.setStart(focusStart.childNodes[0], offsetStart);
 
   const focusEnd = el.querySelector(`[data-cell-id="${selectionEndId}"]`);
+  if (!focusEnd) {
+    return;
+  }
   const offsetEnd = parseInt(selectionEndOffset);
   range.setEnd(focusEnd.childNodes[0], offsetEnd);
   selection.addRange(range);
 };
 
-const ContentEditable: {
-  mounted: () => void;
-  updated?: () => void;
-  getTarget: () => string;
-  selectedRange?: Range;
-} = {
+export const ContentEditable = {
   mounted() {
-    const el: HTMLElement = this.el;
+    const el: HTMLElement = (this as any).el;
 
     let saveRef: null | number = null;
     let savePromise: Promise<void> | null = null;
@@ -188,7 +223,7 @@ const ContentEditable: {
       }
 
       const eventName = 'update';
-      const target = this.getTarget();
+      const target = getTarget(this.el);
 
       savePromise = new Promise((resolve, reject) => {
         applyFixes(el);
@@ -197,17 +232,11 @@ const ContentEditable: {
         const params = { selection, cells };
 
         saveRef = setTimeout(async () => {
-          this.pushEventTo(
-            target,
-            eventName,
-            params,
-            () => {
-              saveRef = null;
-              savePromise = null;
-              resolve();
-            },
-            reject
-          );
+          (this as any).pushEventTo(target, eventName, params, () => {
+            saveRef = null;
+            savePromise = null;
+            resolve();
+          });
         });
       });
     });
@@ -227,12 +256,12 @@ const ContentEditable: {
         await savePromise;
       }
 
-      this.pushEventTo(this.getTarget(), command, { selection });
+      this.pushEventTo(getTarget(el), command, { selection });
     });
 
     el.addEventListener('paste', (event: ClipboardEvent) => {
       event.preventDefault();
-      const target = this.getTarget();
+      const target = getTarget(el);
       this.pushEventTo(target, 'paste_blocks', { selection: getSelection() });
     });
 
@@ -242,10 +271,4 @@ const ContentEditable: {
   updated() {
     restoreSelection(this.el);
   },
-
-  getTarget(): string {
-    return this.el.getAttribute('phx-target');
-  },
-};
-
-export default ContentEditable;
+} as ViewHook;

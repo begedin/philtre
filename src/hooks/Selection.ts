@@ -1,6 +1,5 @@
-import { ViewHook } from 'phoenix_live_view';
-
-type SelectionHook = Partial<ViewHook & { getTarget: () => string }>;
+import { ViewHook } from './types';
+import { getTarget } from './utils';
 
 const overlaps = (a: HTMLElement, b: HTMLElement): boolean => {
   const aRect = a.getBoundingClientRect();
@@ -14,7 +13,7 @@ const overlaps = (a: HTMLElement, b: HTMLElement): boolean => {
   );
 };
 
-const initCopy = (hook: SelectionHook) => {
+const initCopy = (hook: ViewHook) => {
   document.addEventListener('copy', (event: ClipboardEvent) => {
     const selected = document.querySelectorAll<HTMLElement>(
       '.philtre__editor [data-selected]'
@@ -26,7 +25,7 @@ const initCopy = (hook: SelectionHook) => {
 
     event.preventDefault();
 
-    hook.pushEventTo(hook.getTarget(), 'copy_blocks', {
+    hook.pushEventTo(getTarget(hook.el), 'copy_blocks', {
       block_ids: Array.from(selected).map((el) => el.id),
     });
   });
@@ -77,7 +76,7 @@ const hideDOM = (selection: HTMLElement): void => {
   selection.style.display = 'none';
 };
 
-const Selection: SelectionHook = {
+export const Selection = {
   mounted() {
     initCopy(this);
 
@@ -129,13 +128,7 @@ const Selection: SelectionHook = {
       resetDOM(selection, selectionState);
       hideDOM(selection);
 
-      this.pushEventTo(this.getTarget(), 'select_blocks', payload);
+      this.pushEventTo(getTarget(this.el), 'select_blocks', payload);
     });
   },
-
-  getTarget(): string {
-    return this.el.getAttribute('phx-target');
-  },
-};
-
-export default Selection;
+} as ViewHook;

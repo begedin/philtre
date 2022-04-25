@@ -1,0 +1,47 @@
+{
+  "name": "philtre",
+  "version": "0.8.0",
+  "description": "Block-style editor for phoenix_live_view",
+  "directories": {
+    "lib": "dist",
+    "test": "test"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/src"
+  ],
+  "scripts": {
+    "ts-types": " tsc --emitDeclarationOnly --outDir dist",
+    "build": "rimraf dist && node ./esbuild.js && npm run ts-types",
+    "reset-playground": "rm -rf playground/assets/node_modules/philtre && npm --prefix playground/assets i",
+    "serve": "npm run build && npm run reset-playground && (cd playground; mix phx.server)"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/begedin/philtre.git"
+  },
+  "keywords": [
+    "phoenix",
+    "live",
+    "view",
+    "editor",
+    "block",
+    "notion"
+  ],
+  "author": "Nikola Begedin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/begedin/philtre/issues"
+  },
+  "homepage": "https://github.com/begedin/philtre#readme",
+  "dependencies": {
+    "phoenix_live_view": "^0.17.9"
+  },
+  "devDependencies": {
+    "@types/phoenix_live_view": "^0.15.1",
+    "esbuild": "^0.14.38",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.6.3"
+  }
+}

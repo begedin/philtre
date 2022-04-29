@@ -12,7 +12,14 @@ defmodule Editor.Engine do
         ) :: Editor.t()
   def update(%Editor{} = editor, %Block{} = block, %{selection: nil, cells: []}) do
     %Block.Cell{} = cell = Block.Cell.new()
-    %Block{} = new_block = %{block | cells: [cell], selection: Block.Selection.new_start_of(cell)}
+
+    %Block{} =
+      new_block =
+      block
+      |> Map.put(:cells, [cell])
+      |> Map.put(:selection, Block.Selection.new_start_of(cell))
+      |> resolve_transform()
+
     replace_block(editor, block, [new_block])
   end
 
@@ -57,7 +64,7 @@ defmodule Editor.Engine do
     new_block =
       resolve_transform(%{
         block
-        | cells: pre_cells ++ post_cells,
+        | cells: IO.inspect(pre_cells ++ post_cells),
           selection: %Block.Selection{
             start_id: start_id,
             end_id: end_id,
@@ -492,7 +499,11 @@ defmodule Editor.Engine do
 
   @spec resolve_transform(Block.t()) :: Block.t()
   defp resolve_transform(%Block{} = p) do
-    case p.cells |> Enum.at(0) |> Map.get(:text) |> transform_type() do
+    case p.cells
+         |> Enum.at(0)
+         |> Map.get(:text)
+         |> transform_type()
+         |> IO.inspect(label: "transform") do
       nil -> p
       other -> transform(p, other)
     end

@@ -12,7 +12,7 @@
     "/src"
   ],
   "scripts": {
-    "ts-types": " tsc --emitDeclarationOnly --outDir dist",
+    "ts-types": "tsc --emitDeclarationOnly --outDir dist",
     "build": "rimraf dist && node ./esbuild.js && npm run ts-types",
     "reset-playground": "rm -rf playground/assets/node_modules/philtre && npm --prefix playground/assets i",
     "serve": "npm run build && npm run reset-playground && (cd playground; mix phx.server)"
@@ -41,6 +41,8 @@
   "devDependencies": {
     "@types/phoenix_live_view": "^0.15.1",
     "esbuild": "^0.14.38",
+    "phoenix": "^1.6.7",
+    "phoenix_html": "^3.2.0",
     "rimraf": "^3.0.2",
     "typescript": "^4.6.3"
   }

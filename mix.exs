@@ -18,6 +18,7 @@ defmodule Philtre.MixProject do
   end
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(:dev), do: ["lib", "playground"]
   defp elixirc_paths(_), do: ["lib"]
 
   defp deps do
@@ -28,7 +29,10 @@ defmodule Philtre.MixProject do
       {:jason, "~> 1.2"},
       {:mix_test_watch, "~> 1.0", only: [:test]},
       {:phoenix_html, "~> 3.0"},
+      {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 0.17.6"},
+      {:phoenix, "~> 1.6.2"},
+      {:plug_cowboy, "~> 2.5"},
       {:uuid, "~> 1.1"}
     ]
   end
@@ -40,7 +44,8 @@ defmodule Philtre.MixProject do
       "test.e2e": ["cmd mix phx.server & npm --prefix assets run test:e2e"],
       "test.e2e.ci": ["cmd mix phx.server & npm --prefix assets run test:e2e:ci"],
       test: ["test", "cmd cd playground && mix test"],
-      "deps.get": ["deps.get", "cmd cd playground && mix deps.get"]
+      "deps.get": ["deps.get", "cmd cd playground && mix deps.get"],
+      playground: "run --no-halt playground.exs"
     ]
   end
 end

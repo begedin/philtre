@@ -46,6 +46,14 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-mix-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/assets/package-lock.json') }}-v2
 
+      - name: Restore cypress binary cache
+        id: cypress-cache
+        uses: actions/cache@v3
+        with:
+          path: /home/runner/.cache/Cypress
+          key: cypress-${{ runner.os }}-mix-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/assets/package-lock.json') }}-v3
+
+
       - name: Restore build cache
         id: build-cache
         uses: actions/cache@v3
@@ -54,7 +62,7 @@ jobs:
           key: cache-${{ runner.os }}-dialyzer_build-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}-v3
       
       - name: Install NPM Dependencies
-        if: steps.npm-cache.outputs.cache-hit != 'true'
+        if: steps.npm-cache.outputs.cache-hit != 'true' || steps.cypress-cache.outputs.cache-hit != 'true'
         run: npm ci
 
       # check the Cypress binary

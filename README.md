@@ -1,4 +1,4 @@
-# Philtre
+# Playground
 
 To start your Phoenix server:
 

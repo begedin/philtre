@@ -37,13 +37,13 @@ jobs:
         uses: actions/cache@v3
         with:
           path: deps
-          key: ${{ runner.os }}-mix-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}
+          key: ${{ runner.os }}-mix-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}-v2
 
       - name: Restore npm dependencies cache
         id: npm-cache
         uses: actions/cache@v3
         with:
-          path: assets/node_modules
+          path: node_modules
           key: ${{ runner.os }}-mix-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/assets/package-lock.json') }}-v2
 
       - name: Restore cypress binary cache
@@ -51,18 +51,19 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /home/runner/.cache/Cypress
-          key: cypress-${{ runner.os }}-mix-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/assets/package-lock.json') }}-v2
+          key: cypress-${{ runner.os }}-mix-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/assets/package-lock.json') }}-v3
+
 
       - name: Restore build cache
         id: build-cache
         uses: actions/cache@v3
         with:
           path: _build
-          key: cache-${{ runner.os }}-dialyzer_build-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}-v2
+          key: cache-${{ runner.os }}-dialyzer_build-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}-v3
       
       - name: Install NPM Dependencies
         if: steps.npm-cache.outputs.cache-hit != 'true' || steps.cypress-cache.outputs.cache-hit != 'true'
-        run: npm --prefix assets ci
+        run: npm ci
 
       # check the Cypress binary
       - name: Check cypress binary
@@ -92,9 +93,9 @@ jobs:
           mkdir -p $GITHUB_WORKSPACE/artifacts
           tar czf $GITHUB_WORKSPACE/artifacts/build.tgz --directory=_build/ .
           tar czf $GITHUB_WORKSPACE/artifacts/deps.tgz --directory=deps .
-          tar czf $GITHUB_WORKSPACE/artifacts/node_modules.tgz --directory=assets/node_modules/ .
+          tar czf $GITHUB_WORKSPACE/artifacts/node_modules.tgz --directory=node_modules/ .
           tar czf $GITHUB_WORKSPACE/artifacts/cypress.tgz --directory=/home/runner/.cache/Cypress .
-          tar czf $GITHUB_WORKSPACE/artifacts/static.tgz --directory=priv/static/ .
+          tar czf $GITHUB_WORKSPACE/artifacts/static.tgz --directory=playground/priv/static/ .
 
       - uses: "actions/upload-artifact@v2"
         with:
@@ -158,11 +159,11 @@ jobs:
           name: build-env
           path: "${{ github.workspace }}/artifacts"
       - run: |
-          mkdir -p ./assets/node_modules
-          tar xzf $GITHUB_WORKSPACE/artifacts/node_modules.tgz --directory=./assets/node_modules
+          mkdir -p ./node_modules
+          tar xzf $GITHUB_WORKSPACE/artifacts/node_modules.tgz --directory=./node_modules
 
       - name: Run Eslint
-        run: npm --prefix assets run lint
+        run: npm run lint
   
   # runs elixir unit tests
   unit:
@@ -198,11 +199,10 @@ jobs:
       - run: |
           mkdir -p ./_build
           mkdir -p ./deps
-          mkdir -p ./assets/node_modules
-          mkdir -p ./priv/static
+          mkdir -p ./playground/priv/static
           tar xzf $GITHUB_WORKSPACE/artifacts/build.tgz --directory=./_build
           tar xzf $GITHUB_WORKSPACE/artifacts/deps.tgz --directory=./deps
-          tar xzf $GITHUB_WORKSPACE/artifacts/static.tgz --directory=./priv/static
+          tar xzf $GITHUB_WORKSPACE/artifacts/static.tgz --directory=./playground/priv/static
       
       - name: Run elixir unit tests
         run: mix test
@@ -259,7 +259,8 @@ jobs:
       - name: Run dialyzer
         run: mix dialyzer --halt-exit-status
 
-  # runs cypress acceptance/e2e tests
+      # runs cypress acceptance/e2e tests
+  
   acceptance:
     name: "Acceptance/E2E tests"
     runs-on: "ubuntu-latest"
@@ -272,7 +273,8 @@ jobs:
         elixir: ["1.13.3"]
         otp: ["24.2.2"]
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
       - name: Set up Elixir
         uses: erlef/setup-beam@v1
@@ -285,26 +287,28 @@ jobs:
           mix local.rebar --force
           mix local.hex --force
 
-      - name: Download artifacts
+      - name: Download Artifacts
         uses: "actions/download-artifact@v2"
         with:
           name: build-env
           path: "${{ github.workspace }}/artifacts"
-      - run: |
+      
+      - name: Extract Artifacts
+        run: |
           mkdir -p ./_build
           mkdir -p ./deps
-          mkdir -p ./assets/node_modules
+          mkdir -p ./node_modules
+          mkdir -p ./playground/priv/static
           mkdir -p /home/runner/.cache/Cypress
-          mkdir -p ./priv/static
           tar xzf $GITHUB_WORKSPACE/artifacts/build.tgz --directory=./_build
           tar xzf $GITHUB_WORKSPACE/artifacts/deps.tgz --directory=./deps
-          tar xzf $GITHUB_WORKSPACE/artifacts/node_modules.tgz --directory=./assets/node_modules
+          tar xzf $GITHUB_WORKSPACE/artifacts/node_modules.tgz --directory=./node_modules
+          tar xzf $GITHUB_WORKSPACE/artifacts/static.tgz --directory=./playground/priv/static
           tar xzf $GITHUB_WORKSPACE/artifacts/cypress.tgz --directory=/home/runner/.cache/Cypress
-          tar xzf $GITHUB_WORKSPACE/artifacts/static.tgz --directory=./priv/static
       
       - name: E2E tests
         run: |
-          mix phx.server &
-          npm --prefix assets run test:e2e:ci
+          mix playground &
+          npm run test:e2e:ci
 
       

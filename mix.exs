@@ -4,10 +4,10 @@ defmodule Philtre.MixProject do
   def project do
     [
       app: :philtre,
-      version: "0.7.1",
+      version: "0.8.0",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:gettext] ++ Mix.compilers(),
+      compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
@@ -17,55 +17,33 @@ defmodule Philtre.MixProject do
     ]
   end
 
-  # Configuration for the OTP application.
-  #
-  # Type `mix help compile.app` for more information.
   def application do
-    [
-      mod: {Philtre.Application, []},
-      extra_applications: [:logger, :runtime_tools]
-    ]
+    []
   end
 
-  # Specifies which paths to compile per environment.
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(:test), do: ["lib", "playground", "test/support"]
+  defp elixirc_paths(:dev), do: ["lib", "playground"]
   defp elixirc_paths(_), do: ["lib"]
 
-  # Specifies your project dependencies.
-  #
-  # Type `mix help deps` for examples and options.
   defp deps do
     [
       {:credo, "~>1.6.0"},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:floki, ">= 0.30.0"},
-      {:gettext, "~> 0.18"},
       {:jason, "~> 1.2"},
       {:mix_test_watch, "~> 1.0", only: [:test]},
       {:phoenix_html, "~> 3.0"},
-      {:phoenix_live_dashboard, "~> 0.6"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},
+      {:phoenix_live_reload, "~> 1.2", only: [:dev]},
       {:phoenix_live_view, "~> 0.17.6"},
       {:phoenix, "~> 1.6.2"},
       {:plug_cowboy, "~> 2.5"},
-      {:telemetry_metrics, "~> 0.6"},
-      {:telemetry_poller, "~> 1.0"},
       {:uuid, "~> 1.1"}
     ]
   end
 
-  # Aliases are shortcuts or tasks specific to the current project.
-  # For example, to install project dependencies and perform other setup tasks, run:
-  #
-  #     $ mix setup
-  #
-  # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get", "cmd npm --prefix assets install"],
-      "assets.deploy": ["cmd npm --prefix assets run deploy"],
-      "test.e2e": ["cmd mix phx.server & npm --prefix assets run test:e2e"],
-      "test.e2e.ci": ["cmd mix phx.server & npm --prefix assets run test:e2e:ci"]
+      playground: "run --no-halt playground.exs"
     ]
   end
 end

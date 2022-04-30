@@ -1,4 +1,4 @@
-defmodule EditorTest.Wrapper do
+defmodule Philtre.Wrapper do
   @moduledoc """
   Defines a view and a set of utility functions to test how the editor
   component interacts with the view.

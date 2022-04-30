@@ -1,4 +1,4 @@
-defmodule EditorTest.EditorCase do
+defmodule Philtre.EditorCase do
   @moduledoc """
   Defines test case for testing of the editor component
 
@@ -10,9 +10,9 @@ defmodule EditorTest.EditorCase do
     quote do
       import Phoenix.ConnTest
 
-      alias EditorTest.Wrapper
+      alias Philtre.Wrapper
 
-      @endpoint PhiltreWeb.Endpoint
+      @endpoint Playground.Endpoint
     end
   end
 

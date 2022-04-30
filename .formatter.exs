@@ -1,4 +1,3 @@
 [
-  import_deps: [:phoenix],
-  inputs: ["*.{ex,exs}", "priv/*/seeds.exs", "{config,lib,test}/**/*.{ex,exs}"]
+  inputs: ["*.{ex,exs}", "{config,lib,playground,test}/**/*.{ex,exs}"]
 ]

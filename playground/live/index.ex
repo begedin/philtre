@@ -9,7 +9,7 @@ defmodule Playground.Live.Index do
   alias Phoenix.LiveView
   alias Playground.Documents
 
-  @spec mount(map, PlaygroundWeb.session(), LiveView.Socket.t()) :: {:ok, LiveView.Socket.t()}
+  @spec mount(map, struct, LiveView.Socket.t()) :: {:ok, LiveView.Socket.t()}
   def mount(%{}, _session, socket) do
     socket = assign(socket, :documents, Documents.list_documents())
     {:ok, socket}

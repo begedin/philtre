@@ -10,7 +10,7 @@ defmodule Playground.Live.New do
 
   alias Playground.Documents
 
-  @spec mount(map, PlaygroundWeb.session(), LiveView.Socket.t()) :: {:ok, LiveView.Socket.t()}
+  @spec mount(map, struct, LiveView.Socket.t()) :: {:ok, LiveView.Socket.t()}
   def mount(%{}, _session, socket) do
     {:ok, assign(socket, :editor, Editor.new())}
   end

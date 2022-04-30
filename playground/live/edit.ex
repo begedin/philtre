@@ -16,7 +16,7 @@ defmodule Playground.Live.Edit do
     """
   end
 
-  @spec mount(map, PlaygroundWeb.session(), LiveView.Socket.t()) :: {:ok, LiveView.Socket.t()}
+  @spec mount(map, struct, LiveView.Socket.t()) :: {:ok, LiveView.Socket.t()}
   def mount(%{"filename" => filename}, _session, socket) do
     {:ok, %Editor{} = document} = Documents.get_document(filename)
     {:ok, assign(socket, %{editor: document, filename: filename})}

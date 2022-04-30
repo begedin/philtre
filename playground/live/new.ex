@@ -3,7 +3,6 @@ defmodule Playground.Live.New do
   use Phoenix.HTML
 
   import Phoenix.LiveView.Helpers
-  import Phoenix.View
 
   use Phoenix.LiveView, layout: {Playground.View, "live.html"}
 

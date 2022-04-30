@@ -1,8 +1,8 @@
 export declare type ViewHook = {
     el: HTMLElement;
     viewName: string;
-    pushEvent(event: string, payload?: object, onReply?: (reply: any, ref: number) => any): void;
-    pushEventTo(selectorOrTarget: any, event: string, payload?: object, onReply?: (reply: any, ref: number) => any): void;
+    pushEvent(event: string, payload?: object, onReply?: (reply: object, ref: number) => void): void;
+    pushEventTo(selectorOrTarget: string | Element, event: string, payload?: object, onReply?: (reply: object, ref: number) => void): void;
     handleEvent(event: string, callback: (payload: object) => void): void;
     mounted?: (() => void) | undefined;
     beforeUpdate?: (() => void) | undefined;

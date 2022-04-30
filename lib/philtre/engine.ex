@@ -64,7 +64,7 @@ defmodule Editor.Engine do
     new_block =
       resolve_transform(%{
         block
-        | cells: IO.inspect(pre_cells ++ post_cells),
+        | cells: pre_cells ++ post_cells,
           selection: %Block.Selection{
             start_id: start_id,
             end_id: end_id,
@@ -499,21 +499,17 @@ defmodule Editor.Engine do
 
   @spec resolve_transform(Block.t()) :: Block.t()
   defp resolve_transform(%Block{} = p) do
-    case p.cells
-         |> Enum.at(0)
-         |> Map.get(:text)
-         |> transform_type()
-         |> IO.inspect(label: "transform") do
+    case p.cells |> Enum.at(0) |> Map.get(:text) |> transform_type() do
       nil -> p
       other -> transform(p, other)
     end
   end
 
   @spec transform_type(String.t()) :: String.t() | nil
+  defp transform_type("* " <> _), do: "li"
   defp transform_type("# " <> _), do: "h1"
   defp transform_type("## " <> _), do: "h2"
   defp transform_type("### " <> _), do: "h3"
-  defp transform_type("* " <> _), do: "li"
   defp transform_type("```" <> _), do: "pre"
   defp transform_type("> " <> _), do: "blockquote"
   defp transform_type(_), do: nil

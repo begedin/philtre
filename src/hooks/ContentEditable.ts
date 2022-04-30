@@ -212,7 +212,7 @@ const restoreSelection = (el: HTMLElement): void => {
 
 export const ContentEditable = {
   mounted() {
-    const el: HTMLElement = (this as any).el;
+    const el: HTMLElement = this.el;
 
     let saveRef: null | number = null;
     let savePromise: Promise<void> | null = null;
@@ -225,14 +225,14 @@ export const ContentEditable = {
       const eventName = 'update';
       const target = getTarget(this.el);
 
-      savePromise = new Promise((resolve, reject) => {
+      savePromise = new Promise((resolve) => {
         applyFixes(el);
         const cells = getCells(el);
         const selection = getSelection();
         const params = { selection, cells };
 
-        saveRef = setTimeout(async () => {
-          (this as any).pushEventTo(target, eventName, params, () => {
+        saveRef = window.setTimeout(async () => {
+          this.pushEventTo(target, eventName, params, () => {
             saveRef = null;
             savePromise = null;
             resolve();

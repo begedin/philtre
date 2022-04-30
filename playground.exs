@@ -9,5 +9,4 @@
 # $ iex -S mix dev [flags]
 #######################################
 
-Playground.Engine.setup()
-Playground.Engine.run()
+Playground.App.run()

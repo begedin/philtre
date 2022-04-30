@@ -3,10 +3,7 @@ defmodule Playground.View do
   use Phoenix.HTML
 
   import Phoenix.LiveView.Helpers
-  import Phoenix.View
-
-  import Phoenix.Controller,
-    only: [get_flash: 1, get_flash: 2, view_module: 1, view_template: 1]
+  import Phoenix.Controller, only: [get_flash: 2]
 
   alias Playground.Router.Helpers, as: Routes
 
@@ -61,8 +58,21 @@ defmodule Playground.View do
     """
   end
 
+  def render("show.html", assigns) do
+    ~H"""
+    <div>
+      <h1><%= @conn.path_params["filename"] %></h1>
+      <div><%= raw(Editor.html(@document)) %></div>
+    </div>
+    """
+  end
+
   def render("404.html", assigns) do
-    ~H"Not found"
+    ~H"Not Found"
+  end
+
+  def render("500.html", assigns) do
+    ~H"Internal Server Error"
   end
 
   defp head(assigns) do

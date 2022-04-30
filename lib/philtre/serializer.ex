@@ -55,6 +55,10 @@ defmodule Editor.Serializer do
     block |> html |> Floki.parse_document!() |> Floki.text()
   end
 
+  def html(%Editor{blocks: blocks}) do
+    Enum.map_join(blocks, "", &html/1)
+  end
+
   def html(%Block{cells: cells, type: tag}) do
     "<#{tag}>" <> Enum.map_join(cells, "", &html/1) <> "</#{tag}>"
   end

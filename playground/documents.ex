@@ -2,7 +2,7 @@ defmodule Playground.Documents do
   @moduledoc """
   Main context for storing editor content onto disk as json
   """
-  @folder Path.join("priv", "documents")
+  @folder Path.join("playground/priv", "documents")
 
   defp file_path(filename) do
     Path.join(@folder, filename)

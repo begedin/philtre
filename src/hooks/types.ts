@@ -4,13 +4,13 @@ export type ViewHook = {
   pushEvent(
     event: string,
     payload?: object,
-    onReply?: (reply: any, ref: number) => any
+    onReply?: (reply: object, ref: number) => void
   ): void;
   pushEventTo(
-    selectorOrTarget: any,
+    selectorOrTarget: string | Element,
     event: string,
     payload?: object,
-    onReply?: (reply: any, ref: number) => any
+    onReply?: (reply: object, ref: number) => void
   ): void;
   handleEvent(event: string, callback: (payload: object) => void): void;
 

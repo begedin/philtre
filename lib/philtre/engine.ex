@@ -1,9 +1,10 @@
-defmodule Editor.Engine do
+defmodule Philtre.Editor.Engine do
   @moduledoc """
   Holds shared logic for modifying editor blocks
   """
-  alias Editor.Block
-  alias Editor.Utils
+  alias Philtre.Editor
+  alias Philtre.Editor.Block
+  alias Philtre.Editor.Utils
 
   @spec update(
           Editor.t(),

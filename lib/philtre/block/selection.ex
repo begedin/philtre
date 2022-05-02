@@ -1,4 +1,4 @@
-defmodule Editor.Block.Selection do
+defmodule Philtre.Editor.Block.Selection do
   @moduledoc """
   Holds current selection in a block.
 
@@ -19,7 +19,7 @@ defmodule Editor.Block.Selection do
   Selection across blocks is not possible. Only whole blocks can be selected and
   this is handled at a different level.
   """
-  alias Editor.Block
+  alias Philtre.Editor.Block
   defstruct [:start_id, :end_id, :start_offset, :end_offset]
 
   @type t :: %__MODULE__{

@@ -5,7 +5,8 @@ defmodule Philtre.EditorTest do
 
   import Phoenix.LiveViewTest
 
-  alias Editor.Block
+  alias Philtre.Editor
+  alias Philtre.Editor.Block
 
   @editor %Editor{
     id: "-5",

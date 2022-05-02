@@ -10,7 +10,8 @@ defmodule Philtre.Wrapper do
   import Phoenix.LiveView.Helpers
   import Phoenix.LiveViewTest
 
-  alias Editor.Block
+  alias Philtre.Editor
+  alias Philtre.Editor.Block
   alias Phoenix.LiveViewTest.View
 
   @doc false

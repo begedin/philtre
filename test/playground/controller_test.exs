@@ -2,6 +2,7 @@ defmodule Playground.ControllerTest do
   @moduledoc false
   use Playground.ConnCase
 
+  alias Philtre.Editor
   alias Playground.Documents
 
   describe "GET /" do

@@ -1,13 +1,13 @@
-defmodule Editor do
+defmodule Philtre.Editor do
   @moduledoc """
   Shared component used for both creation and editing of an article.
   """
   use Phoenix.LiveComponent
   use Phoenix.HTML
 
-  alias Editor.Block
-  alias Editor.Serializer
-  alias Editor.Utils
+  alias Philtre.Editor.Block
+  alias Philtre.Editor.Serializer
+  alias Philtre.Editor.Utils
 
   alias Phoenix.LiveView.Socket
 

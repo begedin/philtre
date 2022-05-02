@@ -1,4 +1,4 @@
-defmodule Editor.Block.Cell do
+defmodule Philtre.Editor.Block.Cell do
   @moduledoc """
   Represents a single cell within a block. Cells are discrete parts of a block,
   to which some style (specified by modifiers) is applied.
@@ -7,7 +7,7 @@ defmodule Editor.Block.Cell do
   is just one level, separated purely to support styling.
   """
 
-  alias Editor.Utils
+  alias Philtre.Editor.Utils
 
   defstruct [:id, :modifiers, :text]
 

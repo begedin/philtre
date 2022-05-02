@@ -6,6 +6,7 @@ defmodule Playground.Live.Edit do
 
   use Phoenix.LiveView, layout: {Playground.View, "live.html"}
 
+  alias Philtre.Editor
   alias Phoenix.LiveView
   alias Playground.Documents
 
@@ -18,7 +19,7 @@ defmodule Playground.Live.Edit do
 
   @spec mount(map, struct, LiveView.Socket.t()) :: {:ok, LiveView.Socket.t()}
   def mount(%{"filename" => filename}, _session, socket) do
-    {:ok, %Editor{} = document} = Documents.get_document(filename)
+    {:ok, %Philtre.Editor{} = document} = Documents.get_document(filename)
     {:ok, assign(socket, %{editor: document, filename: filename})}
   end
 

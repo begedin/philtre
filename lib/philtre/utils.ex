@@ -1,4 +1,4 @@
-defmodule Editor.Utils do
+defmodule Philtre.Editor.Utils do
   @moduledoc """
   Contains various utility functions used by the library, that don't really have
   another place to fit in.

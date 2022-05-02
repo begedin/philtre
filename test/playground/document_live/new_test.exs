@@ -5,7 +5,8 @@ defmodule Playground.DocumentLive.NewTest do
 
   import Phoenix.LiveViewTest
 
-  alias Editor.Block
+  alias Philtre.Editor
+  alias Philtre.Editor.Block
   alias Playground.Documents
 
   @editor %Editor{

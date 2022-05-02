@@ -6,6 +6,7 @@ defmodule Playground.Live.New do
 
   use Phoenix.LiveView, layout: {Playground.View, "live.html"}
 
+  alias Philtre.Editor
   alias Phoenix.LiveView
 
   alias Playground.Documents

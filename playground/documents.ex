@@ -4,6 +4,8 @@ defmodule Playground.Documents do
   """
   @folder Path.join("playground/priv", "documents")
 
+  alias Philtre.Editor
+
   defp file_path(filename) do
     Path.join(@folder, filename)
   end

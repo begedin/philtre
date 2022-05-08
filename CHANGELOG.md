@@ -1,3 +1,13 @@
+# 0.8.0 2022-05-08
+
+There have been many changes since the last update
+
+- complete engine rewrite
+- e2e test suite
+- conversion to library
+- support for scss
+- various misc additions and tweaks
+
 # 0.7.1 2022-01-25
 
 - reduce blocks after backspacing or updating, so they contain a minimal amount of cells

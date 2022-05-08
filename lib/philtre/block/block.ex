@@ -74,7 +74,7 @@ defmodule Philtre.Editor.Block do
 
   defp attrs(%Block{} = block, selected, myself) when is_boolean(selected) do
     %{
-      class: "philtre__block",
+      class: "philtre-block",
       contenteditable: true,
       data_block: true,
       data_selected: selected,

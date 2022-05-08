@@ -7,6 +7,7 @@ defmodule Philtre.UI.Page do
 
   alias Philtre.Editor
   alias Philtre.Editor.Block
+  alias Philtre.Editor.Engine
   alias Philtre.Editor.Utils
 
   alias Phoenix.LiveView.Socket
@@ -39,15 +40,18 @@ defmodule Philtre.UI.Page do
     <div id={@editor.id}>
       <.selection editor={@editor} myself={@myself} />
       <.history editor={@editor} myself={@myself} />
-      <div class="philtre__editor">
+      <div class="philtre-page">
         <%= for %Block{} = block <- @editor.blocks do %>
-          <.live_component
-            id={block.id}
-            module={Block}
-            editor={@editor}
-            block={block}
-            selected={block.id in @editor.selected_blocks}
-          />
+          <div class="philtre-page__section">
+            <.sidebar block={block} myself={@myself} />
+            <.live_component
+              id={block.id}
+              module={Block}
+              editor={@editor}
+              block={block}
+              selected={block.id in @editor.selected_blocks}
+            />
+          </div>
         <% end %>
       </div>
     </div>
@@ -57,7 +61,7 @@ defmodule Philtre.UI.Page do
   defp selection(%{editor: _} = assigns) do
     ~H"""
     <div
-      class="philtre__selection"
+      class="philtre-selection"
       id={"editor__selection__#{@editor.id}"}
       phx-hook="Selection"
       phx-target={@myself}
@@ -68,11 +72,20 @@ defmodule Philtre.UI.Page do
   defp history(%{editor: _} = assigns) do
     ~H"""
     <div
-      class="philtre__history"
+      class="philtre-history"
       id={"editor__history__#{@editor.id}"}
       phx-hook="History"
       phx-target={@myself}
     />
+    """
+  end
+
+  def sidebar(%{block: _} = assigns) do
+    ~H"""
+    <div class="philtre-sidebar">
+      <button phx-click="add_block" phx-value-block_id={@block.id} phx-target={@myself}>+</button>
+      <button phx-click="remove_block" phx-value-block_id={@block.id} phx-target={@myself}>-</button>
+    </div>
     """
   end
 
@@ -136,5 +149,18 @@ defmodule Philtre.UI.Page do
 
         {:noreply, socket}
     end
+  end
+
+  def handle_event("add_block", %{"block_id" => block_id}, socket) do
+    block = Enum.find(socket.assigns.editor.blocks, &(&1.id === block_id))
+    new_editor = Engine.add_block(socket.assigns.editor, block)
+    {:noreply, assign(socket, :editor, new_editor)}
+  end
+
+  def handle_event("remove_block", %{"block_id" => block_id}, socket) do
+    new_blocks = Enum.reject(socket.assigns.editor.blocks, &(&1.id === block_id))
+    new_editor = %{socket.assigns.editor | blocks: new_blocks}
+
+    {:noreply, assign(socket, :editor, new_editor)}
   end
 end

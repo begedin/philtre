@@ -47,7 +47,7 @@ defmodule Playground.DocumentLive.EditTest do
     assert dom |> Floki.find("h1[contenteditable]") |> Floki.text() == "Foo"
     assert dom |> Floki.find("p[contenteditable]") |> Floki.text() == "BarBaz"
 
-    assert view |> element("button") |> render_click()
+    assert view |> element("button", "Save") |> render_click()
 
     assert Documents.get_document("foo") == {:ok, @editor}
 

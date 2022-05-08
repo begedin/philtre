@@ -9,7 +9,7 @@ defmodule Philtre.Editor.Block.Cell do
 
   alias Philtre.Editor.Utils
 
-  defstruct [:id, :modifiers, :text]
+  defstruct id: Utils.new_id(), modifiers: [], text: ""
 
   @type id :: String.t()
 

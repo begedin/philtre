@@ -30,7 +30,7 @@ defmodule Philtre.Wrapper do
   @impl Phoenix.LiveView
   def render(assigns) do
     ~H"""
-    <.live_component module={Editor} id={@editor.id} editor={@editor} />
+    <.live_component module={Philtre.UI.Page} id={@editor.id} editor={@editor} />
     """
   end
 

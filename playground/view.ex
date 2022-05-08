@@ -5,6 +5,7 @@ defmodule Playground.View do
   import Phoenix.LiveView.Helpers
   import Phoenix.Controller, only: [get_flash: 2]
 
+  alias Philtre.Editor
   alias Playground.Router.Helpers, as: Routes
 
   def render("root.html", assigns) do

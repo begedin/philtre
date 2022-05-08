@@ -1,8 +1,9 @@
-defmodule Editor.Serializer do
+defmodule Philtre.Editor.Serializer do
   @moduledoc """
   Holds normalization and serialization logic for the editor
   """
-  alias Editor.Block
+  alias Philtre.Editor
+  alias Philtre.Editor.Block
 
   def serialize(%Editor{} = editor) do
     %{

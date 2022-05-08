@@ -1,9 +1,10 @@
-defmodule Editor.Engine do
+defmodule Philtre.Editor.Engine do
   @moduledoc """
   Holds shared logic for modifying editor blocks
   """
-  alias Editor.Block
-  alias Editor.Utils
+  alias Philtre.Editor
+  alias Philtre.Editor.Block
+  alias Philtre.Editor.Utils
 
   @spec update(
           Editor.t(),
@@ -166,6 +167,22 @@ defmodule Editor.Engine do
     index = Enum.find_index(editor.blocks, &(&1.id === block.id))
     new_blocks = List.replace_at(editor.blocks, index, new_block)
 
+    %{editor | blocks: new_blocks}
+  end
+
+  def add_block(%Editor{} = editor, %Block{} = block) do
+    index = Enum.find_index(editor.blocks, &(&1.id === block.id))
+
+    cell = %Block.Cell{}
+
+    new_block = %Block{
+      cells: [cell],
+      id: Utils.new_id(),
+      type: "p",
+      selection: Block.Selection.new_start_of(cell)
+    }
+
+    new_blocks = List.insert_at(editor.blocks, index + 1, new_block)
     %{editor | blocks: new_blocks}
   end
 
@@ -497,95 +514,77 @@ defmodule Editor.Engine do
     %{first_block | cells: new_cells}
   end
 
+  @transforms [
+    %{
+      prefixes: ["* ", "* "],
+      kind: "li"
+    },
+    %{
+      prefixes: ["# ", "# "],
+      kind: "h1"
+    },
+    %{
+      prefixes: ["## ", "## "],
+      kind: "h2"
+    },
+    %{
+      prefixes: ["### ", "### "],
+      kind: "h3"
+    },
+    %{
+      prefixes: ["```"],
+      kind: "pre"
+    },
+    %{
+      prefixes: ["> ", "> "],
+      kind: "blockquote"
+    }
+  ]
+
+  @type transform :: %{required(:prefixes) => list(String.t()), kind: String.t()}
+
   @spec resolve_transform(Block.t()) :: Block.t()
-  defp resolve_transform(%Block{} = p) do
-    case p.cells |> Enum.at(0) |> Map.get(:text) |> transform_type() do
-      nil -> p
-      other -> transform(p, other)
+  defp resolve_transform(%Block{} = block) do
+    with %Block.Cell{text: text} <- Enum.at(block.cells, 0),
+         %{} = transform <- match_transform(text) do
+      transform(block, transform)
+    else
+      nil -> block
     end
   end
 
-  @spec transform_type(String.t()) :: String.t() | nil
-  defp transform_type("* " <> _), do: "li"
-  defp transform_type("# " <> _), do: "h1"
-  defp transform_type("## " <> _), do: "h2"
-  defp transform_type("### " <> _), do: "h3"
-  defp transform_type("```" <> _), do: "pre"
-  defp transform_type("> " <> _), do: "blockquote"
-  defp transform_type(_), do: nil
+  defp match_transform(text) when is_binary(text) do
+    Enum.find(@transforms, fn %{prefixes: prefixes, kind: _kind} ->
+      Enum.any?(prefixes, &String.starts_with?(text, &1))
+    end)
+  end
 
-  @spec transform(Block.t(), String.t()) :: Block.t()
-  defp transform(%Block{} = self, "h1") do
+  @spec transform(Block.t(), transform) :: Block.t()
+  defp transform(%Block{} = self, %{kind: kind, prefixes: prefixes}) do
+    {new_cells, shift} = drop_leading(self.cells, prefixes)
+    type = kind
+
     %{
       self
       | id: Utils.new_id(),
-        type: "h1",
-        cells: replace_leading(self.cells, "# ", ""),
-        selection: shift(self.selection, -2)
+        type: type,
+        cells: new_cells,
+        selection: shift(self.selection, -shift)
     }
   end
 
-  defp transform(%Block{} = self, "h2") do
-    %{
-      self
-      | id: Utils.new_id(),
-        type: "h2",
-        cells: replace_leading(self.cells, "## ", ""),
-        selection: shift(self.selection, -3)
-    }
-  end
+  @spec drop_leading(list(Block.Cell.t()), list(String.t())) :: {list(Block.Cell.t()), integer}
+  defp drop_leading([], _), do: []
 
-  defp transform(%Block{} = self, "h3") do
-    %{
-      self
-      | id: Utils.new_id(),
-        type: "h3",
-        cells: replace_leading(self.cells, "### ", ""),
-        selection: shift(self.selection, -4)
-    }
-  end
-
-  defp transform(%Block{} = self, "pre") do
-    %{
-      self
-      | id: Utils.new_id(),
-        type: "pre",
-        cells: replace_leading(self.cells, "```", ""),
-        selection: shift(self.selection, -3)
-    }
-  end
-
-  defp transform(%Block{} = self, "blockquote") do
-    %{
-      self
-      | id: Utils.new_id(),
-        type: "blockquote",
-        cells: replace_leading(self.cells, "> ", ""),
-        selection: shift(self.selection, -2)
-    }
-  end
-
-  defp transform(%Block{} = self, "li") do
-    %{
-      self
-      | id: Utils.new_id(),
-        type: "li",
-        cells: replace_leading(self.cells, "* ", ""),
-        selection: shift(self.selection, -2)
-    }
-  end
-
-  defp replace_leading([], _, _), do: []
-
-  @spec replace_leading(list(Block.Cell.t()), String.t(), String.t()) :: list(Block.Cell.t())
-  defp replace_leading([first | rest], from, to) do
-    first = %{first | text: String.replace(first.text, from, to)}
-    [first | rest]
+  defp drop_leading([%{text: text} = first | rest], prefixes) when is_list(prefixes) do
+    prefix = Enum.find(prefixes, &String.starts_with?(text, &1))
+    first = %{first | text: String.replace(first.text, prefix, "")}
+    {[first | rest], String.length(prefix)}
   end
 
   @spec shift(Block.Selection.t(), integer) :: Block.Selection.t()
   defp shift(
-         %{
+         %Block.Selection{
            start_id: start_id,
            end_id: end_id,
            start_offset: start_offset,

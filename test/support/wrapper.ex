@@ -10,7 +10,8 @@ defmodule Philtre.Wrapper do
   import Phoenix.LiveView.Helpers
   import Phoenix.LiveViewTest
 
-  alias Editor.Block
+  alias Philtre.Editor
+  alias Philtre.Editor.Block
   alias Phoenix.LiveViewTest.View
 
   @doc false
@@ -29,7 +30,7 @@ defmodule Philtre.Wrapper do
   @impl Phoenix.LiveView
   def render(assigns) do
     ~H"""
-    <.live_component module={Editor} id={@editor.id} editor={@editor} />
+    <.live_component module={Philtre.UI.Page} id={@editor.id} editor={@editor} />
     """
   end
 

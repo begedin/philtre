@@ -1,0 +1,111 @@
+$colorLanguidLavender: #cabac8;
+$colorRedRYB: #ff101f;
+$colorUranianBlue: #b2ddf7;
+$colorMiddleBlue: #81d6e3;
+$colorVerdirgis: #4cb5ae;
+
+.philtre-page {
+  max-width: 700px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+
+  &__section {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px;
+
+    .philtre-sidebar {
+      opacity: 0;
+
+      width: 62px;
+      margin-left: -62px;
+      display: grid;
+      grid-template-columns: auto auto;
+      gap: 6px;
+      align-items: center;
+      justify-content: center;
+
+      transition: all 0.2s ease;
+      transition-property: opacity;
+
+      button {
+        color: $colorMiddleBlue;
+        background: none;
+        border: none;
+        outline: none;
+        text-align: center;
+        vertical-align: middle;
+        display: grid;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        width: 28px;
+        height: 28px;
+        line-height: 24px;
+        border-radius: 3px;
+
+        transition: all 0.2s ease;
+        transition-property: background, color;
+
+        &:hover {
+          background: $colorUranianBlue;
+          color: $colorVerdirgis;
+        }
+      }
+    }
+
+    &:hover {
+      .philtre-sidebar {
+        opacity: 1;
+      }
+    }
+  }
+}
+
+.philtre-block {
+  margin: 0;
+  min-height: 1em;
+  cursor: text;
+  outline: none;
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Helvetica, 'Apple Color Emoji', Arial, sans-serif, 'Segoe UI Emoji',
+    'Segoe UI Symbol';
+  padding: 12px;
+  background-clip: border-box;
+
+  & > * {
+    width: 100%;
+  }
+
+  &:hover {
+    background-clip: border-box;
+    background: $colorUranianBlue;
+  }
+
+  &[data-selected] {
+    background-clip: border-box;
+    background: $colorMiddleBlue;
+  }
+
+  .philtre-cell.bold {
+    font-weight: bold;
+  }
+
+  .philtre-cell.italic {
+    font-style: italic;
+  }
+
+  .philtre-cell.br {
+    display: block;
+    clear: both;
+  }
+}
+
+blockquote.philtre-block {
+  margin-left: 0;
+  padding-left: 2em;
+  border-left: 0.25em solid gray;
+}

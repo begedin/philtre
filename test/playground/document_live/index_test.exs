@@ -5,6 +5,7 @@ defmodule Playground.DocumentLive.IndexTest do
 
   import Phoenix.LiveViewTest
 
+  alias Philtre.Editor
   alias Playground.Documents
 
   test "renders articles", %{conn: conn} do

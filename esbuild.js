@@ -1,4 +1,7 @@
-const esbuild = require('esbuild');
+/* globals process */
+
+import esbuild from 'esbuild';
+import { sassPlugin } from 'esbuild-sass-plugin';
 
 // Decide which mode to proceed with
 let mode = 'build';
@@ -21,6 +24,7 @@ const opts = {
   minify: false,
   format: 'esm',
   target: ['esnext'],
+  plugins: [sassPlugin()],
 };
 
 if (mode === 'watch') {

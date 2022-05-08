@@ -1,4 +1,4 @@
-defmodule Editor.Block do
+defmodule Philtre.Editor.Block do
   @moduledoc """
   Holds logic specific to the p block
   """
@@ -6,9 +6,9 @@ defmodule Editor.Block do
   use Phoenix.LiveComponent
   use Phoenix.HTML
 
-  alias Editor.Block
-  alias Editor.Engine
-  alias Editor.Utils
+  alias Philtre.Editor.Block
+  alias Philtre.Editor.Engine
+  alias Philtre.Editor.Utils
 
   require Logger
 
@@ -74,7 +74,7 @@ defmodule Editor.Block do
 
   defp attrs(%Block{} = block, selected, myself) when is_boolean(selected) do
     %{
-      class: "philtre__block",
+      class: "philtre-block",
       contenteditable: true,
       data_block: true,
       data_selected: selected,

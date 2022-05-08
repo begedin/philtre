@@ -6,6 +6,8 @@ defmodule Playground.Live.New do
 
   use Phoenix.LiveView, layout: {Playground.View, "live.html"}
 
+  alias Philtre.Editor
+  alias Philtre.UI.Page
   alias Phoenix.LiveView
 
   alias Playground.Documents
@@ -21,7 +23,7 @@ defmodule Playground.Live.New do
       <input type="text" require name="filename">
       <button type="submit">Save</button>
     </form>
-    <.live_component module={Editor} id={@editor.id} editor={@editor} />
+    <.live_component module={Page} id={@editor.id} editor={@editor} />
     """
   end
 

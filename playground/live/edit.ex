@@ -6,19 +6,21 @@ defmodule Playground.Live.Edit do
 
   use Phoenix.LiveView, layout: {Playground.View, "live.html"}
 
+  alias Philtre.Editor
+  alias Philtre.UI.Page
   alias Phoenix.LiveView
   alias Playground.Documents
 
   def render(assigns) do
     ~H"""
     <button phx-click="save">Save</button>
-    <.live_component module={Editor} id={@editor.id} editor={@editor} />
+    <.live_component module={Page} id={@editor.id} editor={@editor} />
     """
   end
 
   @spec mount(map, struct, LiveView.Socket.t()) :: {:ok, LiveView.Socket.t()}
   def mount(%{"filename" => filename}, _session, socket) do
-    {:ok, %Editor{} = document} = Documents.get_document(filename)
+    {:ok, %Philtre.Editor{} = document} = Documents.get_document(filename)
     {:ok, assign(socket, %{editor: document, filename: filename})}
   end
 

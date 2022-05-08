@@ -91,6 +91,10 @@ export const Selection = {
     };
 
     document.addEventListener('mousedown', (event: MouseEvent) => {
+      if (event.button !== 0) {
+        return;
+      }
+
       selectionState.selecting = true;
       selectionState.fromX = event.x;
       selectionState.fromY = event.y;
@@ -111,10 +115,6 @@ export const Selection = {
 
     document.addEventListener('mouseup', () => {
       selectionState.selecting = false;
-
-      if (getWidth(selectionState) < 5 || getHeight(selectionState) < 5) {
-        return;
-      }
 
       const allBlocks = document.querySelectorAll<HTMLElement>('[data-block]');
 

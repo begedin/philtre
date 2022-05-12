@@ -104,7 +104,7 @@ defmodule Philtre.EditorTest do
 
     Wrapper.set_editor(view, Editor.new())
     Wrapper.trigger_split_block(view, Wrapper.block_at(view, 0), :end)
-    assert %Block{cells: [%{text: ""}], type: "p"} = Wrapper.block_at(view, 1)
+    assert %Block{cells: [%{text: " "}], type: "p"} = Wrapper.block_at(view, 1)
   end
 
   test "can convert block to h1", %{conn: conn} do
@@ -114,7 +114,7 @@ defmodule Philtre.EditorTest do
     Wrapper.trigger_split_block(view, h1, :end)
 
     %Block{type: "p"} = p = Wrapper.block_at(view, 1)
-    assert %{cells: [%{text: ""} = cell]} = p
+    assert %{cells: [%{text: " "} = cell]} = p
 
     Wrapper.trigger_update(view, p, %{
       cells: [cell |> Map.from_struct() |> Map.put(:text, "# ")],
@@ -122,7 +122,7 @@ defmodule Philtre.EditorTest do
     })
 
     assert %Block{type: "h1"} = h1 = Wrapper.block_at(view, 1)
-    assert %{cells: [%{text: ""}]} = h1
+    assert %{cells: [%{text: " "}]} = h1
   end
 
   test "can convert block to h2", %{conn: conn} do
@@ -132,7 +132,7 @@ defmodule Philtre.EditorTest do
     Wrapper.trigger_split_block(view, h1, :end)
 
     %Block{type: "p"} = p = Wrapper.block_at(view, 1)
-    assert %{cells: [%{text: ""} = cell]} = p
+    assert %{cells: [%{text: " "} = cell]} = p
 
     Wrapper.trigger_update(view, p, %{
       cells: [cell |> Map.from_struct() |> Map.put(:text, "## ")],
@@ -140,7 +140,7 @@ defmodule Philtre.EditorTest do
     })
 
     assert %Block{type: "h2"} = h2 = Wrapper.block_at(view, 1)
-    assert %{cells: [%{text: ""}]} = h2
+    assert %{cells: [%{text: " "}]} = h2
   end
 
   test "can convert block to h3", %{conn: conn} do
@@ -150,7 +150,7 @@ defmodule Philtre.EditorTest do
     Wrapper.trigger_split_block(view, h1, :end)
 
     %Block{type: "p"} = p = Wrapper.block_at(view, 1)
-    assert %{cells: [%{text: ""} = cell]} = p
+    assert %{cells: [%{text: " "} = cell]} = p
 
     Wrapper.trigger_update(view, p, %{
       cells: [cell |> Map.from_struct() |> Map.put(:text, "### ")],
@@ -158,7 +158,7 @@ defmodule Philtre.EditorTest do
     })
 
     assert %Block{type: "h3"} = h3 = Wrapper.block_at(view, 1)
-    assert %{cells: [%{text: ""}]} = h3
+    assert %{cells: [%{text: " "}]} = h3
   end
 
   test "can convert block to pre", %{conn: conn} do
@@ -168,7 +168,7 @@ defmodule Philtre.EditorTest do
     Wrapper.trigger_split_block(view, h1, :end)
 
     %Block{type: "p"} = p = Wrapper.block_at(view, 1)
-    assert %{cells: [%{text: ""} = cell]} = p
+    assert %{cells: [%{text: " "} = cell]} = p
 
     Wrapper.trigger_update(view, p, %{
       cells: [cell |> Map.from_struct() |> Map.put(:text, "```")],
@@ -176,7 +176,7 @@ defmodule Philtre.EditorTest do
     })
 
     assert %Block{type: "pre"} = pre = Wrapper.block_at(view, 1)
-    assert %{cells: [%{text: ""}]} = pre
+    assert %{cells: [%{text: " "}]} = pre
   end
 
   test "can convert block to li", %{conn: conn} do
@@ -186,7 +186,7 @@ defmodule Philtre.EditorTest do
     Wrapper.trigger_split_block(view, h1, :end)
 
     %Block{type: "p"} = p = Wrapper.block_at(view, 1)
-    assert %{cells: [%{text: ""} = cell]} = p
+    assert %{cells: [%{text: " "} = cell]} = p
 
     Wrapper.trigger_update(view, p, %{
       cells: [cell |> Map.from_struct() |> Map.put(:text, "* foo")],

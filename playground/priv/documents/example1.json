@@ -1,52 +1,113 @@
 {
   "blocks": [
     {
-      "content": "This is the title of your page",
+      "content": [
+        {
+          "text": "This is the title of your page",
+          "modifiers": [],
+          "id": "72466d06-8a7b-49ed-0000-048005d57716"
+        }
+      ],
       "id": "62c4e564-a0ad-44b1-bfa6-c34efbaad60f",
       "type": "h1"
     },
     {
-      "content": "This is your first paragraph.",
+      "content": [
+        {
+          "text": "This is your first paragraph.",
+          "modifiers": [],
+          "id": "72466d06-8a7b-49ed-9a65-048088d57716"
+        }
+      ],
       "id": "046fcf5f-c5ed-4207-82b2-1eafc47c3cd0",
       "type": "p"
     },
     {
-      "content": "It can have a list to",
+      "content": [
+        {
+          "text": "It can have a list to",
+          "modifiers": [],
+          "id": "72466d06-8a7b-49ed-9a65-048005d57556"
+        }
+      ],
       "id": "7a3c9eed-08d2-4916-aa02-3ea24279e60b",
       "type": "p"
     },
     {
-      "content": "for example",
+      "content": [
+        {
+          "text": "for example",
+          "modifiers": [],
+          "id": "72466d06-8a7b-49ed-9a65-048005d57790"
+        }
+      ],
       "id": "e927338a-65f6-4b6d-a93a-983e1b7668f6",
       "type": "li"
     },
     {
-      "content": "and another",
+      "content": [
+        {
+          "text": "and another",
+          "modifiers": [],
+          "id": "72466d06-8a7b-49ed-9a65-048043d57716"
+        }
+      ],
       "id": "72466d06-8a7b-49ed-9a65-048005d57716",
       "type": "li"
     },
     {
-      "content": "it can also do PRE",
-      "id": "3a5d9af2-1a41-4189-a5d9-bbe6ef12f782",
+      "content": [
+        {
+          "text": "it can also do PRE",
+          "modifiers": [],
+          "id": "72466d06-8a7b-49ed-9a65-048022d57716"
+        }
+      ],
+      "id": "3a5d9af2-1a41-4189-a5d9-bbe6ef121182",
       "type": "pre"
     },
     {
-      "content": "and a blockquote",
-      "id": "e5f04851-e0a3-4a06-a057-a95586e9fbf1",
+      "content": [
+        {
+          "text": "and a blockquote",
+          "modifiers": [],
+          "id": "72466d06-8a7b-49ed-9a65-048000d57716"
+        }
+      ],
+      "id": "e5f04851-e0a3-4a06-a057-a9558699fbf1",
       "type": "blockquote"
     },
     {
-      "content": "As well as other things.",
+      "content": [
+        {
+          "text": "As well as other things.",
+          "type": "span",
+          "modifiers": [],
+          "id": "72466d06-8a7b-49ed-9a65-048405d57716"
+        }
+      ],
       "id": "d91f3fdd-4182-4329-a38c-2b22e4fe85f5",
       "type": "p"
     },
     {
-      "content": "A subheader",
-      "id": "1770d81a-23aa-4988-836a-12664949f67c",
+      "content": [
+        {
+          "text": "A subheader",
+          "modifiers": [],
+          "id": "72466d06-8a7b-49ed-9a65-047005d57716"
+        }
+      ],
+      "id": "1770d81a-23aa-4988-836a-12664942f67c",
       "type": "h2"
     },
     {
-      "content": "A subsubheader",
+      "content": [
+        {
+          "text": "A subsubheader",
+          "modifiers": [],
+          "id": "72466d06-8a7b-49ed-9a65-048105d57716"
+        }
+      ],
       "id": "bf16a035-3714-467c-bb9f-ebf704fca840",
       "type": "h3"
     }

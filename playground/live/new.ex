@@ -20,7 +20,7 @@ defmodule Playground.Live.New do
   def render(assigns) do
     ~H"""
     <form phx-submit="save">
-      <input type="text" require name="filename">
+      <input type="text" require name="filename" />
       <button type="submit">Save</button>
     </form>
     <.live_component module={Page} id={@editor.id} editor={@editor} />

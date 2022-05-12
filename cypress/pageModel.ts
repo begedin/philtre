@@ -11,7 +11,7 @@ export class NewPage {
     return this.blocks
       .eq(blockIndex)
       .click()
-      .type('{selectall}{leftArrow}')
+      .type('{moveToStart}')
       .type('{backspace}');
   }
 
@@ -20,11 +20,11 @@ export class NewPage {
   }
 
   setCursorStart(blockIndex: number) {
-    return this.blocks.eq(blockIndex).click().type('{selectall}{leftArrow}');
+    return this.blocks.eq(blockIndex).click().type('{moveToStart}');
   }
 
   setCursorEnd(blockIndex: number) {
-    return this.blocks.eq(blockIndex).click().type('{selectall}{rightArrow}');
+    return this.blocks.eq(blockIndex).click().type('{moveToEnd}');
   }
 
   newBlockAfter(blockIndex: number) {

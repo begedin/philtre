@@ -2,7 +2,8 @@
 
 - various bugfixes related to blocks splitting and joining
 - phoenix dependency update
-- configuration for heex formatter
+- failed attempt configuration for heex formatter
+- basic styling for PRE block
 
 # 0.8.0 2022-05-08
 

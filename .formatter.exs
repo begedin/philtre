@@ -1,6 +1,4 @@
 [
-  plugins: [Phoenix.LiveView.HTMLFormatter],
-  inputs: ["*.{ex,exs,heex}", "{config,lib,playground,test}/**/*.{heex,ex,exs}"],
-  heex_line_length: 80,
+  inputs: ["*.{ex,exs}", "{config,lib,playground,test}/**/*.{ex,exs}"],
   line_length: 100
 ]

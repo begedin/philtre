@@ -50,7 +50,9 @@ defmodule Philtre.Editor.Block do
 
   def render(%{block: %__MODULE__{type: "h1"}} = assigns) do
     ~H"""
-    <h1 {attrs(@block, @selected, @myself)}><.content block={@block} /></h1>
+    <h1 {attrs(@block, @selected, @myself)}>
+      <.content block={@block} />
+    </h1>
     """
   end
 
@@ -89,7 +91,11 @@ defmodule Philtre.Editor.Block do
   end
 
   defp content(assigns) do
-    ~H"<%= for cell <- @block.cells do %><.cell cell={cell} /><% end %>"
+    # single-row rendering is needed here, as properly formatted
+    # rendering will introduce newlines into the content
+    ~H"""
+    <%= for cell <- @block.cells do %><.cell cell={cell} /><% end %>
+    """
   end
 
   defp cell(%{cell: %Block.Cell{id: id, modifiers: modifiers, text: text}} = assigns) do

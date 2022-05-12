@@ -109,3 +109,8 @@ blockquote.philtre-block {
   padding-left: 2em;
   border-left: 0.25em solid gray;
 }
+
+pre.philtre-block {
+  font-family: monospace;
+  white-space: pre-line;
+}

@@ -423,7 +423,7 @@ defmodule Philtre.Editor.Engine do
   end
 
   @spec empty_block?(Block.t()) :: boolean
-  defp empty_block?(%Block{cells: [%{text: ""}]}), do: true
+  defp empty_block?(%Block{cells: [cell]}), do: empty_cell?(cell)
   defp empty_block?(%Block{}), do: false
 
   defp empty_cell?(%Block.Cell{text: t, modifiers: m})

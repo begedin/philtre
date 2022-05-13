@@ -1,3 +1,10 @@
+# 0.8.1 2022-05-12
+
+- various bugfixes related to blocks splitting and joining
+- phoenix dependency update
+- failed attempt configuration for heex formatter
+- basic styling for PRE block
+
 # 0.8.0 2022-05-08
 
 There have been many changes since the last update

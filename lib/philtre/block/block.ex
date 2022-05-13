@@ -35,41 +35,75 @@ defmodule Philtre.Editor.Block do
   end
 
   def render(%{block: %__MODULE__{type: "p"}} = assigns) do
-    ~H"<p {attrs(@block, @selected, @myself)}><.content block={@block} /></p>"
+    ~H"""
+    <p {attrs(@block, @selected, @myself)}>
+      <.content block={@block} />
+    </p>
+    """
   end
 
   def render(%{block: %__MODULE__{type: "pre"}} = assigns) do
-    ~H"<pre {attrs(@block, @selected, @myself)}><.content block={@block} /></pre>"
+    ~H"""
+    <pre {attrs(@block, @selected, @myself)}><.content block={@block} /></pre>
+    """
   end
 
   def render(%{block: %__MODULE__{type: "h1"}} = assigns) do
-    ~H"<h1 {attrs(@block, @selected, @myself)}><.content block={@block} /></h1>"
+    ~H"""
+    <h1 {attrs(@block, @selected, @myself)}>
+      <.content block={@block} />
+    </h1>
+    """
   end
 
   def render(%{block: %__MODULE__{type: "h2"}} = assigns) do
-    ~H"<h2 {attrs(@block, @selected, @myself)}><.content block={@block} /></h2>"
+    ~H"""
+    <h2 {attrs(@block, @selected, @myself)}>
+      <.content block={@block} />
+    </h2>
+    """
   end
 
   def render(%{block: %__MODULE__{type: "h3"}} = assigns) do
-    ~H"<h3 {attrs(@block, @selected, @myself)}><.content block={@block} /></h3>"
+    ~H"""
+    <h3 {attrs(@block, @selected, @myself)}>
+      <.content block={@block} />
+    </h3>
+    """
   end
 
   def render(%{block: %__MODULE__{type: "blockquote"}} = assigns) do
-    ~H"<blockquote {attrs(@block, @selected, @myself)}><.content block={@block} /></blockquote>"
+    ~H"""
+    <blockquote {attrs(@block, @selected, @myself)}>
+      <.content block={@block} />
+    </blockquote>
+    """
   end
 
   def render(%{block: %__MODULE__{type: "li"}} = assigns) do
-    ~H"<ul><li {attrs(@block, @selected, @myself)}><.content block={@block} /></li></ul>"
+    ~H"""
+    <ul>
+      <li {attrs(@block, @selected, @myself)}>
+        <.content block={@block} />
+      </li>
+    </ul>
+    """
   end
 
   defp content(assigns) do
-    ~H"<%= for cell <- @block.cells do %><.cell cell={cell} /><% end %>"
+    # single-row rendering is needed here, as properly formatted
+    # rendering will introduce newlines into the content
+    ~H"""
+    <%= for cell <- @block.cells do %><.cell cell={cell} /><% end %>
+    """
   end
 
   defp cell(%{cell: %Block.Cell{id: id, modifiers: modifiers, text: text}} = assigns) do
     classes = ["philtre-cell"] |> Enum.concat(modifiers) |> Enum.join(" ") |> String.trim()
 
-    ~H"<span data-cell-id={id} class={classes}><%= text %></span>"
+    ~H"""
+    <span data-cell-id={id} class={classes}><%= text %></span>
+    """
   end
 
   defp attrs(%Block{} = block, selected, myself) when is_boolean(selected) do

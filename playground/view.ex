@@ -32,19 +32,29 @@ defmodule Playground.View do
     ~H"""
     <nav class="admin">
       <ul>
-        <li><%= live_patch "Home", to: "/" %></li>
-        <li><%= live_patch "Index", to: "/documents" %></li>
-        <li><%= live_patch "New", to: "/documents/new" %></li>
+        <li><%= live_patch("Home", to: "/") %></li>
+        <li><%= live_patch("Index", to: "/documents") %></li>
+        <li><%= live_patch("New", to: "/documents/new") %></li>
       </ul>
     </nav>
     <main class="container">
-      <p class="alert alert-info" role="alert"
+      <p
+        class="alert alert-info"
+        role="alert"
         phx-click="lv:clear-flash"
-        phx-value-key="info"><%= live_flash(@flash, :info) %></p>
+        phx-value-key="info"
+      >
+        <%= live_flash(@flash, :info) %>
+      </p>
 
-      <p class="alert alert-danger" role="alert"
+      <p
+        class="alert alert-danger"
+        role="alert"
         phx-click="lv:clear-flash"
-        phx-value-key="error"><%= live_flash(@flash, :error) %></p>
+        phx-value-key="error"
+      >
+        <%= live_flash(@flash, :error) %>
+      </p>
 
       <%= @inner_content %>
     </main>
@@ -69,31 +79,37 @@ defmodule Playground.View do
   end
 
   def render("404.html", assigns) do
-    ~H"Not Found"
+    ~H"""
+    Not Found
+    """
   end
 
   def render("500.html", assigns) do
-    ~H"Internal Server Error"
+    ~H"""
+    Internal Server Error
+    """
   end
 
   defp head(assigns) do
     ~H"""
     <head>
-      <meta charset="utf-8"/>
-      <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <meta charset="utf-8" />
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <%= csrf_meta_tag() %>
-      <%= live_title_tag assigns[:page_title] || "Playground", suffix: " · Homepage" %>
+      <%= live_title_tag(assigns[:page_title] || "Playground", suffix: " · Homepage") %>
       <link
         phx-track-static
         rel="stylesheet"
-        href={Routes.static_path(@conn, "/app.css")} />
+        href={Routes.static_path(@conn, "/app.css")}
+      />
       <script
         defer
         phx-track-static
         type="text/javascript"
         src={Routes.static_path(@conn, "/app.js")}
-      ></script>
+      >
+      </script>
     </head>
     """
   end

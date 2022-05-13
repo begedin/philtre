@@ -423,10 +423,11 @@ defmodule Philtre.Editor.Engine do
   end
 
   @spec empty_block?(Block.t()) :: boolean
-  defp empty_block?(%Block{cells: [%{text: ""}]}), do: true
+  defp empty_block?(%Block{cells: [cell]}), do: empty_cell?(cell)
   defp empty_block?(%Block{}), do: false
 
-  defp empty_cell?(%Block.Cell{text: t, modifiers: m}) when t in ["", nil] and m != ["br"] do
+  defp empty_cell?(%Block.Cell{text: t, modifiers: m})
+       when t in ["", nil, " ", "&nbsp;", " "] and m != ["br"] do
     true
   end
 
@@ -492,7 +493,8 @@ defmodule Philtre.Editor.Engine do
     if index >= 0 do
       %_{} = previous_block = Enum.at(editor.blocks, index)
       merged = %{merge_second_into_first(previous_block, block) | id: Utils.new_id()}
-      last_cell = Enum.at(merged.cells, -1)
+
+      last_cell = Enum.at(previous_block.cells, -1)
       selection = Block.Selection.new_end_of(last_cell)
 
       merged = set_selection(merged, selection)

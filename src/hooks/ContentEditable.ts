@@ -21,58 +21,24 @@ const resolveCell = (node: Node | HTMLElement): HTMLElement | null => {
   return null;
 };
 
-const applyFixes = (el: HTMLElement) => {
-  const zeroth = el.childNodes[0];
+const getChildIndex = (node: Node): number =>
+  Array.prototype.indexOf.call(node.parentNode?.children || [], node);
 
-  if (!zeroth) {
-    return;
-  }
-
-  // this means we had a blank cell. since we can't put a carret into black inline elements, it was
-  // placed on an extra text node outside in the block, but before the first cell
-  if (zeroth.nodeName === '#text') {
-    // we first have to remove the text log
-    el.removeChild(zeroth);
-
-    // then we prepend the content of the removed text node into the actual first cell element
-    el.childNodes[0].textContent = (zeroth.textContent || '').concat(
-      el.childNodes[0].textContent || ''
-    );
-
-    // finally, since the caret was at the end of that node, we move it into the node
-    const selection = document.getSelection();
-    if (!selection) {
-      return;
-    }
-
-    const range = selection.getRangeAt(0);
-    range.selectNode(el.childNodes[0]);
-    selection.collapseToEnd();
-  }
-
-  if (zeroth?.nodeName === 'BR') {
-    el.removeChild(zeroth);
-  }
-};
-
-const getPreCaretText = (element: HTMLElement): string => {
+const isAtStartOfBlock = (): boolean => {
   const selection = document.getSelection();
   if (!selection) {
-    return '';
+    return false;
   }
-  const range = selection.getRangeAt(0);
-
-  // generates dom container for selection from start of contenteditable to caret
-  const preCaretRange = range.cloneRange();
-  preCaretRange.selectNodeContents(element);
-  preCaretRange.setEnd(range.startContainer, range.startOffset);
-  const preContainer = document.createElement('div');
-  preContainer.append(preCaretRange.cloneContents());
-  return preContainer.innerText;
+  const node = selection.anchorNode;
+  if (!node) {
+    return false;
+  }
+  const indexedNode = node.nodeType === Node.TEXT_NODE ? node.parentNode : node;
+  if (!indexedNode) {
+    return false;
+  }
+  return getChildIndex(indexedNode) === 0 && selection.anchorOffset == 0;
 };
-
-const isAtStartOfBlock = (element: HTMLElement): boolean =>
-  getPreCaretText(element).length === 0;
 
 const getSelection = () => {
   const selection = document.getSelection();
@@ -129,7 +95,7 @@ const getCells = (el: HTMLElement): Cell[] => {
 
     return {
       id: child.dataset.cellId || '',
-      text: child.innerText,
+      text: child.innerText.replace(' ', ' '),
       modifiers,
     };
   });
@@ -137,7 +103,7 @@ const getCells = (el: HTMLElement): Cell[] => {
 
 const resolveCommand = (e: KeyboardEvent) => {
   if (e.key === 'Backspace') {
-    if (isAtStartOfBlock(e.target as HTMLElement)) {
+    if (isAtStartOfBlock()) {
       return 'backspace_from_start';
     }
   }
@@ -226,7 +192,6 @@ export const ContentEditable = {
       const target = getTarget(this.el);
 
       savePromise = new Promise((resolve) => {
-        applyFixes(el);
         const cells = getCells(el);
         const selection = getSelection();
         const params = { selection, cells };
@@ -237,7 +202,7 @@ export const ContentEditable = {
             savePromise = null;
             resolve();
           });
-        });
+        }, 300);
       });
     });
 

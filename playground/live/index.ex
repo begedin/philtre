@@ -23,12 +23,11 @@ defmodule Playground.Live.Index do
     ~H"""
     <div>
       <%= for filename <- @documents do %>
-      <div>
-        <%= live_patch(filename, to: "/documents/#{filename}/edit") %>
-      </div>
+        <div>
+          <%= live_patch(filename, to: "/documents/#{filename}/edit") %>
+        </div>
       <% end %>
     </div>
-
     """
   end
 end

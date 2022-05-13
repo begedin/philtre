@@ -4,7 +4,7 @@ defmodule Philtre.MixProject do
   def project do
     [
       app: :philtre,
-      version: "0.8.0",
+      version: "0.8.1",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: Mix.compilers(),
@@ -35,7 +35,7 @@ defmodule Philtre.MixProject do
       {:phoenix_html, "~> 3.0"},
       {:phoenix_live_reload, "~> 1.2", only: [:dev]},
       {:phoenix_live_view, "~> 0.17.6"},
-      {:phoenix, "~> 1.6.2"},
+      {:phoenix, "~> 1.6.8"},
       {:plug_cowboy, "~> 2.5"},
       {:uuid, "~> 1.1"}
     ]

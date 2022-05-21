@@ -5,6 +5,7 @@ defmodule Philtre.Editor.Engine do
   alias Philtre.Editor
   alias Philtre.Editor.Block
   alias Philtre.Editor.Utils
+  alias Philtre.Table
 
   @spec update(
           Editor.t(),
@@ -260,6 +261,22 @@ defmodule Philtre.Editor.Engine do
         _ -> "p"
       end
 
+    block_before =
+      if empty_block?(block_before) do
+        %{block_before | cells: [Block.Cell.new()]}
+      else
+        block_before
+      end
+
+    block_after =
+      if empty_block?(block_after) do
+        cell = Block.Cell.new()
+        selection = Block.Selection.new_start_of(cell)
+        %{block_after | cells: [cell], selection: selection}
+      else
+        block_after
+      end
+
     block_after = %{block_after | type: new_type}
 
     replace_block(editor, block, [block_before, block_after])
@@ -423,6 +440,7 @@ defmodule Philtre.Editor.Engine do
   end
 
   @spec empty_block?(Block.t()) :: boolean
+  defp empty_block?(%Block{cells: []}), do: true
   defp empty_block?(%Block{cells: [cell]}), do: empty_cell?(cell)
   defp empty_block?(%Block{}), do: false
 
@@ -494,8 +512,21 @@ defmodule Philtre.Editor.Engine do
       %_{} = previous_block = Enum.at(editor.blocks, index)
       merged = %{merge_second_into_first(previous_block, block) | id: Utils.new_id()}
 
+      first_cell = Enum.at(block.cells, 0)
       last_cell = Enum.at(previous_block.cells, -1)
-      selection = Block.Selection.new_end_of(last_cell)
+
+      selection =
+        cond do
+          not is_nil(last_cell) and not empty_cell?(last_cell) ->
+            Block.Selection.new_end_of(last_cell)
+
+          not is_nil(first_cell) and not empty_cell?(first_cell) ->
+            Block.Selection.new_start_of(first_cell)
+
+          Enum.count(merged.cells) == 1 ->
+            [only_cell] = merged.cells
+            Block.Selection.new_start_of(only_cell)
+        end
 
       merged = set_selection(merged, selection)
 
@@ -513,8 +544,12 @@ defmodule Philtre.Editor.Engine do
       |> Enum.concat(other_block.cells)
       |> Enum.reject(&empty_cell?/1)
 
-    %{first_block | cells: new_cells}
+    ensure_single_cell(%{first_block | cells: new_cells})
   end
+
+  @spec ensure_single_cell(Block.t()) :: Block.t()
+  defp ensure_single_cell(%Block{cells: []} = block), do: %{block | cells: [Block.Cell.new()]}
+  defp ensure_single_cell(%Block{} = block), do: block
 
   @transforms [
     %{
@@ -540,6 +575,10 @@ defmodule Philtre.Editor.Engine do
     %{
       prefixes: ["> ", "> "],
       kind: "blockquote"
+    },
+    %{
+      prefixes: ["/table"],
+      kind: "table"
     }
   ]
 
@@ -562,6 +601,12 @@ defmodule Philtre.Editor.Engine do
   end
 
   @spec transform(Block.t(), transform) :: Block.t()
+  defp transform(%Block{} = self, %{kind: "table", prefixes: prefixes}) do
+    {new_cells, _shift} = drop_leading(self.cells, prefixes)
+
+    %Table{id: Utils.new_id(), rows: [Enum.map(new_cells, &String.trim(&1.text))]}
+  end
+
   defp transform(%Block{} = self, %{kind: kind, prefixes: prefixes}) do
     {new_cells, shift} = drop_leading(self.cells, prefixes)
     type = kind

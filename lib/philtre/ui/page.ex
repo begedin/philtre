@@ -9,6 +9,7 @@ defmodule Philtre.UI.Page do
   alias Philtre.Editor.Block
   alias Philtre.Editor.Engine
   alias Philtre.Editor.Utils
+  alias Philtre.Table
 
   alias Phoenix.LiveView.Socket
 
@@ -41,16 +42,10 @@ defmodule Philtre.UI.Page do
       <.selection editor={@editor} myself={@myself} />
       <.history editor={@editor} myself={@myself} />
       <div class="philtre-page">
-        <%= for %Block{} = block <- @editor.blocks do %>
+        <%= for block <- @editor.blocks do %>
           <div class="philtre-page__section">
             <.sidebar block={block} myself={@myself} />
-            <.live_component
-              id={block.id}
-              module={Block}
-              editor={@editor}
-              block={block}
-              selected={block.id in @editor.selected_blocks}
-            />
+            <.block {assigns} block={block} />
           </div>
         <% end %>
       </div>
@@ -80,11 +75,47 @@ defmodule Philtre.UI.Page do
     """
   end
 
+  def block(%{block: %Block{}} = assigns) do
+    ~H"""
+    <.live_component
+      id={@block.id}
+      module={Block}
+      editor={@editor}
+      block={@block}
+      selected={@block.id in @editor.selected_blocks}
+    />
+    """
+  end
+
+  def block(%{block: %Table{}} = assigns) do
+    ~H"""
+    <.live_component
+      module={Table}
+      id={@block.id}
+      editor={@editor}
+      block={@block}
+      selected={@block.id in @editor.selected_blocks}
+    />
+    """
+  end
+
   def sidebar(%{block: _} = assigns) do
     ~H"""
     <div class="philtre-sidebar">
-      <button phx-click="add_block" phx-value-block_id={@block.id} phx-target={@myself}>+</button>
-      <button phx-click="remove_block" phx-value-block_id={@block.id} phx-target={@myself}>-</button>
+      <button
+        phx-click="add_block"
+        phx-value-block_id={@block.id}
+        phx-target={@myself}
+      >
+        +
+      </button>
+      <button
+        phx-click="remove_block"
+        phx-value-block_id={@block.id}
+        phx-target={@myself}
+      >
+        -
+      </button>
     </div>
     """
   end

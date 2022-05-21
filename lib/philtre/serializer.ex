@@ -4,6 +4,7 @@ defmodule Philtre.Editor.Serializer do
   """
   alias Philtre.Editor
   alias Philtre.Editor.Block
+  alias Philtre.Table
 
   def serialize(%Editor{} = editor) do
     %{
@@ -25,11 +26,15 @@ defmodule Philtre.Editor.Serializer do
   @spec serialize(struct) :: map
   def serialize(%Block{id: id, type: type, cells: cells})
       when type in @types do
-    %{"id" => id, "type" => type, "content" => Enum.map(cells, &serialize_cell/1)}
+    %{"id" => id, "type" => type, "content" => Enum.map(cells, &serialize/1)}
   end
 
-  defp serialize_cell(%Block.Cell{id: id, modifiers: modifiers, text: text}) do
+  def serialize(%Block.Cell{id: id, modifiers: modifiers, text: text}) do
     %{"id" => id, "modifiers" => modifiers, "text" => text}
+  end
+
+  def serialize(%Philtre.Table{} = table) do
+    %{"id" => table.id, "rows" => table.rows, "type" => "table"}
   end
 
   def normalize(%{"id" => id, "blocks" => blocks}) when is_binary(id) and is_list(blocks) do
@@ -46,6 +51,13 @@ defmodule Philtre.Editor.Serializer do
 
   def normalize(%{"id" => id, "modifiers" => modifiers, "text" => text}) do
     %Block.Cell{id: id, modifiers: modifiers, text: text}
+  end
+
+  def normalize(%{"id" => id, "type" => "table", "rows" => rows}) do
+    %Philtre.Table{
+      id: id,
+      rows: rows
+    }
   end
 
   def text(%Editor{} = editor) do
@@ -66,5 +78,9 @@ defmodule Philtre.Editor.Serializer do
 
   def html(%Block.Cell{id: _id, modifiers: _modifiers, text: text}) do
     "<span>" <> text <> "</span>"
+  end
+
+  def html(%Table{} = table) do
+    Table.html(table)
   end
 end

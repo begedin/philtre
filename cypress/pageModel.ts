@@ -7,6 +7,14 @@ export class NewPage {
     return cy.get('.philtre-block');
   }
 
+  get sections() {
+    return cy.get('.philtre-page__section');
+  }
+
+  sectionAt(index: number) {
+    return this.sections.eq(index);
+  }
+
   backspace(blockIndex: number) {
     return this.blocks
       .eq(blockIndex)
@@ -45,5 +53,9 @@ export class NewPage {
 
   clickRemoveBlockButton(blockIndex: number) {
     return this.removeBlockButtons.eq(blockIndex).click();
+  }
+
+  save() {
+    cy.get('button').contains('Save').click();
   }
 }

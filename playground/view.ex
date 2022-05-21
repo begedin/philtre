@@ -3,7 +3,6 @@ defmodule Playground.View do
   use Phoenix.HTML
 
   import Phoenix.LiveView.Helpers
-  import Phoenix.Controller, only: [get_flash: 2]
 
   alias Philtre.Editor
   alias Playground.Router.Helpers, as: Routes
@@ -21,8 +20,6 @@ defmodule Playground.View do
   def render("app.html", assigns) do
     ~H"""
     <main class="container">
-      <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
-      <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
       <%= @inner_content %>
     </main>
     """
@@ -38,24 +35,6 @@ defmodule Playground.View do
       </ul>
     </nav>
     <main class="container">
-      <p
-        class="alert alert-info"
-        role="alert"
-        phx-click="lv:clear-flash"
-        phx-value-key="info"
-      >
-        <%= live_flash(@flash, :info) %>
-      </p>
-
-      <p
-        class="alert alert-danger"
-        role="alert"
-        phx-click="lv:clear-flash"
-        phx-value-key="error"
-      >
-        <%= live_flash(@flash, :error) %>
-      </p>
-
       <%= @inner_content %>
     </main>
     """

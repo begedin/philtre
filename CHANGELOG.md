@@ -1,3 +1,7 @@
+# 0.9.0 2022-05-21
+
+- basic table component
+
 # 0.8.1 2022-05-12
 
 - various bugfixes related to blocks splitting and joining

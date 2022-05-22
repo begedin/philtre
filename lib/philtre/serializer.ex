@@ -34,7 +34,7 @@ defmodule Philtre.Editor.Serializer do
   end
 
   def serialize(%Philtre.Table{} = table) do
-    %{"id" => table.id, "rows" => table.rows, "type" => "table"}
+    %{"id" => table.id, "header_rows" => table.header_rows, "rows" => table.rows, "type" => "table"}
   end
 
   def normalize(%{"id" => id, "blocks" => blocks}) when is_binary(id) and is_list(blocks) do
@@ -53,10 +53,11 @@ defmodule Philtre.Editor.Serializer do
     %Block.Cell{id: id, modifiers: modifiers, text: text}
   end
 
-  def normalize(%{"id" => id, "type" => "table", "rows" => rows}) do
+  def normalize(%{"id" => id, "type" => "table"} = data) do
     %Philtre.Table{
       id: id,
-      rows: rows
+      rows: Map.get(data, "rows", []),
+      header_rows: Map.get(data, "header_rows", [])
     }
   end
 

@@ -1,3 +1,8 @@
+# 0.9.1 2022-05-22
+
+- separate out scss into individual files
+- style and restructure table component
+
 # 0.9.0 2022-05-21
 
 - basic table component

@@ -4,7 +4,8 @@ defmodule Philtre.MixProject do
   def project do
     [
       app: :philtre,
-      version: "0.9.1",
+      description: "A block-style editor for live view",
+      version: "0.9.2",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: Mix.compilers(),
@@ -13,7 +14,19 @@ defmodule Philtre.MixProject do
       deps: deps(),
       preferred_cli_env: [
         "test.watch": :test
-      ]
+      ],
+      package: package()
+    ]
+  end
+
+  defp package do
+    [
+      maintainers: ["Nikola Begedin"],
+      licenses: ["MIT"],
+      links: %{
+        Changelog: "https://hexdocs.pm/philtre/changelog.html",
+        GitHub: "https://github.com/begedin/philtre"
+      }
     ]
   end
 
@@ -29,6 +42,7 @@ defmodule Philtre.MixProject do
     [
       {:credo, "~>1.6.0"},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.28", only: :dev, runtime: false},
       {:floki, ">= 0.30.0"},
       {:jason, "~> 1.2"},
       {:mix_test_watch, "~> 1.0", only: [:test]},

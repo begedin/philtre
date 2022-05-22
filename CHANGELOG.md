@@ -1,7 +1,9 @@
-# 0.9.1 2022-05-22
+# 0.9.2 2022-05-22
 
 - separate out scss into individual files
 - style and restructure table component
+- publish to hex and npm
+- add basic setup readme
 
 # 0.9.0 2022-05-21
 

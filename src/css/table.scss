@@ -1,0 +1,100 @@
+.philtre__table {
+  padding-top: 2em;
+  display: grid;
+  grid-template-columns: 1fr auto;
+
+  thead {
+    tr:first-child {
+      th {
+        position: relative;
+
+        button[phx-click='remove_column'] {
+          position: absolute;
+          bottom: 100%;
+          left: 0;
+          right: 0;
+        }
+      }
+    }
+  }
+
+  thead tr th:last-child,
+  tbody tr td:last-child {
+    position: relative;
+
+    button[phx-click='remove_row'] {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+    }
+  }
+
+  button[phx-click] {
+    background: none;
+    border: none;
+    padding: 0.2em;
+
+    cursor: pointer;
+
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: $colorUranianBlue;
+    }
+
+    &:disabled {
+      background-color: inherit;
+      cursor: inherit;
+    }
+  }
+
+  button[phx-click='remove_column'] {
+    margin-bottom: 0.5em;
+  }
+
+  button[phx-click='add_column'] {
+    width: 1.5em;
+    margin-left: 0.5em;
+  }
+
+  button[phx-click='add_row'] {
+    margin-top: 0.5em;
+  }
+}
+
+.philtre__table table {
+  border-spacing: 0;
+  border-collapse: collapse;
+
+  td,
+  th {
+    border: 1px solid $colorUranianBlue;
+  }
+
+  td,
+  th {
+    padding: 0;
+
+    form {
+      margin: 0;
+      padding: 0;
+    }
+
+    textarea {
+      border: none;
+      padding: 0.5em;
+      margin: 0;
+      outline: none;
+      font-family: $fontContent;
+      resize: none;
+      overflow: hidden;
+    }
+  }
+
+  th {
+    textarea {
+      font-weight: bold;
+    }
+  }
+}

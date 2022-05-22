@@ -35,6 +35,18 @@ defmodule Philtre.Editor do
           selection: %Block.Selection{},
           type: "p"
         }
+        # Uncomment to test table
+        # %Philtre.Table{
+        #   id: Utils.new_id(),
+        #   header_rows: [
+        #     ["a", "header", "column"]
+        #   ],
+        #   rows: [
+        #     ["a", "row", ""],
+        #     ["another", "row", ""],
+        #     ["yet", "another", "row"]
+        #   ]
+        # }
       ]
     }
   end

@@ -1,3 +1,7 @@
+# 0.9.3 2022-05-25
+
+- fix publish + installation story
+
 # 0.9.2 2022-05-22
 
 - separate out scss into individual files

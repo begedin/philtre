@@ -17,20 +17,29 @@ Install it as an npm dependency using `npm -i -s philtrejs`.
 
 ```json
 "dependencies": {
-  "philtre": "^0.9"
+  "philtre": "philtrejs"
+},
+```
+
+Alternatively, just include it in your /assets/package.json directly from the hex
+installation:
+
+```json
+"dependencies": {
+  "philtre": "file:../deps/philtre"
 },
 ```
 
 Include `philtre.scss` somewhere in your application, for example, from `app.js`:
 
 ```js
-import 'philtre/css/philtre.scss';
+import 'philtre/src/css/philtre.scss';
 ```
 
 Import and include the hooks into your live view application
 
 ```js
-import { ContentEditable, History, Selection } from 'philtre/hooks';
+import { ContentEditable, History, Selection } from 'philtre/src/hooks';
 
 // ...
 
@@ -40,23 +49,27 @@ const liveSocket = new LiveSocket('/live', Socket, {
 });
 ```
 
-Render the page compomnenent inside one of your live views
+Render the page component inside one of your live views
 
 ```Elixir
-def mount(%{"filename" => filename}, _session, socket) do
-  {:ok, %Philtre.Editor{} = document} = Documents.get_document(filename)
-  {:ok, assign(socket, %{editor: document, filename: filename})}
+def mount(%{}, _session, socket) do
+  {:ok, assign(socket, %{editor: Philtre.Editor.new()})}
 end
 
 def render(assigns) do
   ~H"""
   <button phx-click="save">Save</button>
-  <.live_component module={Page} id={@editor.id} editor={@editor} />
+  <.live_component
+    module={Philtre.UI.Page}
+    id={@editor.id}
+    editor={@editor}
+  />
   """
 end
 
 def handle_event("save", %{}, socket) do
-  save(socket.assigns.editor, "file.json")
+  json = Philtre.Editor.serialize(socket.assigns.json)
+  # save the json however you please
   {:noreply, socket}
 end
 

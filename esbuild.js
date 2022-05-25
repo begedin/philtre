@@ -23,7 +23,7 @@ const opts = {
   watch: false,
   minify: false,
   format: 'esm',
-  target: ['esnext'],
+  target: ['es2015'],
   plugins: [sassPlugin()],
 };
 

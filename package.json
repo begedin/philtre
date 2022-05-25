@@ -1,6 +1,6 @@
 {
   "name": "philtrejs",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "description": "Block-style editor for phoenix_live_view, the frontend part",
   "directories": {
     "lib": "dist",
@@ -9,11 +9,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
-  "files": [
-    "/src"
-  ],
   "scripts": {
-    "build": "rimraf dist && tsc --emitDeclarationOnly --outDir dist",
+    "build": "rimraf dist && node ./esbuild.js --deploy && tsc --emitDeclarationOnly --outDir dist",
     "lint": "eslint src playground/js --ext .js,.ts --fix",
     "test:e2e:ci": "cypress run",
     "test:e2e": "cypress open"

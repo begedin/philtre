@@ -211,6 +211,8 @@ jobs:
   dialyzer:
     name: "Run dialyzer"
     runs-on: "ubuntu-latest"
+    env: 
+      MIX_ENV: dev
     needs: build-env
     strategy: 
       fail-fast: true

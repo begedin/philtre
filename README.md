@@ -13,27 +13,16 @@ deps: [
 ]
 ```
 
-Install it as an npm dependency using `npm -i -s philtrejs`.
-
-```json
-"dependencies": {
-  "philtre": "philtrejs"
-},
-```
-
-Alternatively, just include it in your /assets/package.json directly from the hex
-installation:
-
-```json
-"dependencies": {
-  "philtre": "file:../deps/philtre"
-},
-```
-
-Include `philtre.scss` somewhere in your application, for example, from `app.js`:
+Include the styles in your applicatoon somewhere in your application, for example, from `app.js`:
 
 ```js
-import 'philtre/src/css/philtre.scss';
+import 'philtre/dist/index.css';
+```
+
+Or from `app.css`:
+
+```css
+@import 'philtre/dist/index.css';
 ```
 
 Import and include the hooks into your live view application
@@ -41,11 +30,8 @@ Import and include the hooks into your live view application
 ```js
 import { ContentEditable, History, Selection } from 'philtre/src/hooks';
 
-// ...
-
 const liveSocket = new LiveSocket('/live', Socket, {
   hooks: { ContentEditable, Selection, History },
-  // ...
 });
 ```
 
@@ -69,30 +55,21 @@ end
 
 def handle_event("save", %{}, socket) do
   json = Philtre.Editor.serialize(socket.assigns.json)
-  # save the json however you please
+  IO.inspect(json, label: "the json you can now save somehow")
   {:noreply, socket}
 end
 
-def handle_info({:update, %Editor{} = editor}, socket) do
+def handle_info({:update, %Philtre.Editor{} = editor}, socket) do
   {:noreply, assign(socket, :editor, editor)}
 end
 ```
 
-# Playground
+# Developing using Playground
 
-To start your Phoenix server:
+Playground is a locally setup, minimal phoenix application which loads the editor files using local paths, so they are always kept up to date and are even being watched by esbuild.
 
-- Install dependencies with `mix deps.get`
-- Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
+THis means it allows for live-reload development of hte library.
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+To start it, run `mix playground`
 
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
-
-## Learn more
-
-- Official website: https://www.phoenixframework.org/
-- Guides: https://hexdocs.pm/phoenix/overview.html
-- Docs: https://hexdocs.pm/phoenix
-- Forum: https://elixirforum.com/c/phoenix-forum
-- Source: https://github.com/phoenixframework/phoenix
+Note that editor pages are saved as files under `playground\priv\documents` so you should probably periodically clean them.

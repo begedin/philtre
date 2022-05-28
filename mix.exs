@@ -51,7 +51,7 @@ defmodule Philtre.MixProject do
       {:credo, "~> 1.6.0", only: [:dev, :test], runtime: false, optional: true},
       {:dialyxir, "~> 1.1.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.28.0", only: :dev, runtime: false},
-      {:floki, "~> 0.30.0"},
+      {:floki, "~> 0.30"},
       {:jason, "~> 1.3.0"},
       {:mix_test_watch, "~> 1.0", only: [:test]},
       {:phoenix_html, "~> 3.0"},

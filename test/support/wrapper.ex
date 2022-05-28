@@ -66,7 +66,7 @@ defmodule Philtre.Wrapper do
   end
 
   @doc """
-  Sends newline command at the location
+  Sends new block command at the location
   """
   def trigger_split_block(%View{} = view, :end_of_page) do
     %Editor{} = editor = get_editor(view)
@@ -75,9 +75,6 @@ defmodule Philtre.Wrapper do
 
   @model %{selection: "[id^=editor__selection__]", history: "[id^=editor__history__]"}
 
-  @doc """
-  Sends newline command at the location
-  """
   def trigger_split_block(%View{} = view, %_{cells: _} = block, :end) do
     end_cell = Enum.at(block.cells, -1)
 
@@ -100,6 +97,15 @@ defmodule Philtre.Wrapper do
     view
     |> element("##{block.id}")
     |> render_hook("split_block", %{"selection" => selection})
+  end
+
+  @doc """
+  Sends new line command at the location
+  """
+  def trigger_split_line(%View{} = view, %_{} = block, %{selection: selection}) do
+    view
+    |> element("##{block.id}")
+    |> render_hook("split_line", %{"selection" => selection})
   end
 
   @doc """

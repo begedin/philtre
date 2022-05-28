@@ -1,3 +1,7 @@
+# 0.9.4 2022-05-28
+
+- [FIX] Bug with typing after inserting new line at the end of block
+
 # 0.9.3 2022-05-25
 
 - fix publish + installation story

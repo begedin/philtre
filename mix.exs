@@ -5,7 +5,7 @@ defmodule Philtre.MixProject do
     [
       app: :philtre,
       description: "A block-style editor for live view",
-      version: "0.9.3",
+      version: "0.9.4",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: Mix.compilers(),

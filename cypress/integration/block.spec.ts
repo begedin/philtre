@@ -1,12 +1,21 @@
 import { NewPage } from '../pageModel';
 
+const allBlocks = () => cy.get('[data-block]');
+
+const block = (blockIndex: number) => allBlocks().eq(blockIndex);
+
+const focusBlock = (blockIndex: number) => block(blockIndex).click();
+
+const blockCell = (blockIndex: number, cellIndex: number) =>
+  block(blockIndex).find('[data-cell-id]').eq(cellIndex);
+
 it('loads default content', () => {
   const page = new NewPage();
   page.visit();
 
   page.blocks.its('length').should('eq', 2);
-  page.blocks.eq(0).should('contain.text', 'This is the title of your page');
-  page.blocks.eq(1).should('contain.text', 'This is your first paragraph.');
+  block(0).should('contain.text', 'This is the title of your page');
+  block(1).should('contain.text', 'This is your first paragraph.');
 });
 
 it('splits and joins blocks correctly', () => {
@@ -42,31 +51,45 @@ it('splits and joins blocks correctly', () => {
   page.blocks.eq(1).should('contain.text', 'This is your first paragraph.');
 });
 
-it('splits and joins lines correctly', () => {
+it('handles new line in the middle of block', () => {
   const page = new NewPage();
   page.visit();
-  page.blocks.its('length').should('eq', 2);
+  allBlocks().its('length').should('eq', 2);
 
-  page
-    .setCursorEnd(1)
-    .type('{selectall}{rightArrow}')
+  // new line in the middle of block
+
+  focusBlock(1)
+    .type('{selectAll}{rightArrow}')
     .type('{leftArrow}{leftArrow}{leftArrow}{leftArrow}{shift+enter}');
 
-  page.blocks.its('length').should('eq', 2);
-  page.blocks.eq(0).should('contain.text', 'This is the title of your page');
-  page.blocks
-    .eq(1)
-    .find('.philtre-cell')
-    .eq(0)
-    .should('contain.text', 'This is your first paragr');
+  allBlocks().its('length').should('eq', 2);
+  block(0).should('contain.text', 'This is the title of your page');
 
-  page.blocks.eq(1).find('.philtre-cell').eq(1).should('have.text', '');
-  page.blocks.eq(1).find('.philtre-cell').eq(2).should('have.text', 'aph.');
+  blockCell(1, 0).should('contain.text', 'This is your first paragr');
+  blockCell(1, 1).should('have.class', 'br');
+  blockCell(1, 2).should('have.text', 'aph.');
 
-  page.blocks.eq(1).type('{backspace}');
+  block(1).type('{backspace}');
+  block(0).should('contain.text', 'This is the title of your page');
+  blockCell(1, 0).should('contain.text', 'This is your first paragr');
+  blockCell(1, 1).should('contain.text', 'aph.');
+});
 
-  page.blocks.eq(0).should('contain.text', 'This is the title of your page');
-  page.blocks.eq(1).should('contain.text', 'This is your first paragraph.');
+it('handles new line at end of block', () => {
+  const page = new NewPage();
+  page.visit();
+  allBlocks().its('length').should('eq', 2);
+
+  // new line at the end of block
+
+  focusBlock(1).type('{selectAll}{rightArrow}{shift+enter}A new line');
+  blockCell(1, 0).should('contain.text', 'This is your first paragraph.');
+  blockCell(1, 1).should('have.class', 'br');
+  blockCell(1, 2).should('contain.text', 'A new line');
+
+  page.setCursorEnd(1).type('{selectAll}{leftArrow}{downArrow}{backspace}');
+  blockCell(1, 0).should('contain.text', 'This is your first paragraph.');
+  blockCell(1, 1).should('contain.text', 'A new line');
 });
 
 describe('H1', () => {

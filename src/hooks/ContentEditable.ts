@@ -1,6 +1,10 @@
 import { ViewHook } from './types';
 import { getTarget } from './utils';
 
+/**
+ * Resolves closest cell element to the specified node or dom element.
+ * This could be the specified record itself, or a parent, or a child.
+ */
 const resolveCell = (node: Node | HTMLElement): HTMLElement | null => {
   // the current node is the cell we are looking for
   if ('dataset' in node && node.dataset.cellId) {
@@ -75,22 +79,26 @@ const getSelection = () => {
 
 type Cell = {
   id: string;
-  modifiers: ('strong' | 'italic')[];
+  modifiers: ('strong' | 'italic' | 'br')[];
   text: string;
 };
 
 const getCells = (el: HTMLElement): Cell[] => {
-  const children = Array.from(el.children) as HTMLElement[];
+  const cells = el.querySelectorAll<HTMLSpanElement>('[data-cell-id]');
 
-  return children.map((child) => {
-    const modifiers: ('strong' | 'italic')[] = [];
+  return Array.from(cells).map((child) => {
+    const modifiers: ('strong' | 'italic' | 'br')[] = [];
 
-    if (child.tagName === 'strong') {
+    if (child.classList.contains('strong')) {
       modifiers.push('strong');
     }
 
-    if (child.tagName === 'em') {
+    if (child.classList.contains('italic')) {
       modifiers.push('italic');
+    }
+
+    if (child.classList.contains('br')) {
+      modifiers.push('br');
     }
 
     return {
@@ -120,7 +128,7 @@ const resolveCommand = (e: KeyboardEvent) => {
     return 'toggle.bold';
   }
 
-  if (e.metaKey && e.key === 'i') {
+  if (e.metaKey && e.key === 'i' && !e.shiftKey) {
     return 'toggle.italic';
   }
 };

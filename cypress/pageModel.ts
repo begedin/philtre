@@ -1,6 +1,6 @@
 export class NewPage {
   visit() {
-    return cy.visit('/documents/new').get('.phx-connected');
+    return cy.visit('/').visit('/documents/new').get('.phx-connected');
   }
 
   get blocks() {

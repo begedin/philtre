@@ -323,4 +323,56 @@ defmodule Philtre.EditorTest do
     assert Floki.text(p_1) == " is the title of your page"
     assert Floki.text(p_2) == "This is your first paragraph."
   end
+
+  test "can split and join lines", %{conn: conn} do
+    {:ok, view, _html} = live_isolated(conn, Wrapper)
+
+    %{blocks: [_, block]} = Wrapper.get_editor(view)
+    %{cells: [cell]} = block
+
+    Wrapper.trigger_split_line(view, block, %{
+      selection: %{start_id: cell.id, end_id: cell.id, start_offset: 4, end_offset: 4}
+    })
+
+    Wrapper.flush(view)
+
+    assert [{"h1", _, _} = _h1, {"p", _, [cell_1, cell_2, cell_3]} = _p] =
+             view
+             |> render()
+             |> Floki.parse_document!()
+             |> Floki.find("[data-block]")
+
+    assert Floki.text(cell_1) == "This"
+    assert [class_names] = Floki.attribute(cell_2, "class")
+    assert class_names =~ "br"
+    assert Floki.text(cell_3) == " is your first paragraph."
+
+    %{blocks: [_, block]} = Wrapper.get_editor(view)
+    cell_3 = Enum.at(block.cells, -1)
+
+    Wrapper.trigger_split_line(view, block, %{
+      selection: %{
+        start_id: cell_3.id,
+        end_id: cell_3.id,
+        start_offset: String.length(cell_3.text),
+        end_offset: String.length(cell_3.text)
+      }
+    })
+
+    Wrapper.flush(view)
+
+    assert [{"h1", _, _} = _h1, {"p", _, [_cell_1, _cell_2, cell_3, cell_4, cell_5]} = _p] =
+             view
+             |> render()
+             |> Floki.parse_document!()
+             |> Floki.find("[data-block]")
+
+    assert Floki.text(cell_1) == "This"
+    assert [class_names] = Floki.attribute(cell_2, "class")
+    assert class_names =~ "br"
+    assert Floki.text(cell_3) == " is your first paragraph."
+    assert [class_names] = Floki.attribute(cell_4, "class")
+    assert class_names =~ "br"
+    assert Floki.text(cell_5) == " "
+  end
 end

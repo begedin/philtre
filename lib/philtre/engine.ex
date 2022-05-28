@@ -25,7 +25,7 @@ defmodule Philtre.Editor.Engine do
     replace_block(editor, block, [new_block])
   end
 
-  def update(%Editor{} = editor, %Block{} = block, %{
+  def update(%Editor{} = editor, %Block{cells: old_cells} = block, %{
         selection: %Block.Selection{
           start_id: start_id,
           end_id: end_id,
@@ -34,13 +34,16 @@ defmodule Philtre.Editor.Engine do
         },
         cells: new_cells
       }) do
-    old_cells = block.cells
-
+    # the new cells are content received from the client side of the ContentEditable hook
+    # and should be the exact correct content of the updated block
     new_cells =
       Enum.map(new_cells, fn %{"id" => id, "modifiers" => modifiers, "text" => text} ->
         %Block.Cell{id: id, modifiers: modifiers, text: text}
       end)
 
+    # the remainder here probably isn't necessary and updated cells should just equal to new cells
+    # but just in case, until more testing is added, we do not fully trust the frontend and instead
+    # manually match old with new cell records to update them
     new_ids = Enum.map(new_cells, & &1.id)
     remaining_cells = Enum.filter(old_cells, &(&1.id in new_ids))
 
@@ -50,23 +53,10 @@ defmodule Philtre.Editor.Engine do
         %{cell | modifiers: params.modifiers, text: params.text}
       end)
 
-    start_cell = Enum.find(remaining_cells, &(&1.id === start_id))
-    end_cell = Enum.find(remaining_cells, &(&1.id === end_id))
-
-    pre_cells =
-      updated_cells
-      |> Enum.split_with(&(&1.id === start_cell.id))
-      |> Kernel.elem(0)
-
-    post_cells =
-      updated_cells
-      |> Enum.split_with(&(&1.id === end_cell.id))
-      |> Kernel.elem(1)
-
     new_block =
       resolve_transform(%{
         block
-        | cells: pre_cells ++ post_cells,
+        | cells: updated_cells,
           selection: %Block.Selection{
             start_id: start_id,
             end_id: end_id,
@@ -584,6 +574,8 @@ defmodule Philtre.Editor.Engine do
 
   @type transform :: %{required(:prefixes) => list(String.t()), kind: String.t()}
 
+  # checks for transform wildcard character sequences in the contents of the block (first cell)
+  # and applies any matched transform
   @spec resolve_transform(Block.t()) :: Block.t()
   defp resolve_transform(%Block{} = block) do
     with %Block.Cell{text: text} <- Enum.at(block.cells, 0),
@@ -600,6 +592,9 @@ defmodule Philtre.Editor.Engine do
     end)
   end
 
+  # applies a transform to a block, which usually changes its time and, if it's a
+  # regular content-editable block transform, updates selection offsets, as the
+  # wildcard character sequence triggering the transform will be removed
   @spec transform(Block.t(), transform) :: Block.t()
   defp transform(%Block{} = self, %{kind: "table", prefixes: prefixes}) do
     {new_cells, _shift} = drop_leading(self.cells, prefixes)

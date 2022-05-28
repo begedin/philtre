@@ -4,7 +4,10 @@ const allBlocks = () => cy.get('[data-block]');
 
 const block = (blockIndex: number) => allBlocks().eq(blockIndex);
 
-const focusBlock = (blockIndex: number) => block(blockIndex).click();
+const focusBlock = (blockIndex: number) => block(blockIndex).focus();
+
+const focusStartOfBlock = (blockIndex: number) =>
+  focusBlock(blockIndex).type('{moveToStart}');
 
 const blockCell = (blockIndex: number, cellIndex: number) =>
   block(blockIndex).find('[data-cell-id]').eq(cellIndex);
@@ -13,7 +16,7 @@ it('loads default content', () => {
   const page = new NewPage();
   page.visit();
 
-  page.blocks.its('length').should('eq', 2);
+  allBlocks().its('length').should('eq', 2);
   block(0).should('contain.text', 'This is the title of your page');
   block(1).should('contain.text', 'This is your first paragraph.');
 });
@@ -21,26 +24,24 @@ it('loads default content', () => {
 it('splits and joins blocks correctly', () => {
   const page = new NewPage();
   page.visit();
-  page.blocks.its('length').should('eq', 2);
+  allBlocks().its('length').should('eq', 2);
 
-  page
-    .setCursorEnd(0)
+  focusBlock(0)
     .type('{selectall}{rightArrow}')
     .type('{leftArrow}{leftArrow}{leftArrow}{leftArrow}')
     .type('{enter}');
 
-  page.blocks.its('length').should('eq', 3);
-  page.blocks.eq(0).should('contain.text', 'This is the title of your ');
-  page.blocks.eq(1).should('contain.text', 'page');
-  page.blocks.eq(2).should('contain.text', 'This is your first paragraph.');
+  allBlocks().its('length').should('eq', 3);
+  block(0).should('contain.text', 'This is the title of your ');
+  block(1).should('contain.text', 'page');
+  block(2).should('contain.text', 'This is your first paragraph.');
 
-  page.backspace(1);
+  focusBlock(1).type('{moveToStart}{backspace}');
 
-  page.blocks.eq(0).should('contain.text', 'This is the title of your page');
-  page.blocks.eq(1).should('contain.text', 'This is your first paragraph.');
+  block(0).should('contain.text', 'This is the title of your page');
+  block(1).should('contain.text', 'This is your first paragraph.');
 
-  page.blocks
-    .eq(0)
+  block(0)
     .type('original first ')
     .should('contain.text', 'This is the title of your original first page')
     .type('with more content ')
@@ -48,7 +49,7 @@ it('splits and joins blocks correctly', () => {
       'contain.text',
       'This is the title of your original first with more content page'
     );
-  page.blocks.eq(1).should('contain.text', 'This is your first paragraph.');
+  block(1).should('contain.text', 'This is your first paragraph.');
 });
 
 it('handles new line in the middle of block', () => {
@@ -87,7 +88,7 @@ it('handles new line at end of block', () => {
   blockCell(1, 1).should('have.class', 'br');
   blockCell(1, 2).should('contain.text', 'A new line');
 
-  page.setCursorEnd(1).type('{selectAll}{leftArrow}{downArrow}{backspace}');
+  focusBlock(1).type('{selectAll}{leftArrow}').type('{downArrow}{backspace}');
   blockCell(1, 0).should('contain.text', 'This is your first paragraph.');
   blockCell(1, 1).should('contain.text', 'A new line');
 });
@@ -157,8 +158,7 @@ describe('H3', () => {
   it('is converted from P, converts down to P', () => {
     const page = new NewPage();
     page.visit();
-    page
-      .setCursorStart(1)
+    focusStartOfBlock(1)
       .type('### ')
       .get('h3.philtre-block')
       .should('have.length', 1);
@@ -170,8 +170,7 @@ describe('H3', () => {
   it('splits into P', () => {
     const page = new NewPage();
     page.visit();
-    page
-      .setCursorStart(1)
+    focusStartOfBlock(1)
       .type('### ')
       .get('h3.philtre-block')
       .should('have.length', 1);
@@ -187,8 +186,7 @@ describe('PRE', () => {
   it('is converted from P, converts down to P', () => {
     const page = new NewPage();
     page.visit();
-    page
-      .setCursorStart(1)
+    focusStartOfBlock(1)
       .type('```')
       .get('pre.philtre-block')
       .should('have.length', 1);
@@ -200,7 +198,7 @@ describe('PRE', () => {
   it('splits into P', () => {
     const page = new NewPage();
     page.visit();
-    page.setCursorStart(1).type('```');
+    focusStartOfBlock(1).type('```');
     cy.get('pre.philtre-block').should('have.length', 1);
     page.newBlockAfter(1);
     page.blocks.its('length').should('eq', 3);
@@ -214,8 +212,7 @@ describe('BLOCKQUOTE', () => {
   it('is converted from P, converts down to P', () => {
     const page = new NewPage();
     page.visit();
-    page
-      .setCursorStart(1)
+    focusStartOfBlock(1)
       .type('> ')
       .get('blockquote.philtre-block')
       .should('have.length', 1);
@@ -227,13 +224,12 @@ describe('BLOCKQUOTE', () => {
   it('splits into P', () => {
     const page = new NewPage();
     page.visit();
-    page
-      .setCursorStart(1)
+    focusStartOfBlock(1)
       .type('> ')
       .get('blockquote.philtre-block')
       .should('have.length', 1);
     page.newBlockAfter(1);
-    page.blocks.its('length').should('eq', 3);
+    allBlocks().its('length').should('eq', 3);
     page.blockType(0).should('eq', 'H1');
     page.blockType(1).should('eq', 'BLOCKQUOTE');
     page.blockType(2).should('eq', 'P');
@@ -244,8 +240,7 @@ describe('LI', () => {
   it('is converted from P, converts down to P', () => {
     const page = new NewPage();
     page.visit();
-    page
-      .setCursorStart(1)
+    focusStartOfBlock(1)
       .type('* ')
       .get('li.philtre-block')
       .should('have.length', 1);
@@ -257,8 +252,7 @@ describe('LI', () => {
   it('splits into LI', () => {
     const page = new NewPage();
     page.visit();
-    page
-      .setCursorStart(1)
+    focusStartOfBlock(1)
       .type('* ')
       .get('li.philtre-block')
       .should('have.length', 1);

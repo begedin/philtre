@@ -116,7 +116,7 @@ const resolveCommand = (e: KeyboardEvent) => {
     }
   }
 
-  if (e.shiftKey && e.key === 'Enter') {
+  if (e.shiftKey && e.key === 'Enter' && !e.metaKey) {
     return 'split_line';
   }
 

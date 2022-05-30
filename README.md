@@ -55,7 +55,9 @@ end
 
 def handle_event("save", %{}, socket) do
   json = Philtre.Editor.serialize(socket.assigns.json)
-  IO.inspect(json, label: "the json you can now save somehow")
+  # Save the json however you please
+  # Load into editor using Philtre.Editor.normalize/1
+  inspect(json)
   {:noreply, socket}
 end
 

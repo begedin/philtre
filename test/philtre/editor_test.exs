@@ -324,7 +324,7 @@ defmodule Philtre.EditorTest do
     assert Floki.text(p_2) == "This is your first paragraph."
   end
 
-  test "can split and join lines", %{conn: conn} do
+  test "can split lines", %{conn: conn} do
     {:ok, view, _html} = live_isolated(conn, Wrapper)
 
     %{blocks: [_, block]} = Wrapper.get_editor(view)
@@ -336,43 +336,33 @@ defmodule Philtre.EditorTest do
 
     Wrapper.flush(view)
 
-    assert [{"h1", _, _} = _h1, {"p", _, [cell_1, cell_2, cell_3]} = _p] =
+    assert [{"h1", _, _} = _h1, {"p", _, [cell]} = _p] =
              view
              |> render()
              |> Floki.parse_document!()
              |> Floki.find("[data-block]")
 
-    assert Floki.text(cell_1) == "This"
-    assert [class_names] = Floki.attribute(cell_2, "class")
-    assert class_names =~ "br"
-    assert Floki.text(cell_3) == " is your first paragraph."
+    assert Floki.text(cell) == "This\n is your first paragraph."
 
-    %{blocks: [_, block]} = Wrapper.get_editor(view)
-    cell_3 = Enum.at(block.cells, -1)
+    %{blocks: [_, %{cells: [cell]} = block]} = Wrapper.get_editor(view)
 
     Wrapper.trigger_split_line(view, block, %{
       selection: %{
-        start_id: cell_3.id,
-        end_id: cell_3.id,
-        start_offset: String.length(cell_3.text),
-        end_offset: String.length(cell_3.text)
+        start_id: cell.id,
+        end_id: cell.id,
+        start_offset: String.length(cell.text),
+        end_offset: String.length(cell.text)
       }
     })
 
     Wrapper.flush(view)
 
-    assert [{"h1", _, _} = _h1, {"p", _, [_cell_1, _cell_2, cell_3, cell_4, cell_5]} = _p] =
+    assert [{"h1", _, _} = _h1, {"p", _, [cell]} = _p] =
              view
              |> render()
              |> Floki.parse_document!()
              |> Floki.find("[data-block]")
 
-    assert Floki.text(cell_1) == "This"
-    assert [class_names] = Floki.attribute(cell_2, "class")
-    assert class_names =~ "br"
-    assert Floki.text(cell_3) == " is your first paragraph."
-    assert [class_names] = Floki.attribute(cell_4, "class")
-    assert class_names =~ "br"
-    assert Floki.text(cell_5) == " "
+    assert Floki.text(cell) == "This\n is your first paragraph.\n\n"
   end
 end

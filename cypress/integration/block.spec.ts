@@ -57,23 +57,18 @@ it('handles new line in the middle of block', () => {
   page.visit();
   allBlocks().its('length').should('eq', 2);
 
-  // new line in the middle of block
-
   focusBlock(1)
-    .type('{selectAll}{rightArrow}')
+    .type('{moveToEnd}')
     .type('{leftArrow}{leftArrow}{leftArrow}{leftArrow}{shift+enter}');
 
   allBlocks().its('length').should('eq', 2);
   block(0).should('contain.text', 'This is the title of your page');
 
-  blockCell(1, 0).should('contain.text', 'This is your first paragr');
-  blockCell(1, 1).should('have.class', 'br');
-  blockCell(1, 2).should('have.text', 'aph.');
+  blockCell(1, 0).should('contain.text', 'This is your first paragr\naph');
 
-  block(1).type('{backspace}');
+  focusBlock(1).type('{moveToStart}{downArrow}{backspace}');
   block(0).should('contain.text', 'This is the title of your page');
-  blockCell(1, 0).should('contain.text', 'This is your first paragr');
-  blockCell(1, 1).should('contain.text', 'aph.');
+  blockCell(1, 0).should('contain.text', 'This is your first paragraph.');
 });
 
 it('handles new line at end of block', () => {
@@ -81,27 +76,25 @@ it('handles new line at end of block', () => {
   page.visit();
   allBlocks().its('length').should('eq', 2);
 
-  // new line at the end of block
-
   focusBlock(1).type('{selectAll}{rightArrow}{shift+enter}A new line');
-  blockCell(1, 0).should('contain.text', 'This is your first paragraph.');
-  blockCell(1, 1).should('have.class', 'br');
-  blockCell(1, 2).should('contain.text', 'A new line');
+  blockCell(1, 0).should(
+    'contain.text',
+    'This is your first paragraph.\nA new line'
+  );
 
-  focusBlock(1).type('{selectAll}{leftArrow}').type('{downArrow}{backspace}');
-  blockCell(1, 0).should('contain.text', 'This is your first paragraph.');
-  blockCell(1, 1).should('contain.text', 'A new line');
+  focusBlock(1).type('{moveToStart}{downArrow}{backspace}');
+  blockCell(1, 0).should(
+    'contain.text',
+    'This is your first paragraph.A new line'
+  );
 });
 
 describe('H1', () => {
   it('is converted from P, converts down to H2', () => {
     const page = new NewPage();
     page.visit();
-    page
-      .setCursorStart(1)
-      .type('# ')
-      .get('h1.philtre-block')
-      .should('have.length', 2);
+    focusBlock(1).type('{moveToStart}# ');
+    cy.get('h1.philtre-block').should('have.length', 2);
     page.blockType(1).should('eq', 'H1');
     page.backspace(1);
     page.blockType(1).should('eq', 'H2');

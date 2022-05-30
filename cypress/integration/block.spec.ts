@@ -14,6 +14,15 @@ const blockCell = (blockIndex: number, cellIndex: number) =>
 
 const visitNew = () => cy.visit('/documents/new').get('.phx-connected');
 
+/**
+ * Selects first matched occurrence of a string within the specified cell
+ *
+ * Cypress does not provide commands for selection of specific text.
+ *
+ * One can `cy.type('{selectAll}')`, but actions such as `{shift+rightArrow}` do
+ * not add to selection. This executes js int he browser, to synthetise the
+ * selection that way.
+ */
 const selectText = (blockIndex: number, cellIndex: number, text: string) =>
   block(blockIndex)
     .focus()

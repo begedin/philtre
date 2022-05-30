@@ -4,6 +4,7 @@
 - [CHORE] Loosen floki dependency & update
 - [CHORE] Update phoenix_live_view dependency
 - [TWEAK] Use `n` to split lines in block component, instead of `<br/>`
+- [TWEAK] Clean up redundant cells during block operations
 
 # 0.9.3 2022-05-25
 

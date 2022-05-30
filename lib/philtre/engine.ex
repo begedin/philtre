@@ -5,6 +5,9 @@ defmodule Philtre.Editor.Engine do
   alias Philtre.Editor
   alias Philtre.Editor.Block
   alias Philtre.Editor.Block.Cell
+  alias Philtre.Editor.Block.CleanEmptyCells
+  alias Philtre.Editor.Block.Reduce
+  alias Philtre.Editor.Block.Selection
   alias Philtre.Editor.Utils
   alias Philtre.Table
 
@@ -14,20 +17,20 @@ defmodule Philtre.Editor.Engine do
           %{required(:selection) => map, required(:cells) => list(map)}
         ) :: Editor.t()
   def update(%Editor{} = editor, %Block{} = block, %{selection: nil, cells: []}) do
-    %Block.Cell{} = cell = Block.Cell.new()
+    %Cell{} = cell = Cell.new()
 
     %Block{} =
       new_block =
       block
       |> Map.put(:cells, [cell])
-      |> Map.put(:selection, Block.Selection.new_start_of(cell))
+      |> Map.put(:selection, Selection.new_start_of(cell))
       |> resolve_transform()
 
     replace_block(editor, block, [new_block])
   end
 
   def update(%Editor{} = editor, %Block{cells: old_cells} = block, %{
-        selection: %Block.Selection{
+        selection: %Selection{
           start_id: start_id,
           end_id: end_id,
           start_offset: start_offset,
@@ -39,7 +42,7 @@ defmodule Philtre.Editor.Engine do
     # and should be the exact correct content of the updated block
     new_cells =
       Enum.map(new_cells, fn %{"id" => id, "modifiers" => modifiers, "text" => text} ->
-        %Block.Cell{id: id, modifiers: modifiers, text: text}
+        %Cell{id: id, modifiers: modifiers, text: text}
       end)
 
     # the remainder here probably isn't necessary and updated cells should just equal to new cells
@@ -49,8 +52,8 @@ defmodule Philtre.Editor.Engine do
     remaining_cells = Enum.filter(old_cells, &(&1.id in new_ids))
 
     updated_cells =
-      Enum.map(remaining_cells, fn %Block.Cell{} = cell ->
-        %Block.Cell{} = params = Enum.find(new_cells, &(&1.id === cell.id))
+      Enum.map(remaining_cells, fn %Cell{} = cell ->
+        %Cell{} = params = Enum.find(new_cells, &(&1.id === cell.id))
         %{cell | modifiers: params.modifiers, text: params.text}
       end)
 
@@ -58,7 +61,7 @@ defmodule Philtre.Editor.Engine do
       resolve_transform(%{
         block
         | cells: updated_cells,
-          selection: %Block.Selection{
+          selection: %Selection{
             start_id: start_id,
             end_id: end_id,
             start_offset: start_offset,
@@ -78,7 +81,7 @@ defmodule Philtre.Editor.Engine do
           }
         ) :: Editor.t()
   def toggle_style_on_selection(%Editor{} = editor, %Block{} = block, %{
-        selection: %Block.Selection{
+        selection: %Selection{
           start_id: start_id,
           end_id: end_id,
           start_offset: start_offset,
@@ -110,7 +113,7 @@ defmodule Philtre.Editor.Engine do
             %{cell | modifiers: new_modifiers}
           end)
 
-        new_selection = %Block.Selection{
+        new_selection = %Selection{
           start_id: new_cell_left.id,
           end_id: new_cell_right.id,
           start_offset: 0,
@@ -142,7 +145,7 @@ defmodule Philtre.Editor.Engine do
             %{start_cell | id: Utils.new_id(), text: text_right}
           ]
 
-        new_selection = %{
+        new_selection = %Selection{
           start_id: selected_cell.id,
           end_id: selected_cell.id,
           start_offset: 0,
@@ -156,6 +159,11 @@ defmodule Philtre.Editor.Engine do
         }
       end
 
+    new_block =
+      new_block
+      |> CleanEmptyCells.call()
+      |> Reduce.call()
+
     index = Enum.find_index(editor.blocks, &(&1.id === block.id))
     new_blocks = List.replace_at(editor.blocks, index, new_block)
 
@@ -165,13 +173,13 @@ defmodule Philtre.Editor.Engine do
   def add_block(%Editor{} = editor, %Block{} = block) do
     index = Enum.find_index(editor.blocks, &(&1.id === block.id))
 
-    cell = %Block.Cell{}
+    cell = %Cell{}
 
     new_block = %Block{
       cells: [cell],
       id: Utils.new_id(),
       type: "p",
-      selection: Block.Selection.new_start_of(cell)
+      selection: Selection.new_start_of(cell)
     }
 
     new_blocks = List.insert_at(editor.blocks, index + 1, new_block)
@@ -185,7 +193,7 @@ defmodule Philtre.Editor.Engine do
   """
   @spec split_line(Editor.t(), Block.t(), %{required(:selection) => map}) :: Editor.t()
   def split_line(%Editor{} = editor, %Block{type: type} = block, %{
-        selection: %Block.Selection{} = selection
+        selection: %Selection{} = selection
       })
       when type in ["p", "pre", "blockquote"] do
     new_block =
@@ -201,7 +209,7 @@ defmodule Philtre.Editor.Engine do
   @spec split_line_at_selection(Block.t()) :: Block.t()
   defp split_line_at_selection(
          %Block{
-           selection: %Block.Selection{
+           selection: %Selection{
              start_id: start_id,
              end_id: end_id,
              start_offset: start_offset,
@@ -273,7 +281,7 @@ defmodule Philtre.Editor.Engine do
   def split_block(
         %Editor{} = editor,
         %Block{} = block,
-        %{selection: %Block.Selection{} = selection}
+        %{selection: %Selection{} = selection}
       ) do
     [block_before, block_after] =
       block
@@ -289,15 +297,15 @@ defmodule Philtre.Editor.Engine do
 
     block_before =
       if empty_block?(block_before) do
-        %{block_before | cells: [Block.Cell.new()]}
+        %{block_before | cells: [Cell.new()]}
       else
         block_before
       end
 
     block_after =
       if empty_block?(block_after) do
-        cell = Block.Cell.new()
-        selection = Block.Selection.new_start_of(cell)
+        cell = Cell.new()
+        selection = Selection.new_start_of(cell)
         %{block_after | cells: [cell], selection: selection}
       else
         block_after
@@ -308,13 +316,13 @@ defmodule Philtre.Editor.Engine do
     replace_block(editor, block, [block_before, block_after])
   end
 
-  defp set_selection(%Block{} = block, %Block.Selection{} = selection) do
+  defp set_selection(%Block{} = block, %Selection{} = selection) do
     Map.put(block, :selection, selection)
   end
 
   defp remove_selection(
          %Block{
-           selection: %Block.Selection{
+           selection: %Selection{
              start_id: id,
              end_id: end_id,
              start_offset: offset,
@@ -328,7 +336,7 @@ defmodule Philtre.Editor.Engine do
 
   defp remove_selection(
          %Block{
-           selection: %Block.Selection{
+           selection: %Selection{
              start_id: id,
              end_id: end_id,
              start_offset: start_offset,
@@ -346,12 +354,12 @@ defmodule Philtre.Editor.Engine do
       |> Enum.concat([cell_before, cell_after])
       |> Enum.concat(cells_after)
 
-    %{block | cells: new_cells, selection: Block.Selection.new_start_of(cell_after)}
+    %{block | cells: new_cells, selection: Selection.new_start_of(cell_after)}
   end
 
   defp remove_selection(
          %Block{
-           selection: %Block.Selection{
+           selection: %Selection{
              start_id: start_id,
              end_id: end_id,
              start_offset: start_offset,
@@ -374,7 +382,7 @@ defmodule Philtre.Editor.Engine do
       |> Enum.concat([start_cell_before])
       |> Enum.reject(&empty_cell?/1)
 
-    [%Block.Cell{} = cell_after | _] =
+    [%Cell{} = cell_after | _] =
       cells_after =
       [end_cell_after]
       |> Enum.concat(cells_after)
@@ -382,12 +390,12 @@ defmodule Philtre.Editor.Engine do
 
     new_cells = Enum.concat(cells_before, cells_after)
 
-    %{block | cells: new_cells, selection: Block.Selection.new_start_of(cell_after)}
+    %{block | cells: new_cells, selection: Selection.new_start_of(cell_after)}
   end
 
   defp split_at_selection(
          %Block{
-           selection: %Block.Selection{
+           selection: %Selection{
              start_id: id,
              end_id: end_id,
              start_offset: offset,
@@ -413,7 +421,7 @@ defmodule Philtre.Editor.Engine do
 
     cells_after =
       if cells_after == [] do
-        [Block.Cell.new()]
+        [Cell.new()]
       else
         cells_after
       end
@@ -421,12 +429,12 @@ defmodule Philtre.Editor.Engine do
     selected_cell = Enum.at(cells_after, 0)
 
     [
-      %{block | cells: cells_before, selection: Block.Selection.new_empty()},
+      %{block | cells: cells_before, selection: Selection.new_empty()},
       %{
         block
         | cells: cells_after,
           id: Utils.new_id(),
-          selection: Block.Selection.new_start_of(selected_cell)
+          selection: Selection.new_start_of(selected_cell)
       }
     ]
   end
@@ -439,13 +447,13 @@ defmodule Philtre.Editor.Engine do
   def paste(%Editor{clipboard: nil} = editor, %Block{} = _block, %{}), do: editor
 
   def paste(%Editor{} = editor, %Block{} = block, %{
-        selection: %Block.Selection{} = selection
+        selection: %Selection{} = selection
       }) do
     [%{cells: [first_cell | _]} = first_block | rest] =
       Enum.map(editor.clipboard, &Map.put(&1, :id, Utils.new_id()))
 
     first_block =
-      Map.put(first_block, :selection, %Block.Selection{
+      Map.put(first_block, :selection, %Selection{
         start_id: first_cell.id,
         end_id: first_cell.id,
         start_offset: 0,
@@ -470,19 +478,19 @@ defmodule Philtre.Editor.Engine do
   defp empty_block?(%Block{cells: [cell]}), do: empty_cell?(cell)
   defp empty_block?(%Block{}), do: false
 
-  defp empty_cell?(%Block.Cell{text: t}) when t in ["", nil, " ", "&nbsp;", " "], do: true
-  defp empty_cell?(%Block.Cell{}), do: false
+  defp empty_cell?(%Cell{text: t}) when t in ["", nil, " ", "&nbsp;", " "], do: true
+  defp empty_cell?(%Cell{}), do: false
 
-  @spec split_cell(Block.Cell.t(), non_neg_integer()) :: {Block.Cell.t(), Block.Cell.t()}
-  defp split_cell(%Block.Cell{id: _, modifiers: _, text: _} = cell, index) do
+  @spec split_cell(Cell.t(), non_neg_integer()) :: {Cell.t(), Cell.t()}
+  defp split_cell(%Cell{id: _, modifiers: _, text: _} = cell, index) do
     {text_before, text_after} = String.split_at(cell.text, index)
     cell_before = %{cell | text: text_before}
     cell_after = %{cell | id: Utils.new_id(), text: text_after}
     {cell_before, cell_after}
   end
 
-  @spec split_cell(Block.Cell.t(), non_neg_integer(), non_neg_integer()) ::
-          {Block.Cell.t(), Block.Cell.t(), Block.Cell.t()}
+  @spec split_cell(Cell.t(), non_neg_integer(), non_neg_integer()) ::
+          {Cell.t(), Cell.t(), Cell.t()}
 
   defp split_cell(%{id: _, text: _, modifiers: _} = cell, start_offset, end_offset)
        when start_offset < end_offset do
@@ -540,17 +548,17 @@ defmodule Philtre.Editor.Engine do
       selection =
         cond do
           not is_nil(last_cell) and not empty_cell?(last_cell) ->
-            Block.Selection.new_end_of(last_cell)
+            Selection.new_end_of(last_cell)
 
           not is_nil(first_cell) and not empty_cell?(first_cell) ->
-            Block.Selection.new_start_of(first_cell)
+            Selection.new_start_of(first_cell)
 
           Enum.count(merged.cells) == 1 ->
             [only_cell] = merged.cells
-            Block.Selection.new_start_of(only_cell)
+            Selection.new_start_of(only_cell)
         end
 
-      merged = set_selection(merged, selection)
+      merged = merged |> set_selection(selection) |> Reduce.call()
 
       blocks = editor.blocks |> List.delete_at(index + 1) |> List.replace_at(index, merged)
       %{editor | blocks: blocks}
@@ -570,7 +578,7 @@ defmodule Philtre.Editor.Engine do
   end
 
   @spec ensure_single_cell(Block.t()) :: Block.t()
-  defp ensure_single_cell(%Block{cells: []} = block), do: %{block | cells: [Block.Cell.new()]}
+  defp ensure_single_cell(%Block{cells: []} = block), do: %{block | cells: [Cell.new()]}
   defp ensure_single_cell(%Block{} = block), do: block
 
   @transforms [
@@ -610,7 +618,7 @@ defmodule Philtre.Editor.Engine do
   # and applies any matched transform
   @spec resolve_transform(Block.t()) :: Block.t()
   defp resolve_transform(%Block{} = block) do
-    with %Block.Cell{text: text} <- Enum.at(block.cells, 0),
+    with %Cell{text: text} <- Enum.at(block.cells, 0),
          %{} = transform <- match_transform(text) do
       transform(block, transform)
     else
@@ -647,7 +655,7 @@ defmodule Philtre.Editor.Engine do
     }
   end
 
-  @spec drop_leading(list(Block.Cell.t()), list(String.t())) :: {list(Block.Cell.t()), integer}
+  @spec drop_leading(list(Cell.t()), list(String.t())) :: {list(Cell.t()), integer}
   defp drop_leading([], _), do: []
 
   defp drop_leading([%{text: text} = first | rest], prefixes) when is_list(prefixes) do
@@ -656,9 +664,9 @@ defmodule Philtre.Editor.Engine do
     {[first | rest], String.length(prefix)}
   end
 
-  @spec shift(Block.Selection.t(), integer) :: Block.Selection.t()
+  @spec shift(Selection.t(), integer) :: Selection.t()
   defp shift(
-         %Block.Selection{
+         %Selection{
            start_id: start_id,
            end_id: end_id,
            start_offset: start_offset,
@@ -669,7 +677,7 @@ defmodule Philtre.Editor.Engine do
     end_offset = Kernel.max(end_offset + amount, 0)
     start_offset = Kernel.max(start_offset + amount, 0)
 
-    %Block.Selection{
+    %Selection{
       start_id: start_id,
       end_id: end_id,
       start_offset: start_offset,

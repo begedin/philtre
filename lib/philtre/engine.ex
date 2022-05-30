@@ -4,6 +4,7 @@ defmodule Philtre.Editor.Engine do
   """
   alias Philtre.Editor
   alias Philtre.Editor.Block
+  alias Philtre.Editor.Block.Cell
   alias Philtre.Editor.Utils
   alias Philtre.Table
 
@@ -187,27 +188,59 @@ defmodule Philtre.Editor.Engine do
         selection: %Block.Selection{} = selection
       })
       when type in ["p", "pre", "blockquote"] do
-    [%Block{cells: cells_before}, %Block{cells: cells_after}] =
+    new_block =
       block
       |> set_selection(selection)
-      |> remove_selection()
-      |> split_at_selection()
-
-    br_cell = %Block.Cell{id: Utils.new_id(), modifiers: ["br"], text: ""}
-
-    new_cells =
-      cells_before
-      |> Enum.concat([br_cell])
-      |> Enum.concat(cells_after)
-
-    [%Block.Cell{} = cell | _] = cells_after
-
-    new_block = %{block | cells: new_cells, selection: Block.Selection.new_start_of(cell)}
+      |> split_line_at_selection()
 
     replace_block(editor, block, [new_block])
   end
 
   def split_line(%Editor{} = editor, %Block{}, %{}), do: editor
+
+  @spec split_line_at_selection(Block.t()) :: Block.t()
+  defp split_line_at_selection(
+         %Block{
+           selection: %Block.Selection{
+             start_id: start_id,
+             end_id: end_id,
+             start_offset: start_offset,
+             end_offset: end_offset
+           }
+         } = block
+       )
+       when start_id == end_id and start_offset == end_offset do
+    cell_index = Enum.find_index(block.cells, &(&1.id === start_id))
+    %Cell{} = cell = Enum.at(block.cells, cell_index)
+
+    {text_before, text_after} = String.split_at(cell.text, start_offset)
+
+    new_text =
+      [text_before, "\n", text_after]
+      |> Enum.join()
+      |> fix_double_newlines()
+      |> fix_trailing_newline()
+
+    %Cell{} = new_cell = %{cell | text: new_text}
+    new_cells = List.replace_at(block.cells, cell_index, new_cell)
+
+    new_selection = shift(block.selection, 1)
+    %{block | cells: new_cells, selection: new_selection}
+  end
+
+  defp split_line_at_selection(%Block{} = block), do: block
+
+  @spec fix_double_newlines(String.t()) :: String.t()
+  defp fix_double_newlines(text), do: String.replace(text, "\n\n", "\n", global: true)
+
+  @spec fix_trailing_newline(String.t()) :: String.t()
+  defp fix_trailing_newline(text) do
+    if String.ends_with?(text, "\n") do
+      text <> "\n"
+    else
+      text
+    end
+  end
 
   @spec replace_block(Editor.t(), Block.t(), list(Block.t())) :: Editor.t()
   defp replace_block(%Editor{} = editor, %Block{} = block, new_blocks) when is_list(new_blocks) do
@@ -434,11 +467,7 @@ defmodule Philtre.Editor.Engine do
   defp empty_block?(%Block{cells: [cell]}), do: empty_cell?(cell)
   defp empty_block?(%Block{}), do: false
 
-  defp empty_cell?(%Block.Cell{text: t, modifiers: m})
-       when t in ["", nil, " ", "&nbsp;", " "] and m != ["br"] do
-    true
-  end
-
+  defp empty_cell?(%Block.Cell{text: t}) when t in ["", nil, " ", "&nbsp;", " "], do: true
   defp empty_cell?(%Block.Cell{}), do: false
 
   @spec split_cell(Block.Cell.t(), non_neg_integer()) :: {Block.Cell.t(), Block.Cell.t()}

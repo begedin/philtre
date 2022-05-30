@@ -7,6 +7,10 @@
   padding: 12px;
   background-clip: border-box;
 
+  [data-cell-id] {
+    white-space: pre-wrap;
+  }
+
   & > * {
     width: 100%;
   }

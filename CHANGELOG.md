@@ -1,8 +1,9 @@
-# 0.9.4 2022-05-28
+# 0.9.4 2022-05-30
 
 - [FIX] Bug with typing after inserting new line at the end of block
 - [CHORE] Loosen floki dependency & update
 - [CHORE] Update phoenix_live_view dependency
+- [TWEAK] Use `n` to split lines in block component, instead of `<br/>`
 
 # 0.9.3 2022-05-25
 

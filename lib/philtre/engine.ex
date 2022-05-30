@@ -233,6 +233,9 @@ defmodule Philtre.Editor.Engine do
   @spec fix_double_newlines(String.t()) :: String.t()
   defp fix_double_newlines(text), do: String.replace(text, "\n\n", "\n", global: true)
 
+  # The browser will ignore the final newline in html, so to enable us to add a
+  # new line at the end of a block without having to hit Shift+Enter twice, we
+  # have to duplicate the trailing newline
   @spec fix_trailing_newline(String.t()) :: String.t()
   defp fix_trailing_newline(text) do
     if String.ends_with?(text, "\n") do

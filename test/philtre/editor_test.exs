@@ -272,14 +272,8 @@ defmodule Philtre.EditorTest do
     Wrapper.trigger_backspace_from_start(view, 2)
     Wrapper.trigger_backspace_from_start(view, 1)
 
-    assert %{blocks: [%Block{type: "h1", cells: [_, _, _, _] = cells}]} = Wrapper.get_editor(view)
-
-    assert [
-             %{text: "This"},
-             %{text: " is "},
-             %{text: "the title of your page"},
-             %{text: "This is your first paragraph."}
-           ] = cells
+    assert %{blocks: [%Block{type: "h1", cells: [cell]}]} = Wrapper.get_editor(view)
+    assert cell.text == "This is the title of your pageThis is your first paragraph."
   end
 
   test "can undo and redo", %{conn: conn} do

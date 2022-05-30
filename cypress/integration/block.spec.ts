@@ -12,6 +12,37 @@ const focusStartOfBlock = (blockIndex: number) =>
 const blockCell = (blockIndex: number, cellIndex: number) =>
   block(blockIndex).find('[data-cell-id]').eq(cellIndex);
 
+const visitNew = () => cy.visit('/documents/new').get('.phx-connected');
+
+/**
+ * Selects first matched occurrence of a string within the specified cell
+ *
+ * Cypress does not provide commands for selection of specific text.
+ *
+ * One can `cy.type('{selectAll}')`, but actions such as `{shift+rightArrow}` do
+ * not add to selection. This executes js int he browser, to synthetise the
+ * selection that way.
+ */
+const selectText = (blockIndex: number, cellIndex: number, text: string) =>
+  block(blockIndex)
+    .focus()
+    .find('[data-cell-id]')
+    .eq(cellIndex)
+    .then((cell) => {
+      const el = cell[0];
+      const document = el.ownerDocument;
+      const textIndex = el.innerText.indexOf(text);
+      const range = document.createRange();
+      console.log(el.innerText);
+
+      range.setStart(el.childNodes[0], textIndex);
+      range.setEnd(el.childNodes[0], textIndex + text.length);
+
+      const selection = document.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+    });
+
 it('loads default content', () => {
   const page = new NewPage();
   page.visit();
@@ -87,6 +118,22 @@ it('handles new line at end of block', () => {
     'contain.text',
     'This is your first paragraph.A new line'
   );
+});
+
+it('allows toggling styles styles within a block', () => {
+  visitNew();
+
+  selectText(1, 0, 'is').type('{meta+b}');
+  blockCell(1, 1).should('have.text', 'is').should('have.class', 'bold');
+
+  selectText(1, 1, 'is').type('{meta+b}');
+  blockCell(1, 0).should('have.text', 'This is your first paragraph.');
+
+  selectText(1, 0, 'your').type('{meta+i}');
+  blockCell(1, 1).should('have.text', 'your').should('have.class', 'italic');
+
+  selectText(1, 1, 'your').type('{meta+i}');
+  blockCell(1, 0).should('have.text', 'This is your first paragraph.');
 });
 
 describe('H1', () => {

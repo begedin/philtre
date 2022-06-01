@@ -1,18 +1,12 @@
 import { NewPage } from '../pageModel';
-
-const allBlocks = () => cy.get('[data-block]');
-
-const block = (blockIndex: number) => allBlocks().eq(blockIndex);
-
-const focusBlock = (blockIndex: number) => block(blockIndex).focus();
-
-const focusStartOfBlock = (blockIndex: number) =>
-  focusBlock(blockIndex).type('{moveToStart}');
-
-const blockCell = (blockIndex: number, cellIndex: number) =>
-  block(blockIndex).find('[data-cell-id]').eq(cellIndex);
-
-const visitNew = () => cy.visit('/documents/new').get('.phx-connected');
+import {
+  allBlocks,
+  block,
+  blockCell,
+  focusBlock,
+  focusStartOfBlock,
+  visitNew,
+} from '../utils';
 
 /**
  * Selects first matched occurrence of a string within the specified cell

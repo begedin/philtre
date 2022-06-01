@@ -1,3 +1,7 @@
+# 0.10.0 2022-06-01
+
+- [FEATURE] Basic code block only supporing elixir synthax highlighting
+
 # 0.9.4 2022-05-30
 
 - [FIX] Bug with typing after inserting new line at the end of block

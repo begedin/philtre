@@ -1,0 +1,45 @@
+.philtre__code {
+  display: grid;
+  grid-template-areas: 'only';
+  align-items: stretch;
+  justify-content: start;
+  padding: 1em;
+  border-radius: 0.3em;
+  background: $colorDark;
+  overflow-y: auto;
+
+  .code-toolbar,
+  .philtre__code__highlighted,
+  .philtre__code__editable {
+    grid-area: only;
+  }
+
+  .code-toolbar pre,
+  .philtre__code__editable {
+    margin: 0;
+    padding: 0;
+    font-family: $fontCode;
+    font-size: 1em;
+    line-height: 1.5;
+    font-weight: bold;
+    border-radius: none;
+    background: transparent;
+    white-space: nowrap;
+  }
+
+  .philtre__code__editable {
+    z-index: 1;
+    color: transparent;
+    resize: none;
+    border: none;
+    caret-color: white;
+
+    &:focus {
+      outline: none;
+    }
+
+    &::spelling-error {
+      text-decoration: none;
+    }
+  }
+}

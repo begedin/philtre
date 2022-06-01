@@ -8,6 +8,7 @@
 
   &__section {
     display: grid;
+    width: 100%;
     grid-template-columns: auto 1fr;
     gap: 6px;
 

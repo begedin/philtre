@@ -2,23 +2,9 @@
 
 import esbuild from 'esbuild';
 import { sassPlugin } from 'esbuild-sass-plugin';
-import { prismjsPlugin } from 'esbuild-plugin-prismjs';
 
 // Decide which mode to proceed with
 let mode = 'build';
-
-const prism = prismjsPlugin({
-  inline: true,
-  languages: ['typescript', 'javascript', 'css', 'markup'],
-  plugins: [
-    'line-highlight',
-    'line-numbers',
-    'show-language',
-    'copy-to-clipboard',
-  ],
-  theme: 'okaidia',
-  css: true,
-});
 
 const sass = sassPlugin();
 
@@ -40,7 +26,7 @@ const opts = {
   minify: false,
   format: 'esm',
   target: ['esnext'],
-  plugins: [sass, prism],
+  plugins: [sass],
 };
 
 if (mode === 'watch') {

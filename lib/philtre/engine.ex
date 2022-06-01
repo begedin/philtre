@@ -172,7 +172,7 @@ defmodule Philtre.Editor.Engine do
     %{editor | blocks: new_blocks}
   end
 
-  def add_block(%Editor{} = editor, %Block{} = block) do
+  def add_block(%Editor{} = editor, %_{id: _} = block) do
     index = Enum.find_index(editor.blocks, &(&1.id === block.id))
 
     cell = %Cell{}

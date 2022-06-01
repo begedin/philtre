@@ -1,6 +1,7 @@
 # 0.10.0 2022-06-01
 
 - [FEATURE] Basic code block only supporing elixir synthax highlighting
+- [FIX] Using button to add block after a code or table block fails
 
 # 0.9.4 2022-05-30
 

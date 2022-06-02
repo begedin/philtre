@@ -1,6 +1,25 @@
 defmodule Philtre.Block.ContentEditable do
   @moduledoc """
-  Holds logic specific to the p block
+  Represents the generic contenteditable block.
+
+  This block is initially created as a `p` block. It can be converted to other
+  blocks by entering a markdown-like wildcard sequence at the start of the
+  content.
+
+  - `# ` to convert to `<h1>`
+  - `## ` to convert to `<h2>`
+  - `### ` to convert to `<h3>`
+  - `* ` to convert to `<ul>`
+  - `> ` to convert to `<blockquote>`
+  - `{triple backticks}` to convert to `<pre>`
+
+  It can also be converted to other high-level blocks. The documentation of the respective higher
+  level block should cover how to handle such conversion.
+
+  Typing backspace from the start of a content-editable block which isn't a P already converts it
+  down to the "previous" block. H1 goes to H2, which goes to H3. All other blocks convert town to P.
+
+  Typing backspace from the start of a P block merges it into the previous block.
   """
 
   use Phoenix.LiveComponent

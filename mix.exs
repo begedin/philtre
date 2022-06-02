@@ -79,19 +79,23 @@ defmodule Philtre.MixProject do
       source_ref: @version,
       source_url: @source_url,
       groups_for_modules: [
-        Philtre: [
-          Philtre.Block.Code,
-          Philtre.Block.Table,
-          Philtre.Block.ContentEditable,
-          Philtre.Block.ContentEditable.Cell,
-          Philtre.Block.ContentEditable.CleanEmptyCells,
+        General: [
           Philtre.Editor,
-          Philtre.Block.ContentEditable.Reduce,
-          Philtre.Block.ContentEditable.Selection,
           Philtre.Editor.Engine,
           Philtre.Editor.Serializer,
           Philtre.Editor.Utils,
           Philtre.UI.Page
+        ],
+        Blocks: [
+          Philtre.Block.Code,
+          Philtre.Block.Table,
+          Philtre.Block.ContentEditable
+        ],
+        ContentEditable: [
+          Philtre.Block.ContentEditable.Cell,
+          Philtre.Block.ContentEditable.CleanEmptyCells,
+          Philtre.Block.ContentEditable.Reduce,
+          Philtre.Block.ContentEditable.Selection
         ],
         Playground: [
           Playground.App,

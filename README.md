@@ -4,7 +4,24 @@
 
 A block-based content editor, with support for static html generation, in phoenix live view.
 
-## Installation
+> #### Disclaimer {: .warning}
+>
+> **This library is still heavily in development.**
+>
+> Things will break and at least initially, they
+> will not maintain backwards compatibility. In fact, the final, release-worthy version may never
+> see the light of day.
+>
+> Use it at your own risk!
+
+Currently supports the following blocks:
+
+- a generic content-editable wrapped which can output any of:
+  `<p>`, `<h1>`, `<h2>`, `<h3>`, `<ul>`, `<pre>`, `<blockquote>`
+- a very badly styled table
+- a code block with synthax highlighting for elixir only
+
+## Installation and Usage
 
 Add it to your dependencies in `mix.exs`:
 

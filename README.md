@@ -1,21 +1,24 @@
-# Description
+# Readme
 
-A block-style content editor, with support for static html generation, in phoenix live view.
+## Description
 
-# Installation
+A block-based content editor, with support for static html generation, in phoenix live view.
+
+## Installation
 
 Add it to your dependencies in `mix.exs`:
 
-```Elixir
+```elixir
 deps: [
   # ...
   {:philtre, "~> 0.9"}
+  # ...
 ]
 ```
 
-Include the styles in your applicatoon somewhere in your application, for example, from `app.js`:
+Include the styles somewhere in your application, for example, from `app.js`:
 
-```js
+```typescript
 import 'philtre/dist/index.css';
 ```
 
@@ -25,19 +28,24 @@ Or from `app.css`:
 @import 'philtre/dist/index.css';
 ```
 
-Import and include the hooks into your live view application
+Import and add the necessary hooks to your live view application
 
-```js
-import { ContentEditable, History, Selection } from 'philtre/src/hooks';
+```typescript
+import { ContentEditable, Code, History, Selection } from 'philtre/src/hooks';
 
 const liveSocket = new LiveSocket('/live', Socket, {
-  hooks: { ContentEditable, Selection, History },
+  hooks: {
+    Code,
+    ContentEditable,
+    Selection,
+    History,
+  },
 });
 ```
 
 Render the page component inside one of your live views
 
-```Elixir
+```elixir
 def mount(%{}, _session, socket) do
   {:ok, assign(socket, %{editor: Philtre.Editor.new()})}
 end
@@ -66,7 +74,7 @@ def handle_info({:update, %Philtre.Editor{} = editor}, socket) do
 end
 ```
 
-# Developing using Playground
+## Developing using Playground
 
 Playground is a locally setup, minimal phoenix application which loads the editor files using local paths, so they are always kept up to date and are even being watched by esbuild.
 

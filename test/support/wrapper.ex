@@ -10,8 +10,8 @@ defmodule Philtre.Wrapper do
   import Phoenix.LiveView.Helpers
   import Phoenix.LiveViewTest
 
+  alias Philtre.Block.ContentEditable
   alias Philtre.Editor
-  alias Philtre.Editor.Block
   alias Phoenix.LiveViewTest.View
 
   @doc false
@@ -131,7 +131,7 @@ defmodule Philtre.Wrapper do
 
   def trigger_backspace_from_start(
         %View{} = view,
-        %Block{cells: [%Block.Cell{} = cell | _]} = block
+        %ContentEditable{cells: [%ContentEditable.Cell{} = cell | _]} = block
       ) do
     view
     |> element("##{block.id}")
@@ -180,7 +180,7 @@ defmodule Philtre.Wrapper do
     paste_blocks(view, block_at(view, index), %{selection: selection})
   end
 
-  def paste_blocks(%View{} = view, %Block{} = block, %{selection: selection}) do
+  def paste_blocks(%View{} = view, %ContentEditable{} = block, %{selection: selection}) do
     view
     |> element("##{block.id}")
     |> render_hook("paste_blocks", %{"selection" => selection})

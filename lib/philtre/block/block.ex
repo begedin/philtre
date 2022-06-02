@@ -1,4 +1,4 @@
-defmodule Philtre.Editor.Block do
+defmodule Philtre.Block.ContentEditable do
   @moduledoc """
   Holds logic specific to the p block
   """
@@ -6,7 +6,7 @@ defmodule Philtre.Editor.Block do
   use Phoenix.LiveComponent
   use Phoenix.HTML
 
-  alias Philtre.Editor.Block
+  alias Philtre.Block.ContentEditable
   alias Philtre.Editor.Engine
   alias Philtre.Editor.Utils
 
@@ -17,15 +17,15 @@ defmodule Philtre.Editor.Block do
   defstruct cells: [],
             id: Utils.new_id(),
             type: "p",
-            selection: %Block.Selection{}
+            selection: %ContentEditable.Selection{}
 
   @type id :: String.t()
 
   @type t :: %__MODULE__{
           id: id,
-          cells: list(Block.Cell.t()),
+          cells: list(ContentEditable.Cell.t()),
           type: String.t(),
-          selection: Block.Selection.t()
+          selection: ContentEditable.Selection.t()
         }
 
   # component
@@ -98,7 +98,7 @@ defmodule Philtre.Editor.Block do
     """
   end
 
-  defp cell(%{cell: %Block.Cell{id: id, modifiers: modifiers, text: text}} = assigns) do
+  defp cell(%{cell: %ContentEditable.Cell{id: id, modifiers: modifiers, text: text}} = assigns) do
     classes = ["philtre-cell"] |> Enum.concat(modifiers) |> Enum.join(" ") |> String.trim()
 
     ~H"""
@@ -106,7 +106,7 @@ defmodule Philtre.Editor.Block do
     """
   end
 
-  defp attrs(%Block{} = block, selected, myself) when is_boolean(selected) do
+  defp attrs(%ContentEditable{} = block, selected, myself) when is_boolean(selected) do
     %{
       class: "philtre-block",
       contenteditable: true,
@@ -127,7 +127,7 @@ defmodule Philtre.Editor.Block do
 
     editor =
       Engine.update(socket.assigns.editor, socket.assigns.block, %{
-        selection: Block.Selection.normalize!(selection),
+        selection: ContentEditable.Selection.normalize!(selection),
         cells: cells
       })
 
@@ -144,7 +144,7 @@ defmodule Philtre.Editor.Block do
 
     editor =
       Engine.toggle_style_on_selection(socket.assigns.editor, socket.assigns.block, %{
-        selection: Block.Selection.normalize!(selection),
+        selection: ContentEditable.Selection.normalize!(selection),
         style: style
       })
 
@@ -160,7 +160,7 @@ defmodule Philtre.Editor.Block do
 
     editor =
       Engine.split_line(socket.assigns.editor, socket.assigns.block, %{
-        selection: Block.Selection.normalize!(selection)
+        selection: ContentEditable.Selection.normalize!(selection)
       })
 
     if editor !== socket.assigns.editor do
@@ -175,7 +175,7 @@ defmodule Philtre.Editor.Block do
 
     editor =
       Engine.split_block(socket.assigns.editor, socket.assigns.block, %{
-        selection: Block.Selection.normalize!(selection)
+        selection: ContentEditable.Selection.normalize!(selection)
       })
 
     if editor !== socket.assigns.editor do
@@ -201,7 +201,7 @@ defmodule Philtre.Editor.Block do
 
     editor =
       Engine.paste(socket.assigns.editor, socket.assigns.block, %{
-        selection: Block.Selection.normalize!(selection)
+        selection: ContentEditable.Selection.normalize!(selection)
       })
 
     if editor !== socket.assigns.editor do

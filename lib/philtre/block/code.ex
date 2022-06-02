@@ -1,4 +1,4 @@
-defmodule Philtre.Code do
+defmodule Philtre.Block.Code do
   @moduledoc """
   Elixir-side implementation of the code-type block
 

@@ -5,16 +5,28 @@ defmodule Playground.DocumentLive.NewTest do
 
   import Phoenix.LiveViewTest
 
+  alias Philtre.Block.ContentEditable
   alias Philtre.Editor
-  alias Philtre.Editor.Block
   alias Playground.Documents
 
   @editor %Editor{
     id: "-1",
     blocks: [
-      %Block{id: "1", cells: [%Block.Cell{id: "1-1", text: "Foo", modifiers: []}], type: "h1"},
-      %Block{id: "2", cells: [%Block.Cell{id: "2-1", text: "Bar", modifiers: []}], type: "p"},
-      %Block{id: "3", cells: [%Block.Cell{id: "3-1", text: "Baz", modifiers: []}], type: "p"}
+      %ContentEditable{
+        id: "1",
+        cells: [%ContentEditable.Cell{id: "1-1", text: "Foo", modifiers: []}],
+        type: "h1"
+      },
+      %ContentEditable{
+        id: "2",
+        cells: [%ContentEditable.Cell{id: "2-1", text: "Bar", modifiers: []}],
+        type: "p"
+      },
+      %ContentEditable{
+        id: "3",
+        cells: [%ContentEditable.Cell{id: "3-1", text: "Baz", modifiers: []}],
+        type: "p"
+      }
     ]
   }
 
@@ -34,9 +46,21 @@ defmodule Playground.DocumentLive.NewTest do
 
     assert %Editor{
              blocks: [
-               %Block{id: "1", cells: [%{id: "1-1", text: "Foo", modifiers: []}], type: "h1"},
-               %Block{id: "2", cells: [%{id: "2-1", text: "Bar", modifiers: []}], type: "p"},
-               %Block{id: "3", cells: [%{id: "3-1", text: "Baz", modifiers: []}], type: "p"}
+               %ContentEditable{
+                 id: "1",
+                 cells: [%{id: "1-1", text: "Foo", modifiers: []}],
+                 type: "h1"
+               },
+               %ContentEditable{
+                 id: "2",
+                 cells: [%{id: "2-1", text: "Bar", modifiers: []}],
+                 type: "p"
+               },
+               %ContentEditable{
+                 id: "3",
+                 cells: [%{id: "3-1", text: "Baz", modifiers: []}],
+                 type: "p"
+               }
              ],
              clipboard: nil,
              selected_blocks: [],
@@ -67,8 +91,8 @@ defmodule Playground.DocumentLive.NewTest do
     assert %{socket: %{assigns: %{editor: %Editor{} = editor}}} = :sys.get_state(view.pid)
 
     assert [
-             %Block{cells: [%{text: "Foo"}], type: "h1"},
-             %Block{cells: [%{text: "Bar"}], type: "p"}
+             %ContentEditable{cells: [%{text: "Foo"}], type: "h1"},
+             %ContentEditable{cells: [%{text: "Bar"}], type: "p"}
            ] = editor.clipboard
 
     block = Enum.at(@editor.blocks, 0)

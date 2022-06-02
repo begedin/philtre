@@ -3,10 +3,10 @@ defmodule Philtre.Editor.Serializer do
   Holds normalization and serialization logic for the editor
   """
 
-  alias Philtre.Code
+  alias Philtre.Block.Code
+  alias Philtre.Block.ContentEditable
+  alias Philtre.Block.Table
   alias Philtre.Editor
-  alias Philtre.Editor.Block
-  alias Philtre.Table
 
   def serialize(%Editor{} = editor) do
     %{
@@ -26,12 +26,12 @@ defmodule Philtre.Editor.Serializer do
   ]
 
   @spec serialize(struct) :: map
-  def serialize(%Block{id: id, type: type, cells: cells})
+  def serialize(%ContentEditable{id: id, type: type, cells: cells})
       when type in @types do
     %{"id" => id, "type" => type, "content" => Enum.map(cells, &serialize/1)}
   end
 
-  def serialize(%Block.Cell{id: id, modifiers: modifiers, text: text}) do
+  def serialize(%ContentEditable.Cell{id: id, modifiers: modifiers, text: text}) do
     %{"id" => id, "modifiers" => modifiers, "text" => text}
   end
 
@@ -52,15 +52,15 @@ defmodule Philtre.Editor.Serializer do
   end
 
   def normalize(%{"id" => id, "type" => type, "content" => content}) when type in @types do
-    %Block{id: id, type: type, cells: Enum.map(content, &normalize/1)}
+    %ContentEditable{id: id, type: type, cells: Enum.map(content, &normalize/1)}
   end
 
   def normalize(%{"id" => id, "modifiers" => modifiers, "text" => text}) do
-    %Block.Cell{id: id, modifiers: modifiers, text: text}
+    %ContentEditable.Cell{id: id, modifiers: modifiers, text: text}
   end
 
   def normalize(%{"id" => id, "type" => "table"} = data) do
-    %Philtre.Table{
+    %Philtre.Block.Table{
       id: id,
       rows: Map.get(data, "rows", []),
       header_rows: Map.get(data, "header_rows", [])
@@ -75,7 +75,7 @@ defmodule Philtre.Editor.Serializer do
     Enum.map_join(editor.blocks, "", &text/1)
   end
 
-  def text(%Block{cells: _} = block) do
+  def text(%ContentEditable{cells: _} = block) do
     block |> html |> Floki.parse_document!() |> Floki.text()
   end
 
@@ -83,11 +83,11 @@ defmodule Philtre.Editor.Serializer do
     Enum.map_join(blocks, "", &html/1)
   end
 
-  def html(%Block{cells: cells, type: tag}) do
+  def html(%ContentEditable{cells: cells, type: tag}) do
     "<#{tag}>" <> Enum.map_join(cells, "", &html/1) <> "</#{tag}>"
   end
 
-  def html(%Block.Cell{id: _id, modifiers: _modifiers, text: text}) do
+  def html(%ContentEditable.Cell{id: _id, modifiers: _modifiers, text: text}) do
     "<span>" <> text <> "</span>"
   end
 

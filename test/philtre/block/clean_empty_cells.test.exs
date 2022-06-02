@@ -1,23 +1,23 @@
-defmodule Philtre.Editor.Block.ReduceTest do
+defmodule Philtre.Block.ContentEditable.ReduceTest do
   use ExUnit.Case, async: true
 
-  alias Philtre.Editor.Block
-  alias Philtre.Editor.Block.Cell
-  alias Philtre.Editor.Block.CleanEmptyCells
-  alias Philtre.Editor.Block.Selection
+  alias Philtre.Block.ContentEditable
+  alias Philtre.Block.ContentEditable.Cell
+  alias Philtre.Block.ContentEditable.CleanEmptyCells
+  alias Philtre.Block.ContentEditable.Selection
 
   test "returns same block when no cells" do
-    block = %Block{cells: []}
+    block = %ContentEditable{cells: []}
     assert CleanEmptyCells.call(block) == block
   end
 
   test "returns same block when one cell" do
-    block = %Block{cells: [Cell.new()]}
+    block = %ContentEditable{cells: [Cell.new()]}
     assert CleanEmptyCells.call(block) == block
   end
 
   test "out of two cells with empty content, discards the first one" do
-    block = %Block{
+    block = %ContentEditable{
       cells: [
         %Cell{id: "1", text: ""},
         %Cell{id: "2", text: ""}
@@ -29,7 +29,7 @@ defmodule Philtre.Editor.Block.ReduceTest do
   end
 
   test "out of multiple cells with empty content, keeps the last one" do
-    block = %Block{
+    block = %ContentEditable{
       cells: [
         %Cell{id: "1", text: ""},
         %Cell{id: "2", text: ""},
@@ -42,7 +42,7 @@ defmodule Philtre.Editor.Block.ReduceTest do
   end
 
   test "cleans up multiple ocurrences of empty cells" do
-    block = %Block{
+    block = %ContentEditable{
       cells: [
         %Cell{id: "1", text: ""},
         %Cell{id: "2", text: ""},
@@ -63,7 +63,7 @@ defmodule Philtre.Editor.Block.ReduceTest do
   end
 
   test "when cleaned cell had entire selection, moves it to first clean block" do
-    block = %Block{
+    block = %ContentEditable{
       cells: [
         %Cell{id: "1", text: ""},
         %Cell{id: "2", text: ""},
@@ -83,7 +83,7 @@ defmodule Philtre.Editor.Block.ReduceTest do
   end
 
   test "when cleaned cell had start of selection, moves it to first clean block" do
-    block = %Block{
+    block = %ContentEditable{
       cells: [
         %Cell{id: "1", text: ""},
         %Cell{id: "2", text: ""},

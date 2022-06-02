@@ -1,9 +1,13 @@
-# 0.10.0 2022-06-01
+# Changelog
+
+## 0.10.0
 
 - [FEATURE] Basic code block only supporing elixir synthax highlighting
 - [FIX] Using button to add block after a code or table block fails
+- [QA] Improve docs
+- [FIX] Styles for `/code` block were not getting included correctly
 
-# 0.9.4 2022-05-30
+## 0.9.4 2022-05-30
 
 - [FIX] Bug with typing after inserting new line at the end of block
 - [CHORE] Loosen floki dependency & update
@@ -11,29 +15,29 @@
 - [TWEAK] Use `n` to split lines in block component, instead of `<br/>`
 - [TWEAK] Clean up redundant cells during block operations
 
-# 0.9.3 2022-05-25
+## 0.9.3 2022-05-25
 
 - fix publish + installation story
 
-# 0.9.2 2022-05-22
+## 0.9.2 2022-05-22
 
 - separate out scss into individual files
 - style and restructure table component
 - publish to hex and npm
 - add basic setup readme
 
-# 0.9.0 2022-05-21
+## 0.9.0 2022-05-21
 
 - basic table component
 
-# 0.8.1 2022-05-12
+## 0.8.1 2022-05-12
 
 - various bugfixes related to blocks splitting and joining
 - phoenix dependency update
 - failed attempt configuration for heex formatter
 - basic styling for PRE block
 
-# 0.8.0 2022-05-08
+## 0.8.0 2022-05-08
 
 There have been many changes since the last update
 
@@ -43,44 +47,44 @@ There have been many changes since the last update
 - support for scss
 - various misc additions and tweaks
 
-# 0.7.1 2022-01-25
+## 0.7.1 2022-01-25
 
 - reduce blocks after backspacing or updating, so they contain a minimal amount of cells
 
-# 0.7.0 2022-01-25
+## 0.7.0 2022-01-25
 
 - blockquote
 - further codebase simplication
 - removal of page struct
 - bugfixes to backspace operation
 
-# 0.6.1 2022-01-19
+## 0.6.1 2022-01-19
 
 - simplification and improvements to internal API
 - fix for a selection bug
 
-# 0.6.0 2022-01-16
+## 0.6.0 2022-01-16
 
 - introduce esbuild via npm
 - introduce eslint
 - introduce prettier
 - make topbar an npm dependency
 
-# 0.5.2 2022-01-08
+## 0.5.2 2022-01-08
 
 - update elixir to 1.13.1 + all dependencies
 - clear up credo issues
 - add CI action workflow
 - documentation improvements
 
-# 0.5.0 2022-01-08
+## 0.5.0 2022-01-08
 
 - block selection feature
 - copy paste feature
 - cleanup
 - known bug: typing too quickly changes cursor position
 
-# 0.4.0 2021-11-21
+## 0.4.0 2021-11-21
 
 - block + cell based editor, supporting following blocks
   - p
@@ -88,16 +92,16 @@ There have been many changes since the last update
   - ul
   - with block downgrades, splitting, etc.
 
-# 0.2.0 2021-11-07
+## 0.2.0 2021-11-07
 
 - credo + pre-commit hook for credo
 - dialyzer + specs + fixes + pre-commit hook for dialyzer
 
-# 0.2.0 2021-11-06
+## 0.2.0 2021-11-06
 
 - basic markdown support
 
-# 0.1.0
+## 0.1.0
 
 - Basic article crud and routes
 - Slug generation and uniqueness

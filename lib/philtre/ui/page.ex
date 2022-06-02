@@ -5,12 +5,12 @@ defmodule Philtre.UI.Page do
   use Phoenix.LiveComponent
   use Phoenix.HTML
 
-  alias Philtre.Code
+  alias Philtre.Block.Code
+  alias Philtre.Block.ContentEditable
+  alias Philtre.Block.Table
   alias Philtre.Editor
-  alias Philtre.Editor.Block
   alias Philtre.Editor.Engine
   alias Philtre.Editor.Utils
-  alias Philtre.Table
 
   alias Phoenix.LiveView.Socket
 
@@ -76,11 +76,11 @@ defmodule Philtre.UI.Page do
     """
   end
 
-  def block(%{block: %Block{}} = assigns) do
+  def block(%{block: %ContentEditable{}} = assigns) do
     ~H"""
     <.live_component
       id={@block.id}
-      module={Block}
+      module={ContentEditable}
       editor={@editor}
       block={@block}
       selected={@block.id in @editor.selected_blocks}

@@ -1,4 +1,4 @@
-defmodule Philtre.Editor.Block.Selection do
+defmodule Philtre.Block.ContentEditable.Selection do
   @moduledoc """
   Holds current selection in a block.
 
@@ -19,12 +19,12 @@ defmodule Philtre.Editor.Block.Selection do
   Selection across blocks is not possible. Only whole blocks can be selected and
   this is handled at a different level.
   """
-  alias Philtre.Editor.Block
+  alias Philtre.Block.ContentEditable
   defstruct [:start_id, :end_id, :start_offset, :end_offset]
 
   @type t :: %__MODULE__{
-          start_id: Block.Cell.id() | nil,
-          end_id: Block.Cell.id() | nil,
+          start_id: ContentEditable.Cell.id() | nil,
+          end_id: ContentEditable.Cell.id() | nil,
           start_offset: non_neg_integer() | nil,
           end_offset: non_neg_integer() | nil
         }
@@ -65,7 +65,7 @@ defmodule Philtre.Editor.Block.Selection do
 
   def new_empty, do: %__MODULE__{}
 
-  def new_start_of(%Block.Cell{id: id}) do
+  def new_start_of(%ContentEditable.Cell{id: id}) do
     %__MODULE__{
       start_id: id,
       end_id: id,
@@ -74,7 +74,7 @@ defmodule Philtre.Editor.Block.Selection do
     }
   end
 
-  def new_end_of(%Block.Cell{id: id, text: text}) do
+  def new_end_of(%ContentEditable.Cell{id: id, text: text}) do
     offset = String.length(text)
 
     %__MODULE__{

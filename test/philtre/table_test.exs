@@ -1,9 +1,9 @@
-defmodule Philtre.TableTest do
+defmodule Philtre.Block.TableTest do
   @moduledoc false
   import Phoenix.LiveViewTest
   use ExUnit.Case
 
-  alias Philtre.Table
+  alias Philtre.Block.Table
 
   describe "read_only" do
     test "renders" do

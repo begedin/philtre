@@ -1,4 +1,4 @@
-defmodule Philtre.Table do
+defmodule Philtre.Block.Table do
   @moduledoc """
   Implementation for a table section/component of the editor
 

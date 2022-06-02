@@ -10,12 +10,14 @@
 
   .code-toolbar,
   .philtre__code__highlighted,
-  .philtre__code__editable {
+  .philtre__code__editable,
+  > pre {
     grid-area: only;
   }
 
   .code-toolbar pre,
-  .philtre__code__editable {
+  .philtre__code__editable,
+  > pre {
     margin: 0;
     padding: 0;
     font-family: $fontCode;

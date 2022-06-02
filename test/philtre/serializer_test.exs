@@ -3,7 +3,7 @@ defmodule Editor.SerializerTest do
 
   use ExUnit.Case, async: true
 
-  alias Philtre.Code
+  alias Philtre.Block.Code
   alias Philtre.Editor
 
   test "works" do

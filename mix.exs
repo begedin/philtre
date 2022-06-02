@@ -1,11 +1,14 @@
 defmodule Philtre.MixProject do
   use Mix.Project
 
+  @source_url "https://github.com/begedin/philtre"
+  @version "0.10.0"
+
   def project do
     [
       app: :philtre,
       description: "A block-style editor for live view",
-      version: "0.10.0",
+      version: @version,
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: Mix.compilers(),
@@ -14,7 +17,9 @@ defmodule Philtre.MixProject do
       preferred_cli_env: [
         "test.watch": :test
       ],
-      package: package()
+      package: package(),
+      docs: docs(),
+      source_url: @source_url
     ]
   end
 
@@ -60,6 +65,51 @@ defmodule Philtre.MixProject do
       {:phoenix, "~> 1.6.0"},
       {:plug_cowboy, "~> 2.5.0"},
       {:uuid, "~> 1.1.0"}
+    ]
+  end
+
+  def docs do
+    [
+      main: "readme",
+      extras: [
+        "README.md",
+        "CHANGELOG.md",
+        "LICENSE"
+      ],
+      source_ref: @version,
+      source_url: @source_url,
+      groups_for_modules: [
+        General: [
+          Philtre.Editor,
+          Philtre.Editor.Engine,
+          Philtre.Editor.Serializer,
+          Philtre.Editor.Utils,
+          Philtre.UI.Page
+        ],
+        Blocks: [
+          Philtre.Block.Code,
+          Philtre.Block.Table,
+          Philtre.Block.ContentEditable
+        ],
+        ContentEditable: [
+          Philtre.Block.ContentEditable.Cell,
+          Philtre.Block.ContentEditable.CleanEmptyCells,
+          Philtre.Block.ContentEditable.Reduce,
+          Philtre.Block.ContentEditable.Selection
+        ],
+        Playground: [
+          Playground.App,
+          Playground.Controller,
+          Playground.Documents,
+          Playground.Endpoint,
+          Playground.Live.Edit,
+          Playground.Live.Index,
+          Playground.Live.New,
+          Playground.Router,
+          Playground.Router.Helpers,
+          Playground.View
+        ]
+      ]
     ]
   end
 

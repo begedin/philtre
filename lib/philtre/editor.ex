@@ -3,7 +3,7 @@ defmodule Philtre.Editor do
   Shared component used for both creation and editing of an article.
   """
 
-  alias Philtre.Editor.Block
+  alias Philtre.Block.ContentEditable
   alias Philtre.Editor.Serializer
   alias Philtre.Editor.Utils
 
@@ -19,24 +19,32 @@ defmodule Philtre.Editor do
     %__MODULE__{
       id: Utils.new_id(),
       blocks: [
-        %Block{
+        %ContentEditable{
           id: Utils.new_id(),
           cells: [
-            %Block.Cell{id: Utils.new_id(), text: "This is the title of your page", modifiers: []}
+            %ContentEditable.Cell{
+              id: Utils.new_id(),
+              text: "This is the title of your page",
+              modifiers: []
+            }
           ],
-          selection: %Block.Selection{},
+          selection: %ContentEditable.Selection{},
           type: "h1"
         },
-        %Block{
+        %ContentEditable{
           id: Utils.new_id(),
           cells: [
-            %Block.Cell{id: Utils.new_id(), text: "This is your first paragraph.", modifiers: []}
+            %ContentEditable.Cell{
+              id: Utils.new_id(),
+              text: "This is your first paragraph.",
+              modifiers: []
+            }
           ],
-          selection: %Block.Selection{},
+          selection: %ContentEditable.Selection{},
           type: "p"
         }
         # Uncomment to test table
-        # %Philtre.Table{
+        # %Philtre.Block.Table{
         #   id: Utils.new_id(),
         #   header_rows: [
         #     ["a", "header", "column"]
@@ -48,7 +56,7 @@ defmodule Philtre.Editor do
         #   ]
         # },
         # Uncomment to test code
-        # %Philtre.Code{
+        # %Philtre.Block.Code{
         #   id: Utils.new_id(),
         #   language: "elixir",
         #   content: "defmodule Foo do"

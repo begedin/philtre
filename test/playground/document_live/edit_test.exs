@@ -5,16 +5,28 @@ defmodule Playground.DocumentLive.EditTest do
 
   import Phoenix.LiveViewTest
 
+  alias Philtre.Block.ContentEditable
   alias Philtre.Editor
-  alias Philtre.Editor.Block
   alias Playground.Documents
 
   @editor %Editor{
     id: "-1",
     blocks: [
-      %Block{id: "1", cells: [%Block.Cell{id: "1-1", text: "Foo", modifiers: []}], type: "h1"},
-      %Block{id: "2", cells: [%Block.Cell{id: "2-1", text: "Bar", modifiers: []}], type: "p"},
-      %Block{id: "3", cells: [%Block.Cell{id: "3-1", text: "Baz", modifiers: []}], type: "p"}
+      %ContentEditable{
+        id: "1",
+        cells: [%ContentEditable.Cell{id: "1-1", text: "Foo", modifiers: []}],
+        type: "h1"
+      },
+      %ContentEditable{
+        id: "2",
+        cells: [%ContentEditable.Cell{id: "2-1", text: "Bar", modifiers: []}],
+        type: "p"
+      },
+      %ContentEditable{
+        id: "3",
+        cells: [%ContentEditable.Cell{id: "3-1", text: "Baz", modifiers: []}],
+        type: "p"
+      }
     ]
   }
 

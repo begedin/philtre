@@ -1,4 +1,4 @@
-defmodule Philtre.Editor.Block.Cell do
+defmodule Philtre.Block.ContentEditable.Cell do
   @moduledoc """
   Represents a single cell within a block. Cells are discrete parts of a block,
   to which some style (specified by modifiers) is applied.

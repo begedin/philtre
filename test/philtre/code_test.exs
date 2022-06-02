@@ -1,9 +1,9 @@
-defmodule Philtre.CodeTest do
+defmodule Philtre.Block.CodeTest do
   @moduledoc false
   import Phoenix.LiveViewTest
   use ExUnit.Case
 
-  alias Philtre.Code
+  alias Philtre.Block.Code
 
   describe "read_only" do
     test "renders" do

@@ -1,23 +1,23 @@
-defmodule Philtre.Editor.Block.ReduceTest do
+defmodule Philtre.Block.ContentEditable.ReduceTest do
   use ExUnit.Case, async: true
 
-  alias Philtre.Editor.Block
-  alias Philtre.Editor.Block.Cell
-  alias Philtre.Editor.Block.Reduce
-  alias Philtre.Editor.Block.Selection
+  alias Philtre.Block.ContentEditable
+  alias Philtre.Block.ContentEditable.Cell
+  alias Philtre.Block.ContentEditable.Reduce
+  alias Philtre.Block.ContentEditable.Selection
 
   test "returns same block when no cells" do
-    block = %Block{cells: []}
+    block = %ContentEditable{cells: []}
     assert Reduce.call(block) == block
   end
 
   test "returns same block when one cell" do
-    block = %Block{cells: [Cell.new()]}
+    block = %ContentEditable{cells: [Cell.new()]}
     assert Reduce.call(block) == block
   end
 
   test "returns same block when nothing to reduce" do
-    block = %Block{
+    block = %ContentEditable{
       cells: [
         %Cell{text: "foo", modifiers: []},
         %Cell{text: "bar", modifiers: ["strong"]}
@@ -28,7 +28,7 @@ defmodule Philtre.Editor.Block.ReduceTest do
   end
 
   test "merges two mergeable cells" do
-    block = %Block{
+    block = %ContentEditable{
       cells: [
         %Cell{text: "foo", modifiers: []},
         %Cell{text: "bar", modifiers: []}
@@ -39,7 +39,7 @@ defmodule Philtre.Editor.Block.ReduceTest do
   end
 
   test "merges more than two mergeable cells" do
-    block = %Block{
+    block = %ContentEditable{
       cells: [
         %Cell{text: "foo", modifiers: []},
         %Cell{text: "bar", modifiers: []},
@@ -51,7 +51,7 @@ defmodule Philtre.Editor.Block.ReduceTest do
   end
 
   test "merges multiple sets of mergeable cells" do
-    block = %Block{
+    block = %ContentEditable{
       cells: [
         %Cell{text: "foo", modifiers: []},
         %Cell{text: "bar", modifiers: []},
@@ -65,7 +65,7 @@ defmodule Philtre.Editor.Block.ReduceTest do
   end
 
   test "updates selection when it's exclusively in the merged cell" do
-    block = %Block{
+    block = %ContentEditable{
       cells: [
         %Cell{id: "1", text: "foo", modifiers: []},
         %Cell{id: "2", text: "bar", modifiers: []}
@@ -84,7 +84,7 @@ defmodule Philtre.Editor.Block.ReduceTest do
   end
 
   test "updates selection when it spans to and from cell" do
-    block = %Block{
+    block = %ContentEditable{
       cells: [
         %Cell{id: "1", text: "foo", modifiers: []},
         %Cell{id: "2", text: "bar", modifiers: []}
@@ -103,7 +103,7 @@ defmodule Philtre.Editor.Block.ReduceTest do
   end
 
   test "updates selection when it starts in from cell and ends in another cell" do
-    block = %Block{
+    block = %ContentEditable{
       cells: [
         %Cell{id: "1", text: "foo", modifiers: []},
         %Cell{id: "2", text: "bar", modifiers: []},
@@ -117,7 +117,7 @@ defmodule Philtre.Editor.Block.ReduceTest do
   end
 
   test "updates selection when it starts in another cell and ends in from cell" do
-    block = %Block{
+    block = %ContentEditable{
       cells: [
         %Cell{id: "1", text: "foo", modifiers: ["strong"]},
         %Cell{id: "2", text: "bar", modifiers: []},

@@ -1,4 +1,4 @@
-defmodule Philtre.Editor.Block.CleanEmptyCells do
+defmodule Philtre.Block.ContentEditable.CleanEmptyCells do
   @moduledoc """
   Cleans up empty cells from a block.
 
@@ -6,9 +6,9 @@ defmodule Philtre.Editor.Block.CleanEmptyCells do
   redundant and can be removed without any consequences, resulting in a simpler
   html.
   """
-  alias Philtre.Editor.Block
-  alias Philtre.Editor.Block.Cell
-  alias Philtre.Editor.Block.Selection
+  alias Philtre.Block.ContentEditable
+  alias Philtre.Block.ContentEditable.Cell
+  alias Philtre.Block.ContentEditable.Selection
 
   @doc """
   Removes empty cells from a block.
@@ -19,11 +19,11 @@ defmodule Philtre.Editor.Block.CleanEmptyCells do
   If block selection starts and/or ends within a cleaned up cell, that edge of
   selection is moved into the next appropriate cell.
   """
-  @spec call(Block.t()) :: Block.t()
-  def call(%Block{cells: []} = block), do: block
-  def call(%Block{cells: [_]} = block), do: block
+  @spec call(ContentEditable.t()) :: ContentEditable.t()
+  def call(%ContentEditable{cells: []} = block), do: block
+  def call(%ContentEditable{cells: [_]} = block), do: block
 
-  def call(%Block{} = block) do
+  def call(%ContentEditable{} = block) do
     {new_cells, new_selection} = clean([], block.cells, block.selection)
     %{block | cells: new_cells, selection: new_selection}
   end

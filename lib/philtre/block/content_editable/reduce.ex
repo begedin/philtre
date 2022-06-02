@@ -1,24 +1,24 @@
-defmodule Philtre.Editor.Block.Reduce do
+defmodule Philtre.Block.ContentEditable.Reduce do
   @moduledoc """
   Reduces a block by merging in cells with the same styling (modifiers).
 
   The aim is to reduce the overall number of redundant cells and keep the output HTML as simple as
   possible.
   """
-  alias Philtre.Editor.Block
-  alias Philtre.Editor.Block.Cell
-  alias Philtre.Editor.Block.Selection
+  alias Philtre.Block.ContentEditable
+  alias Philtre.Block.ContentEditable.Cell
+  alias Philtre.Block.ContentEditable.Selection
 
   @doc """
   Reduces the block by joining neighboring cells with the same modifiers.
 
   Since selection is defined by cell ids, it needs to be updated as well.
   """
-  @spec call(Block.t()) :: Block.t()
-  def call(%Block{cells: []} = block), do: block
-  def call(%Block{cells: [_]} = block), do: block
+  @spec call(ContentEditable.t()) :: ContentEditable.t()
+  def call(%ContentEditable{cells: []} = block), do: block
+  def call(%ContentEditable{cells: [_]} = block), do: block
 
-  def call(%Block{cells: [first | rest]} = block) do
+  def call(%ContentEditable{cells: [first | rest]} = block) do
     {new_cells, new_selection} =
       Enum.reduce(
         rest,

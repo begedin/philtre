@@ -2,6 +2,8 @@ defmodule Philtre.Editor.Engine do
   @moduledoc """
   Holds shared logic for modifying editor blocks
   """
+
+  alias Philtre.Code
   alias Philtre.Editor
   alias Philtre.Editor.Block
   alias Philtre.Editor.Block.Cell
@@ -170,7 +172,7 @@ defmodule Philtre.Editor.Engine do
     %{editor | blocks: new_blocks}
   end
 
-  def add_block(%Editor{} = editor, %Block{} = block) do
+  def add_block(%Editor{} = editor, %_{id: _} = block) do
     index = Enum.find_index(editor.blocks, &(&1.id === block.id))
 
     cell = %Cell{}
@@ -609,6 +611,10 @@ defmodule Philtre.Editor.Engine do
     %{
       prefixes: ["/table"],
       kind: "table"
+    },
+    %{
+      prefixes: ["/code"],
+      kind: "code"
     }
   ]
 
@@ -640,6 +646,10 @@ defmodule Philtre.Editor.Engine do
     {new_cells, _shift} = drop_leading(self.cells, prefixes)
 
     %Table{id: Utils.new_id(), rows: [Enum.map(new_cells, &String.trim(&1.text))]}
+  end
+
+  defp transform(%Block{}, %{kind: "code"}) do
+    %Code{id: Utils.new_id(), content: "", language: "elixir"}
   end
 
   defp transform(%Block{} = self, %{kind: kind, prefixes: prefixes}) do

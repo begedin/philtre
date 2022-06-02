@@ -1,31 +1,19 @@
 import { NewPage } from '../pageModel';
+import {
+  createTable,
+  deleteTestFiles,
+  navigateToFileInReadOnly,
+  openFile,
+} from '../utils';
 
 beforeEach(() => {
-  cy.exec('rm -rf playground/priv/documents/cypress_*', {
-    log: true,
-    failOnNonZeroExit: false,
-  });
+  deleteTestFiles();
 });
-
-const openFile = (filename: string): Cypress.Chainable =>
-  cy.get(`a[href*="${filename}.json"]`).click();
 
 const rowAt = (rowIndex: number) => cy.get('table').find('tr').eq(rowIndex);
 
 const cellAt = (rowIndex: number, cellIndex: number) =>
   rowAt(rowIndex).find('td,th').eq(cellIndex);
-
-const navigateToFileInReadOnly = (filename: string): Cypress.Chainable => {
-  cy.visit('/');
-  return openFile(filename);
-};
-
-const createTable = () => {
-  const page = new NewPage();
-  page.visit();
-  page.clickNewBlockButton(1);
-  return page.setCursorStart(2).type('/table');
-};
 
 const savePage = () => {
   const timestamp = new Date().toISOString();

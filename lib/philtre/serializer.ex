@@ -2,6 +2,8 @@ defmodule Philtre.Editor.Serializer do
   @moduledoc """
   Holds normalization and serialization logic for the editor
   """
+
+  alias Philtre.Code
   alias Philtre.Editor
   alias Philtre.Editor.Block
   alias Philtre.Table
@@ -33,8 +35,12 @@ defmodule Philtre.Editor.Serializer do
     %{"id" => id, "modifiers" => modifiers, "text" => text}
   end
 
-  def serialize(%Philtre.Table{} = table) do
+  def serialize(%Table{} = table) do
     %{"id" => table.id, "header_rows" => table.header_rows, "rows" => table.rows, "type" => "table"}
+  end
+
+  def serialize(%Code{} = code) do
+    %{"id" => code.id, "content" => code.content, "language" => code.language, "type" => "code"}
   end
 
   def normalize(%{"id" => id, "blocks" => blocks}) when is_binary(id) and is_list(blocks) do
@@ -61,6 +67,10 @@ defmodule Philtre.Editor.Serializer do
     }
   end
 
+  def normalize(%{"id" => id, "content" => content, "language" => language, "type" => "code"}) do
+    %Code{id: id, content: content, language: language}
+  end
+
   def text(%Editor{} = editor) do
     Enum.map_join(editor.blocks, "", &text/1)
   end
@@ -83,5 +93,9 @@ defmodule Philtre.Editor.Serializer do
 
   def html(%Table{} = table) do
     Table.html(table)
+  end
+
+  def html(%Code{} = code) do
+    Code.html(code)
   end
 end

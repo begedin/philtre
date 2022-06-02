@@ -46,6 +46,12 @@ defmodule Philtre.Editor do
         #     ["another", "row", ""],
         #     ["yet", "another", "row"]
         #   ]
+        # },
+        # Uncomment to test code
+        # %Philtre.Code{
+        #   id: Utils.new_id(),
+        #   language: "elixir",
+        #   content: "defmodule Foo do"
         # }
       ]
     }

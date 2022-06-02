@@ -44,14 +44,14 @@ jobs:
         uses: actions/cache@v3
         with:
           path: node_modules
-          key: ${{ runner.os }}-mix-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/assets/package-lock.json') }}-v2
+          key: ${{ runner.os }}-mix-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/package-lock.json') }}-v3
 
       - name: Restore cypress binary cache
         id: cypress-cache
         uses: actions/cache@v3
         with:
           path: /home/runner/.cache/Cypress
-          key: cypress-${{ runner.os }}-mix-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/assets/package-lock.json') }}-v3
+          key: cypress-${{ runner.os }}-mix-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/package-lock.json') }}-v3
 
 
       - name: Restore build cache

@@ -6,6 +6,8 @@ import { sassPlugin } from 'esbuild-sass-plugin';
 // Decide which mode to proceed with
 let mode = 'build';
 
+const sass = sassPlugin();
+
 process.argv.slice(2).forEach((arg) => {
   if (arg === '--watch') {
     mode = 'watch';
@@ -23,8 +25,8 @@ const opts = {
   watch: false,
   minify: false,
   format: 'esm',
-  target: ['es2015'],
-  plugins: [sassPlugin()],
+  target: ['esnext'],
+  plugins: [sass],
 };
 
 if (mode === 'watch') {

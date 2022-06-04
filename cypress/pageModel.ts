@@ -1,3 +1,5 @@
+import { addBlockButton } from './utils';
+
 export class NewPage {
   visit() {
     return cy.visit('/documents/new').get('.phx-connected');
@@ -39,12 +41,8 @@ export class NewPage {
     return this.setCursorEnd(blockIndex).type('{enter}');
   }
 
-  get addBlockButtons() {
-    return cy.get('.philtre-page button[phx-click="add_block"]');
-  }
-
   clickNewBlockButton(blockIndex: number) {
-    return this.addBlockButtons.eq(blockIndex).click();
+    return addBlockButton(blockIndex).click();
   }
 
   get removeBlockButtons() {

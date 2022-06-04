@@ -133,7 +133,7 @@ defmodule Philtre.EditorTest do
     })
 
     assert %ContentEditable{type: "h1"} = h1 = Wrapper.block_at(view, 1)
-    assert %{cells: [%{text: ""}]} = h1
+    assert %{cells: [%{text: " "}]} = h1
   end
 
   test "can convert block to h2", %{conn: conn} do
@@ -151,7 +151,7 @@ defmodule Philtre.EditorTest do
     })
 
     assert %ContentEditable{type: "h2"} = h2 = Wrapper.block_at(view, 1)
-    assert %{cells: [%{text: ""}]} = h2
+    assert %{cells: [%{text: " "}]} = h2
   end
 
   test "can convert block to h3", %{conn: conn} do
@@ -169,7 +169,7 @@ defmodule Philtre.EditorTest do
     })
 
     assert %ContentEditable{type: "h3"} = h3 = Wrapper.block_at(view, 1)
-    assert %{cells: [%{text: ""}]} = h3
+    assert %{cells: [%{text: " "}]} = h3
   end
 
   test "can convert block to pre", %{conn: conn} do
@@ -187,7 +187,7 @@ defmodule Philtre.EditorTest do
     })
 
     assert %ContentEditable{type: "pre"} = pre = Wrapper.block_at(view, 1)
-    assert %{cells: [%{text: ""}]} = pre
+    assert %{cells: [%{text: " "}]} = pre
   end
 
   test "can convert block to li", %{conn: conn} do

@@ -28,16 +28,11 @@ defmodule Philtre.Editor.Engine do
       |> Map.put(:selection, Selection.new_start_of(cell))
       |> resolve_transform()
 
-    replace_block(editor, block, [new_block])
+    Editor.replace_block(editor, block, [new_block])
   end
 
   def update(%Editor{} = editor, %ContentEditable{cells: old_cells} = block, %{
-        selection: %Selection{
-          start_id: start_id,
-          end_id: end_id,
-          start_offset: start_offset,
-          end_offset: end_offset
-        },
+        selection: selection,
         cells: new_cells
       }) do
     # the new cells are content received from the client side of the ContentEditable hook
@@ -59,19 +54,9 @@ defmodule Philtre.Editor.Engine do
         %{cell | modifiers: params.modifiers, text: params.text}
       end)
 
-    new_block =
-      resolve_transform(%{
-        block
-        | cells: updated_cells,
-          selection: %Selection{
-            start_id: start_id,
-            end_id: end_id,
-            start_offset: start_offset,
-            end_offset: end_offset
-          }
-      })
+    new_block = resolve_transform(%{block | cells: updated_cells, selection: selection})
 
-    replace_block(editor, block, [new_block])
+    Editor.replace_block(editor, block, [new_block])
   end
 
   @spec toggle_style_on_selection(
@@ -203,7 +188,7 @@ defmodule Philtre.Editor.Engine do
       |> set_selection(selection)
       |> split_line_at_selection()
 
-    replace_block(editor, block, [new_block])
+    Editor.replace_block(editor, block, [new_block])
   end
 
   def split_line(%Editor{} = editor, %ContentEditable{}, %{}), do: editor
@@ -255,23 +240,6 @@ defmodule Philtre.Editor.Engine do
     end
   end
 
-  @spec replace_block(Editor.t(), ContentEditable.t(), list(ContentEditable.t())) :: Editor.t()
-  defp replace_block(%Editor{} = editor, %ContentEditable{} = block, new_blocks)
-       when is_list(new_blocks) do
-    case Enum.find_index(editor.blocks, &(&1.id === block.id)) do
-      nil ->
-        editor
-
-      index when is_integer(index) ->
-        new_blocks =
-          editor.blocks
-          |> List.replace_at(index, new_blocks)
-          |> List.flatten()
-
-        %{editor | blocks: new_blocks}
-    end
-  end
-
   @doc """
   Performs action of splitting a block into two separate blocks at current cursor position.
 
@@ -316,7 +284,7 @@ defmodule Philtre.Editor.Engine do
 
     block_after = %{block_after | type: new_type}
 
-    replace_block(editor, block, [block_before, block_after])
+    Editor.replace_block(editor, block, [block_before, block_after])
   end
 
   defp set_selection(%ContentEditable{} = block, %Selection{} = selection) do
@@ -473,7 +441,7 @@ defmodule Philtre.Editor.Engine do
 
     new_blocks = Enum.reject([block_before] ++ clipboard_blocks ++ [block_after], &empty_block?/1)
 
-    replace_block(editor, block, new_blocks)
+    Editor.replace_block(editor, block, new_blocks)
   end
 
   @spec empty_block?(ContentEditable.t()) :: boolean
@@ -650,7 +618,7 @@ defmodule Philtre.Editor.Engine do
   end
 
   defp transform(%ContentEditable{}, %{kind: "code"}) do
-    %Code{id: Utils.new_id(), content: "", language: "elixir"}
+    %Code{id: Utils.new_id(), content: "", language: "elixir", focused: true}
   end
 
   defp transform(%ContentEditable{} = self, %{kind: kind, prefixes: prefixes}) do
@@ -671,8 +639,27 @@ defmodule Philtre.Editor.Engine do
 
   defp drop_leading([%{text: text} = first | rest], prefixes) when is_list(prefixes) do
     prefix = Enum.find(prefixes, &String.starts_with?(text, &1))
-    first = %{first | text: String.replace(first.text, prefix, "")}
-    {[first | rest], String.length(prefix)}
+    replaced = String.replace(first.text, prefix, "")
+
+    # we need to make sure the transformed cell has at least a single "fake space"
+    # character into which the editor can focus
+
+    # this can probably be written more cleanly
+
+    offset =
+      case replaced do
+        "" -> String.length(prefix) - 1
+        _other -> String.length(prefix)
+      end
+
+    new_text =
+      case replaced do
+        "" -> " "
+        other -> other
+      end
+
+    first = %{first | text: new_text}
+    {[first | rest], offset}
   end
 
   @spec shift(Selection.t(), integer) :: Selection.t()

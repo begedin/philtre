@@ -3,19 +3,12 @@ import {
   deleteTestFiles,
   navigateToFileInReadOnly,
   openFile,
-} from '../utils';
+  savePage,
+} from '../../utils';
 
 beforeEach(() => {
   deleteTestFiles();
 });
-
-const savePage = () => {
-  const timestamp = new Date().toISOString();
-  const filename = `cypress_${timestamp}`;
-  cy.get('input[name=filename]').type(filename);
-  cy.get('button').contains('Save').click();
-  return filename;
-};
 
 it('can save a page containing a table', () => {
   createCode();

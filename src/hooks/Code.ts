@@ -56,6 +56,14 @@ const updateHighlight = (el: HTMLElement) => {
 
 const bindInput = (el: HTMLElement, hook: ViewHook): void => {
   const codeEl = getCodeEl(el);
+
+  codeEl.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && e.shiftKey) {
+      e.preventDefault();
+      hook.pushEventTo(getTarget(el), 'add_block');
+    }
+  });
+
   codeEl.addEventListener('input', () => {
     updateHighlight(el);
     hook.pushEventTo(getTarget(el), 'update', { value: codeEl.value });

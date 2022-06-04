@@ -69,4 +69,21 @@ defmodule Philtre.Editor do
   defdelegate normalize(editor), to: Serializer
   defdelegate text(editor), to: Serializer
   defdelegate html(editor), to: Serializer
+
+  @spec replace_block(t(), struct(), list(struct)) :: t()
+  def replace_block(%__MODULE__{} = editor, %{id: _id} = block, new_blocks)
+      when is_list(new_blocks) do
+    case Enum.find_index(editor.blocks, &(&1.id === block.id)) do
+      nil ->
+        editor
+
+      index when is_integer(index) ->
+        new_blocks =
+          editor.blocks
+          |> List.replace_at(index, new_blocks)
+          |> List.flatten()
+
+        %{editor | blocks: new_blocks}
+    end
+  end
 end

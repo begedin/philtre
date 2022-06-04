@@ -29,8 +29,6 @@ export const createCode = () => createNewBlock('/code');
 
 export const allBlocks = () => cy.get('[data-block]');
 
-export const block = (blockIndex: number) => allBlocks().eq(blockIndex);
-
 export const focusBlock = (blockIndex: number) => block(blockIndex).focus();
 
 export const focusStartOfBlock = (blockIndex: number) =>
@@ -40,3 +38,22 @@ export const blockCell = (blockIndex: number, cellIndex: number) =>
   block(blockIndex).find('[data-cell-id]').eq(cellIndex);
 
 export const visitNew = () => cy.visit('/documents/new').get('.phx-connected');
+
+export const sections = () => cy.get('.philtre-page__section');
+
+export const addBlockButton = (index: number) =>
+  sections().eq(index).find('button[phx-click="add_block"]');
+
+export const removeBlockButton = (index: number) =>
+  sections().eq(index).find('button[phx-click="remove_block"]');
+
+export const block = (blockIndex: number, type = '*') =>
+  sections().eq(blockIndex).find(`${type}[data-block]`);
+
+export const savePage = () => {
+  const timestamp = new Date().toISOString();
+  const filename = `cypress_${timestamp}`;
+  cy.get('input[name=filename]').type(filename);
+  cy.get('button').contains('Save').click();
+  return filename;
+};

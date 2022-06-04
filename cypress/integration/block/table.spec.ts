@@ -1,10 +1,11 @@
-import { NewPage } from '../pageModel';
+import { NewPage } from '../../pageModel';
 import {
   createTable,
   deleteTestFiles,
   navigateToFileInReadOnly,
   openFile,
-} from '../utils';
+  savePage,
+} from '../../utils';
 
 beforeEach(() => {
   deleteTestFiles();
@@ -14,14 +15,6 @@ const rowAt = (rowIndex: number) => cy.get('table').find('tr').eq(rowIndex);
 
 const cellAt = (rowIndex: number, cellIndex: number) =>
   rowAt(rowIndex).find('td,th').eq(cellIndex);
-
-const savePage = () => {
-  const timestamp = new Date().toISOString();
-  const filename = `cypress_${timestamp}`;
-  cy.get('input[name=filename]').type(filename);
-  cy.get('button').contains('Save').click();
-  return filename;
-};
 
 it('can save a page containing a table', () => {
   createTable();

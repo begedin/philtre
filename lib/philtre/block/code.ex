@@ -7,7 +7,13 @@ defmodule Philtre.Block.Code do
   """
   use Phoenix.LiveComponent
 
-  defstruct id: nil, content: "", language: "elixir"
+  alias Philtre.Block.ContentEditable
+  alias Philtre.Editor
+  alias Philtre.Editor.Utils
+
+  require Logger
+
+  defstruct id: nil, content: "", language: "elixir", focused: false
 
   def render(assigns) do
     # data-language is used to get the language in the frontend hook, which is
@@ -26,6 +32,7 @@ defmodule Philtre.Block.Code do
       <textarea
         class="philtre__code__editable"
         spellcheck="false"
+        autofocus={@block.focused}
         rows={rows(@block.content)}><%= @block.content %></textarea>
     </div>
     """
@@ -53,6 +60,27 @@ defmodule Philtre.Block.Code do
     index = Enum.find_index(socket.assigns.editor.blocks, &(&1.id === new_block.id))
     new_blocks = List.replace_at(socket.assigns.editor.blocks, index, new_block)
     new_editor = %{socket.assigns.editor | blocks: new_blocks}
+
+    send(self(), {:update, new_editor})
+
+    {:noreply, socket}
+  end
+
+  def handle_event("add_block", %{} = params, socket) do
+    Logger.debug("add_block: #{inspect(params)}")
+
+    %__MODULE__{} = block = socket.assigns.block
+
+    cell = ContentEditable.Cell.new()
+
+    new_block = %ContentEditable{
+      id: Utils.new_id(),
+      type: "p",
+      cells: [cell],
+      selection: ContentEditable.Selection.new_start_of(cell)
+    }
+
+    new_editor = Editor.replace_block(socket.assigns.editor, block, [block, new_block])
 
     send(self(), {:update, new_editor})
 

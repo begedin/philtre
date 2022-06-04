@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.10.1
+
+- [FIX] Adding a new empty h1, h2, h3, or li would crash
+- [FIX] Better padding on li block
+- [FEATURE] Shift + enter in /code block starts new block below
+- [FEATURE] Code block auto-focuses when added
+
 ## 0.10.0
 
 - [FEATURE] Basic code block only supporing elixir synthax highlighting

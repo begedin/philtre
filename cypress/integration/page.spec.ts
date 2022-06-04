@@ -3,6 +3,7 @@ import {
   allBlocks,
   block,
   removeBlockButton,
+  section,
   visitNew,
 } from '../utils';
 
@@ -35,4 +36,30 @@ it('can add and edit a li after a code block (regression)', () => {
 
   block(2).should('contain.text', 'A list item');
   block(3).should('contain.text', 'Another list item');
+});
+
+// not the most robust of tests, as tab is achieved via custom plugin and
+// typing withouth changing focus is not easily possible
+it('can navigate focused blocks via tab and shift+tab', () => {
+  visitNew();
+  section(0).focus().tab();
+  section(0).should('not.have.attr', 'data-focused');
+  section(1).should('have.attr', 'data-focused');
+  section(1).focus().tab({ shift: true });
+
+  section(1).should('not.have.attr', 'data-focused');
+  section(0).should('have.attr', 'data-focused');
+
+  // ensures merging blocks preserves focus
+  block(1).type('{moveToEnd}{enter}');
+  block(2).should('exist');
+  section(2).should('have.attr', 'data-focused');
+  block(2).type('{moveToEnd}bar{moveToStart}{backspace}');
+
+  section(1).should('have.attr', 'data-focused');
+  section(0).should('not.have.attr', 'data-focused');
+
+  block(1).should('contain.text', 'paragraph. bar').tab({ shift: true });
+  section(1).should('not.have.attr', 'data-focused');
+  section(0).should('have.attr', 'data-focused');
 });

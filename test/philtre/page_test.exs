@@ -74,4 +74,48 @@ defmodule Philtre.PageTest do
              |> render_click()
              |> get_rendered_blocks()
   end
+
+  test "can shift focus between blocks", %{conn: conn} do
+    {:ok, view, html} = live_isolated(conn, TestView)
+
+    assert [{"div", attrs, _}] =
+             html
+             |> Floki.parse_document!()
+             |> Floki.find("[data-focused]")
+
+    assert {"id", "section_1"} in attrs
+    assert {"tabindex", "1"} in attrs
+
+    assert [{"div", attrs, _}] =
+             view
+             |> element("#section_1")
+             |> render_hook("focus_previous")
+             |> Floki.parse_document!()
+             |> Floki.find("[data-focused]")
+
+    assert {"id", "section_0"} in attrs
+    assert {"tabindex", "0"} in attrs
+
+    assert [{"div", attrs, _}] =
+             view
+             |> element("#section_0")
+             |> render_hook("focus_next")
+             |> Floki.parse_document!()
+             |> Floki.find("[data-focused]")
+
+    assert {"id", "section_1"} in attrs
+    assert {"tabindex", "1"} in attrs
+
+    %Editor{blocks: [h1, p]} = get_editor(view.pid)
+
+    assert [{"div", attrs, _}] =
+             view
+             |> element("#section_0")
+             |> render_hook("focus_current", %{"block_id" => h1.id})
+             |> Floki.parse_document!()
+             |> Floki.find("[data-focused]")
+
+    assert {"id", "section_0"} in attrs
+    assert {"tabindex", "0"} in attrs
+  end
 end

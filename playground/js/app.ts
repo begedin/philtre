@@ -8,13 +8,13 @@ import { Socket } from 'phoenix';
 import { LiveSocket } from 'phoenix_live_view';
 
 // import hooks also directly from source, for live-reload
-import { Code, ContentEditable, History, Selection } from '../../src/hooks';
+import * as philtreHooks from '../../src/hooks';
 
 const csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute('content');
 const liveSocket = new LiveSocket('/live', Socket, {
-  hooks: { Code, ContentEditable, Selection, History },
+  hooks: { ...philtreHooks },
   params: { _csrf_token: csrfToken },
 });
 

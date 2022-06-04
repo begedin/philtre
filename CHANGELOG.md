@@ -6,6 +6,7 @@
 - [FIX] Better padding on li block
 - [FEATURE] Shift + enter in /code block starts new block below
 - [FEATURE] Code block auto-focuses when added
+- [FEATURE] Navigation between blocks using tab and shift + tab
 
 ## 0.10.0
 

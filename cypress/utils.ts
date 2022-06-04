@@ -41,6 +41,8 @@ export const visitNew = () => cy.visit('/documents/new').get('.phx-connected');
 
 export const sections = () => cy.get('.philtre-page__section');
 
+export const section = (index: number) => sections().eq(index);
+
 export const addBlockButton = (index: number) =>
   sections().eq(index).find('button[phx-click="add_block"]');
 

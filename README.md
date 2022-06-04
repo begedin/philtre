@@ -48,15 +48,10 @@ Or from `app.css`:
 Import and add the necessary hooks to your live view application
 
 ```typescript
-import { ContentEditable, Code, History, Selection } from 'philtre/src/hooks';
+import * as philtreHooks from 'philtre/src/hooks';
 
 const liveSocket = new LiveSocket('/live', Socket, {
-  hooks: {
-    Code,
-    ContentEditable,
-    Selection,
-    History,
-  },
+  hooks: { ...philtreHooks, ...yourHooks },
 });
 ```
 

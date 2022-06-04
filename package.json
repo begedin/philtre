@@ -41,6 +41,7 @@
     "@types/prismjs": "^1.26.0",
     "@typescript-eslint/eslint-plugin": "^5.21.0",
     "cypress": "^9.6.0",
+    "cypress-plugin-tab": "^1.0.5",
     "esbuild": "^0.14.38",
     "esbuild-sass-plugin": "^2.2.6",
     "eslint": "^8.14.0",

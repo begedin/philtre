@@ -48,11 +48,9 @@ defmodule Playground.DocumentLive.EditTest do
   end
 
   test "updates and saves article", %{conn: conn} do
-    _document = Documents.save_document(%Editor{}, "foo")
+    _document = Documents.save_document(@editor, "foo")
 
     {:ok, view, _html} = live(conn, "/documents/foo.json/edit")
-
-    send(view.pid, {:update, @editor})
 
     assert dom = view |> render() |> Floki.parse_document!()
 

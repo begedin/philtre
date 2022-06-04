@@ -76,6 +76,11 @@ const hideDOM = (selection: HTMLElement): void => {
   selection.style.display = 'none';
 };
 
+const THRESHOLD = 20;
+const pastThreshold = (state: SelectionState): boolean =>
+  Math.abs(state.fromX - state.toX) > THRESHOLD &&
+  Math.abs(state.fromY - state.toY) > THRESHOLD;
+
 export const Selection = {
   mounted() {
     initCopy(this);
@@ -113,8 +118,18 @@ export const Selection = {
       updateDOM(selection, selectionState);
     });
 
-    document.addEventListener('mouseup', () => {
+    document.addEventListener('mouseup', (event) => {
+      if (!selectionState.selecting) {
+        return;
+      }
+
+      selectionState.toX = event.x;
+      selectionState.toY = event.y;
       selectionState.selecting = false;
+
+      if (!pastThreshold(selectionState)) {
+        return;
+      }
 
       const allBlocks = document.querySelectorAll<HTMLElement>('[data-block]');
 
@@ -125,6 +140,7 @@ export const Selection = {
       const payload = {
         block_ids: results.map((el) => el.id),
       };
+
       resetDOM(selection, selectionState);
       hideDOM(selection);
 

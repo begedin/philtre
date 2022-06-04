@@ -13,7 +13,7 @@ defmodule Philtre.Block.Table do
 
   def render(assigns) do
     ~H"""
-    <div class="philtre__table">
+    <div class="philtre__table" data-block>
       <table>
         <thead>
           <.head {assigns} />

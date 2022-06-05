@@ -106,7 +106,7 @@ defmodule Philtre.PageTest do
     assert {"id", "section_1"} in attrs
     assert {"tabindex", "1"} in attrs
 
-    %Editor{blocks: [h1, p]} = get_editor(view.pid)
+    %Editor{blocks: [h1, _p]} = get_editor(view.pid)
 
     assert [{"div", attrs, _}] =
              view

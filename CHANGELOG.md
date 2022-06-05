@@ -7,6 +7,7 @@
 - [FEATURE] Shift + enter in /code block starts new block below
 - [FEATURE] Code block auto-focuses when added
 - [FEATURE] Navigation between blocks using tab and shift + tab
+- [QA] Remove pageModel from integration tests
 
 ## 0.10.0
 

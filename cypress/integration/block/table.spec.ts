@@ -1,10 +1,10 @@
-import { NewPage } from '../../pageModel';
 import {
   createTable,
   deleteTestFiles,
   navigateToFileInReadOnly,
   openFile,
   savePage,
+  visitNew,
 } from '../../utils';
 
 beforeEach(() => {
@@ -17,32 +17,20 @@ const cellAt = (rowIndex: number, cellIndex: number) =>
   rowAt(rowIndex).find('td,th').eq(cellIndex);
 
 it('can save a page containing a table', () => {
+  visitNew();
   createTable();
 
-  const page = new NewPage();
-  page
-    .sectionAt(2)
-    .get('table')
-    .should('exist')
-    .find('textarea')
-    .eq(0)
-    .type('foo');
+  cellAt(0, 0).find('textarea').eq(0).type('foo');
 
   const filename = savePage();
   openFile(filename);
 
-  page
-    .sectionAt(2)
-    .get('table')
-    .should('exist')
-    .find('textarea')
-    .eq(0)
-    .should('have.text', 'foo');
+  cellAt(0, 0).find('textarea').should('have.text', 'foo');
 });
 
 it('can render a saved table in read-only', () => {
+  visitNew();
   createTable();
-
   cy.get('button[phx-click="add_column"]').click();
   cy.get('button[phx-click="add_row"]').click();
 

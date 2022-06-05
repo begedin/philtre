@@ -1,5 +1,3 @@
-import { NewPage } from './pageModel';
-
 export const deleteTestFiles = () =>
   cy.exec('rm -rf playground/priv/documents/cypress_*', {
     log: true,
@@ -17,10 +15,9 @@ export const navigateToFileInReadOnly = (
 };
 
 const createNewBlock = (type: string) => {
-  const page = new NewPage();
-  page.visit();
-  page.clickNewBlockButton(1);
-  return page.setCursorStart(2).type(type);
+  visitNew();
+  sections().eq(1).find('button[phx-click="add_block"]').eq(0).click();
+  return block(2).focus().type('{moveToStart}').type(type);
 };
 
 export const createTable = () => createNewBlock('/table');

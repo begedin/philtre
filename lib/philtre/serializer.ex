@@ -60,7 +60,7 @@ defmodule Philtre.Editor.Serializer do
   end
 
   def normalize(%{"id" => id, "type" => "table"} = data) do
-    %Philtre.Block.Table{
+    %Table{
       id: id,
       rows: Map.get(data, "rows", []),
       header_rows: Map.get(data, "header_rows", [])

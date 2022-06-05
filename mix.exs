@@ -115,7 +115,7 @@ defmodule Philtre.MixProject do
 
   defp aliases do
     [
-      playground: "run --no-halt playground.exs"
+      playground: "run --no-halt -e 'Playground.App.run()'"
     ]
   end
 end

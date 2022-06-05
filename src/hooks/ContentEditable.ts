@@ -124,11 +124,11 @@ const resolveCommand = (e: KeyboardEvent) => {
     return 'split_block';
   }
 
-  if (e.metaKey && e.key === 'b') {
+  if (e.metaKey && !e.shiftKey && !e.altKey && e.key === 'b') {
     return 'toggle.bold';
   }
 
-  if (e.metaKey && e.key === 'i' && !e.shiftKey) {
+  if (e.metaKey && !e.shiftKey && !e.altKey && e.key === 'i') {
     return 'toggle.italic';
   }
 };

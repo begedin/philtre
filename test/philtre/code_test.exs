@@ -15,7 +15,7 @@ defmodule Philtre.Block.CodeTest do
                 [
                   "defmodule Foo do",
                   "  def foo do",
-                  "    IO.inspect(:bar)",
+                  "    Logger.info(:bar)",
                   "  end",
                   "end"
                 ],
@@ -30,7 +30,7 @@ defmodule Philtre.Block.CodeTest do
                  "pre",
                  [],
                  [
-                   "defmodule Foo do/n  def foo do/n    IO.inspect(:bar)/n  end/nend"
+                   "defmodule Foo do/n  def foo do/n    Logger.info(:bar)/n  end/nend"
                  ]
                }
              ]

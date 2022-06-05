@@ -10,7 +10,7 @@ defmodule Playground.View do
   def render("root.html", assigns) do
     ~H"""
     <!DOCTYPE html>
-    <html lang="en">
+    <html>
       <.head {assigns} />
       <body><%= @inner_content %></body>
     </html>

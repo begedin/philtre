@@ -33,7 +33,7 @@ it('can start as an empty block (regression)', () => {
   visitNew();
   block(1).focus().type('{moveToEnd}{enter}');
   block(2, 'p').focus().type('# ');
-  block(2, 'h1').type('New header');
+  block(2, 'h1').focus().type('New header');
 
   block(2, 'h1').should('contain.text', 'New header');
 });

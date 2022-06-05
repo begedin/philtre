@@ -18,23 +18,34 @@ defmodule Philtre.UI.Page do
 
   @spec update(%{optional(:editor) => Editor.t()}, Socket.t()) :: {:ok, Socket.t()}
 
-  def update(%{editor: new_editor}, %Socket{} = socket) do
-    case Map.get(socket.assigns, :editor) do
-      nil ->
-        {:ok, assign(socket, %{editor: new_editor})}
+  def update(%{editor: new_editor} = updated_assigns, %Socket{} = socket) do
+    undo_history = Map.get(socket.assigns, :undo_history, [])
 
-      %Editor{} = current_editor ->
-        undo_history = Map.get(socket.assigns, :undo_history, [])
+    new_undo_history =
+      case socket.assigns[:editor] do
+        nil -> []
+        current_editor -> Enum.take([current_editor | undo_history], 50)
+      end
 
-        socket =
-          assign(socket, %{
-            editor: new_editor,
-            undo_history: Enum.take([current_editor | undo_history], 50),
-            redo_history: []
-          })
+    redo_history = []
 
-        {:ok, socket}
-    end
+    focused_id =
+      case socket.assigns[:focused_id] do
+        nil -> Enum.at(new_editor.blocks, -1).id
+        id -> id
+      end
+
+    new_assigns =
+      Map.merge(
+        %{
+          undo_history: new_undo_history,
+          redo_history: redo_history,
+          focused_id: focused_id
+        },
+        updated_assigns
+      )
+
+    {:ok, assign(socket, new_assigns)}
   end
 
   def render(assigns) do
@@ -43,11 +54,11 @@ defmodule Philtre.UI.Page do
       <.selection editor={@editor} myself={@myself} />
       <.history editor={@editor} myself={@myself} />
       <div class="philtre-page">
-        <%= for block <- @editor.blocks do %>
-          <div class="philtre-page__section">
+        <%= for {block, index} <- Enum.with_index(@editor.blocks) do %>
+          <.section {assigns} index={index} block={block}>
             <.sidebar block={block} myself={@myself} />
-            <.block {assigns} block={block} />
-          </div>
+            <.block {assigns} block={block} tabindex={index} />
+          </.section>
         <% end %>
       </div>
     </div>
@@ -76,14 +87,28 @@ defmodule Philtre.UI.Page do
     """
   end
 
+  defp section(assigns) do
+    focused = assigns.focused_id === assigns.block.id
+
+    ~H"""
+    <div
+      class="philtre-page__section"
+      data-focused={focused}
+      id={"section_#{@index}"}
+      phx-hook="BlockNavigation"
+      phx-target={@myself}
+      tabindex={@index}
+    >
+      <%= render_slot(@inner_block) %>
+    </div>
+    """
+  end
+
   def block(%{block: %ContentEditable{}} = assigns) do
     ~H"""
     <.live_component
-      id={@block.id}
       module={ContentEditable}
-      editor={@editor}
-      block={@block}
-      selected={@block.id in @editor.selected_blocks}
+      {block_assigns(assigns)}
     />
     """
   end
@@ -92,23 +117,14 @@ defmodule Philtre.UI.Page do
     ~H"""
     <.live_component
       module={Table}
-      id={@block.id}
-      editor={@editor}
-      block={@block}
-      selected={@block.id in @editor.selected_blocks}
+      {block_assigns(assigns)}
     />
     """
   end
 
   def block(%{block: %Code{}} = assigns) do
     ~H"""
-    <.live_component
-      module={Code}
-      id={@block.id}
-      editor={@editor}
-      block={@block}
-      selected={@block.id in @editor.selected_blocks}
-    />
+    <.live_component module={Code} {block_assigns(assigns)}/>
     """
   end
 
@@ -133,9 +149,20 @@ defmodule Philtre.UI.Page do
     """
   end
 
+  defp block_assigns(%{block: %{id: id} = block, editor: editor}) do
+    %{
+      block: block,
+      id: id,
+      editor: editor,
+      tabindex: Enum.find_index(editor.blocks, &(&1.id === id)),
+      selected: id in editor.selected_blocks
+    }
+  end
+
   @spec handle_event(String.t(), map, Socket.t()) :: {:noreply, Socket.t()}
   def handle_event("select_blocks", %{"block_ids" => block_ids}, socket)
       when is_list(block_ids) do
+    Logger.debug("select_blocks #{inspect(block_ids)}")
     send(self(), {:update, %{socket.assigns.editor | selected_blocks: block_ids}})
     {:noreply, socket}
   end
@@ -196,9 +223,11 @@ defmodule Philtre.UI.Page do
   end
 
   def handle_event("add_block", %{"block_id" => block_id}, socket) do
-    block = Enum.find(socket.assigns.editor.blocks, &(&1.id === block_id))
-    new_editor = Engine.add_block(socket.assigns.editor, block)
-    {:noreply, assign(socket, :editor, new_editor)}
+    %{id: id} = block = Enum.find(socket.assigns.editor.blocks, &(&1.id === block_id))
+    %Editor{} = new_editor = Engine.add_block(socket.assigns.editor, block)
+    new_index = Enum.find_index(new_editor.blocks, &(&1.id === id)) + 1
+    %{id: new_id} = Enum.at(new_editor.blocks, new_index)
+    {:noreply, assign(socket, editor: new_editor, focused_id: new_id)}
   end
 
   def handle_event("remove_block", %{"block_id" => block_id}, socket) do
@@ -206,5 +235,36 @@ defmodule Philtre.UI.Page do
     new_editor = %{socket.assigns.editor | blocks: new_blocks}
 
     {:noreply, assign(socket, :editor, new_editor)}
+  end
+
+  def handle_event("focus_previous", %{}, socket) do
+    Logger.debug("focus_previous")
+
+    with focused_id when is_binary(focused_id) <- socket.assigns[:focused_id],
+         focused_index when is_integer(focused_index) <-
+           Enum.find_index(socket.assigns.editor.blocks, &(&1.id === focused_id)),
+         %{id: id} <- Enum.at(socket.assigns.editor.blocks, focused_index - 1) do
+      {:noreply, assign(socket, :focused_id, id)}
+    else
+      _ -> {:noreply, socket}
+    end
+  end
+
+  def handle_event("focus_next", %{}, socket) do
+    Logger.debug("focus_next")
+
+    with focused_id when is_binary(focused_id) <- socket.assigns[:focused_id],
+         focused_index when is_integer(focused_index) <-
+           Enum.find_index(socket.assigns.editor.blocks, &(&1.id === focused_id)),
+         %{id: id} <- Enum.at(socket.assigns.editor.blocks, focused_index + 1) do
+      {:noreply, assign(socket, :focused_id, id)}
+    else
+      _ -> {:noreply, socket}
+    end
+  end
+
+  def handle_event("focus_current", %{"block_id" => id} = params, socket) do
+    Logger.debug("focus_current, #{inspect(params)}")
+    {:noreply, assign(socket, :focused_id, id)}
   end
 end

@@ -71,11 +71,6 @@ defmodule Philtre.MixProject do
   def docs do
     [
       main: "readme",
-      extras: [
-        "README.md",
-        "CHANGELOG.md",
-        "LICENSE"
-      ],
       source_ref: @version,
       source_url: @source_url,
       groups_for_modules: [
@@ -108,6 +103,19 @@ defmodule Philtre.MixProject do
           Playground.Router,
           Playground.Router.Helpers,
           Playground.View
+        ]
+      ],
+      extras: [
+        "README.md",
+        "CHANGELOG.md",
+        "LICENSE",
+        "proposals/extensible_components.md": [
+          title: "Extensible Components"
+        ]
+      ],
+      groups_for_extras: [
+        Proposals: [
+          "proposals/extensible_components.md"
         ]
       ]
     ]

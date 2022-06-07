@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.2
+
+- [QA] Simplify Playground endpoint
+
 ## 0.10.1
 
 - [FIX] Adding a new empty h1, h2, h3, or li would crash

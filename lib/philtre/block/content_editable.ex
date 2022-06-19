@@ -51,10 +51,6 @@ defmodule Philtre.Block.ContentEditable do
 
   # component
 
-  def update(assigns, socket) do
-    {:ok, assign(socket, assigns)}
-  end
-
   def render(%{block: %__MODULE__{type: "p"}} = assigns) do
     ~H"""
     <p {attrs(@block, @selected, @myself)}>

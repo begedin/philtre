@@ -5,7 +5,7 @@ defmodule Philtre.Block.Code do
   This block is used to write code in a synthax-highlighted UI. The frontend
   aspect of it is implemented in `hooks/Code.ts`
   """
-  use Phoenix.LiveComponent
+  use Phoenix.Component
 
   alias Philtre.Block.ContentEditable
   alias Philtre.Editor

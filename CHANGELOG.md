@@ -3,6 +3,7 @@
 ## 0.10.2
 
 - [QA] Simplify Playground endpoint
+- [QA] Reorganize e2e tests around scopes
 
 ## 0.10.1
 

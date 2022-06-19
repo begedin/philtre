@@ -41,3 +41,6 @@ philtre-*.tar
 npm-debug.log
 /playground/assets/node_modules/
 /node_modules/
+
+
+/cypress/screenshots

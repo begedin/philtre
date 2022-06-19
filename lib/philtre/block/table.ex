@@ -7,11 +7,11 @@ defmodule Philtre.Block.Table do
   The current implementation starts of with a single cell, to which additional
   rows and cells can be added and removed from.
   """
-  use Phoenix.LiveComponent
+  use Phoenix.Component
 
   defstruct id: nil, header_rows: [[""]], rows: [[""]]
 
-  def render(assigns) do
+  def render_live(assigns) do
     ~H"""
     <div class="philtre__table" data-block>
       <table>
@@ -125,7 +125,7 @@ defmodule Philtre.Block.Table do
     """
   end
 
-  def read_only(%{} = assigns) do
+  def render_static(%{} = assigns) do
     ~H"""
     <table>
       <thead>
@@ -148,13 +148,6 @@ defmodule Philtre.Block.Table do
       </tbody>
     </table>
     """
-  end
-
-  def html(%__MODULE__{} = table) do
-    %{block: table}
-    |> read_only()
-    |> Phoenix.HTML.html_escape()
-    |> Phoenix.HTML.safe_to_string()
   end
 
   def handle_event("add_row", %{}, socket) do

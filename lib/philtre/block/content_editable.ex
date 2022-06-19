@@ -22,7 +22,7 @@ defmodule Philtre.Block.ContentEditable do
   Typing backspace from the start of a P block merges it into the previous block.
   """
 
-  use Phoenix.LiveComponent
+  use Phoenix.Component
   use Phoenix.HTML
 
   alias Philtre.Block.ContentEditable
@@ -51,7 +51,7 @@ defmodule Philtre.Block.ContentEditable do
 
   # component
 
-  def render(%{block: %__MODULE__{type: "p"}} = assigns) do
+  def render_live(%{block: %__MODULE__{type: "p"}} = assigns) do
     ~H"""
     <p {attrs(@block, @selected, @myself)}>
       <.content block={@block} />
@@ -59,13 +59,13 @@ defmodule Philtre.Block.ContentEditable do
     """
   end
 
-  def render(%{block: %__MODULE__{type: "pre"}} = assigns) do
+  def render_live(%{block: %__MODULE__{type: "pre"}} = assigns) do
     ~H"""
     <pre {attrs(@block, @selected, @myself)}><.content block={@block} /></pre>
     """
   end
 
-  def render(%{block: %__MODULE__{type: "h1"}} = assigns) do
+  def render_live(%{block: %__MODULE__{type: "h1"}} = assigns) do
     ~H"""
     <h1 {attrs(@block, @selected, @myself)}>
       <.content block={@block} />
@@ -73,7 +73,7 @@ defmodule Philtre.Block.ContentEditable do
     """
   end
 
-  def render(%{block: %__MODULE__{type: "h2"}} = assigns) do
+  def render_live(%{block: %__MODULE__{type: "h2"}} = assigns) do
     ~H"""
     <h2 {attrs(@block, @selected, @myself)}>
       <.content block={@block} />
@@ -81,7 +81,7 @@ defmodule Philtre.Block.ContentEditable do
     """
   end
 
-  def render(%{block: %__MODULE__{type: "h3"}} = assigns) do
+  def render_live(%{block: %__MODULE__{type: "h3"}} = assigns) do
     ~H"""
     <h3 {attrs(@block, @selected, @myself)}>
       <.content block={@block} />
@@ -89,7 +89,7 @@ defmodule Philtre.Block.ContentEditable do
     """
   end
 
-  def render(%{block: %__MODULE__{type: "blockquote"}} = assigns) do
+  def render_live(%{block: %__MODULE__{type: "blockquote"}} = assigns) do
     ~H"""
     <blockquote {attrs(@block, @selected, @myself)}>
       <.content block={@block} />
@@ -97,7 +97,7 @@ defmodule Philtre.Block.ContentEditable do
     """
   end
 
-  def render(%{block: %__MODULE__{type: "li"}} = assigns) do
+  def render_live(%{block: %__MODULE__{type: "li"}} = assigns) do
     ~H"""
     <ul>
       <li {attrs(@block, @selected, @myself)}>
@@ -137,6 +137,48 @@ defmodule Philtre.Block.ContentEditable do
       phx_hook: "ContentEditable",
       phx_target: myself
     }
+  end
+
+  def render_static(%{block: %__MODULE__{type: "p"}} = assigns) do
+    ~H"""
+    <p><.content block={@block} /></p>
+    """
+  end
+
+  def render_static(%{block: %__MODULE__{type: "pre"}} = assigns) do
+    ~H"""
+    <pre><.content block={@block} /></pre>
+    """
+  end
+
+  def render_static(%{block: %__MODULE__{type: "h1"}} = assigns) do
+    ~H"""
+    <h1><.content block={@block} /></h1>
+    """
+  end
+
+  def render_static(%{block: %__MODULE__{type: "h2"}} = assigns) do
+    ~H"""
+    <h2><.content block={@block} /></h2>
+    """
+  end
+
+  def render_static(%{block: %__MODULE__{type: "h3"}} = assigns) do
+    ~H"""
+    <h3><.content block={@block} /></h3>
+    """
+  end
+
+  def render_static(%{block: %__MODULE__{type: "blockquote"}} = assigns) do
+    ~H"""
+    <blockquote><.content block={@block} /></blockquote>
+    """
+  end
+
+  def render_static(%{block: %__MODULE__{type: "li"}} = assigns) do
+    ~H"""
+    <ul><li><.content block={@block} /></li></ul>
+    """
   end
 
   def handle_event("update", %{"selection" => selection, "cells" => cells} = attrs, socket) do

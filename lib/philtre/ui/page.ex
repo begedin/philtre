@@ -5,10 +5,10 @@ defmodule Philtre.UI.Page do
   use Phoenix.LiveComponent
   use Phoenix.HTML
 
-  alias Philtre.LiveBlock
   alias Philtre.Editor
   alias Philtre.Editor.Engine
   alias Philtre.Editor.Utils
+  alias Philtre.LiveBlock
 
   alias Phoenix.LiveView.Socket
 

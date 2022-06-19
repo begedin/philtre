@@ -18,7 +18,7 @@ defmodule Philtre.LiveBlock do
   end
 
   def render(%{block: %module{}} = assigns) do
-    module.render(assigns)
+    module.render_live(assigns)
   end
 
   def handle_event(event, payload, socket) do

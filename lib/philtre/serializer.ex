@@ -7,6 +7,7 @@ defmodule Philtre.Editor.Serializer do
   alias Philtre.Block.ContentEditable
   alias Philtre.Block.Table
   alias Philtre.Editor
+  alias Philtre.StaticBlock
 
   def serialize(%Editor{} = editor) do
     %{
@@ -79,23 +80,12 @@ defmodule Philtre.Editor.Serializer do
     block |> html |> Floki.parse_document!() |> Floki.text()
   end
 
-  def html(%Editor{blocks: blocks}) do
-    Enum.map_join(blocks, "", &html/1)
-  end
+  def html(%Editor{blocks: blocks}), do: Enum.map_join(blocks, "", &html/1)
 
-  def html(%ContentEditable{cells: cells, type: tag}) do
-    "<#{tag}>" <> Enum.map_join(cells, "", &html/1) <> "</#{tag}>"
-  end
-
-  def html(%ContentEditable.Cell{id: _id, modifiers: _modifiers, text: text}) do
-    "<span>" <> text <> "</span>"
-  end
-
-  def html(%Table{} = table) do
-    Table.html(table)
-  end
-
-  def html(%Code{} = code) do
-    Code.html(code)
+  def html(%_{} = block) do
+    %{block: block}
+    |> StaticBlock.render()
+    |> Phoenix.HTML.html_escape()
+    |> Phoenix.HTML.safe_to_string()
   end
 end

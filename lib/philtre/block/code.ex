@@ -15,7 +15,7 @@ defmodule Philtre.Block.Code do
 
   defstruct id: nil, content: "", language: "elixir", focused: false
 
-  def render(assigns) do
+  def render_live(assigns) do
     # data-language is used to get the language in the frontend hook, which is
     # then used by the frontend-based code-highlighting library
     ~H"""
@@ -44,14 +44,7 @@ defmodule Philtre.Block.Code do
     |> Enum.count()
   end
 
-  def html(%__MODULE__{} = table) do
-    %{block: table}
-    |> read_only()
-    |> Phoenix.HTML.html_escape()
-    |> Phoenix.HTML.safe_to_string()
-  end
-
-  def read_only(%{block: _} = assigns) do
+  def render_static(%{block: _} = assigns) do
     ~H"<pre><%= @block.content %></pre>"
   end
 

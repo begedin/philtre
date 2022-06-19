@@ -5,10 +5,10 @@ defmodule Philtre.Block.TableTest do
 
   alias Philtre.Block.Table
 
-  describe "read_only" do
+  describe "render_static" do
     test "renders" do
       rendered =
-        render_component(&Table.read_only/1,
+        render_component(&Table.render_static/1,
           block: %Table{
             header_rows: [["foo", "bar"]],
             rows: [["a", "b"], ["c", "d"]]

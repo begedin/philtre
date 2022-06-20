@@ -5,6 +5,7 @@
 - [QA] Simplify Playground endpoint
 - [QA] Reorganize e2e tests around scopes
 - [REFACTOR] Introduce common LiveBlock component
+- [REFACTOR] Introduce common StaticBlock component
 
 ## 0.10.1
 

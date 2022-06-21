@@ -603,7 +603,10 @@ defmodule Philtre.Editor.Engine do
 
   defp match_transform(text) when is_binary(text) do
     Enum.find(@transforms, fn %{prefixes: prefixes, kind: _kind} ->
-      Enum.any?(prefixes, &String.starts_with?(text, &1))
+      # we put a space character inside of every new cell, which we clear out at the end.
+      # if the prefix matches exactly the content of the cell, that means it's the initial
+      # space character and not an actual transform we're doing
+      Enum.any?(prefixes, &(String.starts_with?(text, &1) && text !== &1))
     end)
   end
 

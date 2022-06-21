@@ -41,7 +41,7 @@ describe('ui.page', () => {
 
   // not the most robust of tests, as tab is achieved via custom plugin and
   // typing without changing focus is not easily possible
-  it.only('can navigate focused blocks via tab and shift+tab', () => {
+  it('can navigate focused blocks via tab and shift+tab', () => {
     visitNew();
     section(0).focus().tab();
     section(0).should('not.have.attr', 'data-focused');

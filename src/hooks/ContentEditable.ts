@@ -2,8 +2,15 @@ import { ViewHook } from './types';
 import { getTarget } from './utils';
 
 /**
- * Resolves closest cell element to the specified node or dom element.
- * This could be the specified record itself, or a parent, or a child.
+ * Used to match the closest cell from selection anchor or offset node.
+ *
+ * Reason for this is, when moving selection using hotkeys, we can end up in a
+ * text node within the block, but outside the cell.
+ *
+ * This usually happens on a new block, or close to the end of the cell.
+ *
+ * When we serialize the selection to send to backend, we want to match it to
+ * the closest cell.
  */
 const resolveCell = (node: Node | HTMLElement | null): HTMLElement | null => {
   if (node === null) {
@@ -29,15 +36,27 @@ const resolveCell = (node: Node | HTMLElement | null): HTMLElement | null => {
   return null;
 };
 
+/**
+ * Used to determine whether the current selection is at start of block
+ * That means 0 offset in first cell.
+ *
+ * We use the selection and cell serializer functions to determine this.
+ */
 const isAtStartOfBlock = (el: HTMLElement): boolean => {
   const selection = getBlockSelection(el);
   const cells = getCells(el);
   return selection.start_id === cells[0].id && selection.start_offset === 0;
 };
 
+/**
+ * Type guard to determine whether the specified node is an element
+ */
 const isElement = (node: Node): node is HTMLElement =>
   node.nodeType === node.ELEMENT_NODE;
 
+/**
+ * Resolves cell id from an anchor node
+ */
 const getCellId = (node: Node | null): string | null => {
   if (!node) {
     return null;
@@ -51,8 +70,21 @@ const getCellId = (node: Node | null): string | null => {
   return node.dataset.cellId;
 };
 
-const sanitizeText = (text: string) => text.replace(' ', ' ');
+const IRREGULAR_WHITESPACE = ' ';
+/**
+ * Content editable will sometimes insert &nbsp; or a special space character.
+ *
+ * When looking at el.innerText, this is given as IRREGULAR_WHITESPACE
+ *
+ * We need to replace it with regular space when sending to backend.
+ */
+const sanitizeText = (text: string) => text.replace(IRREGULAR_WHITESPACE, ' ');
 
+/**
+ * Used to determine whether current selection is outside a cell whilw we've already been typing .
+ *
+ * This usually needs at the start of the block, before the first cell.
+ */
 const getIsOutOfCell = (el: HTMLElement): boolean => {
   const cells = Array.from(
     el.querySelectorAll<HTMLSpanElement>('[data-cell-id]')
@@ -71,6 +103,9 @@ type Selection = {
   end_offset: number;
 };
 
+/**
+ * Returns inferred default selection, when the actual selection is not inside a valid cell
+ */
 const getDefaultSelection = (el: HTMLElement): Selection => {
   const cell = el.querySelector<HTMLElement>('[data-cell-id]');
   const cellId = getCellId(cell);
@@ -91,6 +126,9 @@ const getDefaultSelection = (el: HTMLElement): Selection => {
   };
 };
 
+/**
+ * Returns proper selection from within a range of cells.
+ */
 const getProperSelection = (): Selection => {
   const selection = document.getSelection();
   if (!selection) {
@@ -118,6 +156,9 @@ const getProperSelection = (): Selection => {
   };
 };
 
+/**
+ * Returns either the proper or the inferred default seleciton
+ */
 const getBlockSelection = (el: HTMLElement): Selection =>
   getIsOutOfCell(el) ? getDefaultSelection(el) : getProperSelection();
 
@@ -127,9 +168,21 @@ type Cell = {
   text: string;
 };
 
+/**
+ * Returns all cell elements within the specified block element
+ */
 const getCellElements = (el: HTMLElement): HTMLElement[] =>
   Array.from(el.querySelectorAll<HTMLSpanElement>('[data-cell-id]'));
 
+/**
+ * Returns inferred default cells, when the cell structure is not valid.
+ *
+ * Usual case is, due to invalid selection, block text is in a text node before
+ * the first cell.
+ *
+ * When shift deleting the contents of a block, we also have the case of there
+ * being no cells in the block at all.
+ */
 const getDefaultCells = (el: HTMLElement): Cell[] => {
   const cells = getCellElements(el);
   const id = cells.length === 0 ? el.id : getCellId(cells[0]);
@@ -147,6 +200,9 @@ const getDefaultCells = (el: HTMLElement): Cell[] => {
   ];
 };
 
+/**
+ * Takes data from a cell element and outputs a proper cell
+ */
 const cellElementToCell = (child: HTMLElement): Cell => {
   const modifiers: ('strong' | 'italic' | 'br')[] = [];
 
@@ -169,12 +225,22 @@ const cellElementToCell = (child: HTMLElement): Cell => {
   };
 };
 
+/**
+ * Returns proper cells from a block, when everything is valid.
+ */
 const getProperCells = (el: HTMLElement): Cell[] =>
   getCellElements(el).map((child) => cellElementToCell(child));
 
+/**
+ * Returns either proper or default inferred cells from a block, depending on
+ * block structure being valid or not.
+ */
 const getCells = (el: HTMLElement): Cell[] =>
   getIsOutOfCell(el) ? getDefaultCells(el) : getProperCells(el);
 
+/**
+ * Resolves command for a keyboard event preformed on a block, if any.
+ */
 const resolveCommand = (e: KeyboardEvent, el: HTMLElement) => {
   if (e.key === 'Backspace') {
     if (isAtStartOfBlock(el)) {
@@ -199,6 +265,9 @@ const resolveCommand = (e: KeyboardEvent, el: HTMLElement) => {
   }
 };
 
+/**
+ * Restores block selection from the structure given by backend
+ */
 const restoreSelection = (el: HTMLElement): void => {
   // if the block is the focused block, the backend will insert these data
   // attributes onto the containing element

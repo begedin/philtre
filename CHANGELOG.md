@@ -9,6 +9,7 @@
 - [FIX] Transform being applied to soon due to placeholder space character in new cells
 - [QA] Add blank `.credo.exs`
 - [REFACTOR] Make ContentEditable less hacky
+- [QA] Document ContentEditable
 
 ## 0.10.1
 

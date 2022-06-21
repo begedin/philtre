@@ -8,6 +8,7 @@
 - [REFACTOR] Introduce common StaticBlock component
 - [FIX] Transform being applied to soon due to placeholder space character in new cells
 - [QA] Add blank `.credo.exs`
+- [REFACTOR] Make ContentEditable less hacky
 
 ## 0.10.1
 

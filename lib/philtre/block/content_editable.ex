@@ -134,6 +134,7 @@ defmodule Philtre.Block.ContentEditable do
       data_selection_start_id: block.selection.start_id,
       data_selection_start_offset: block.selection.start_offset,
       id: block.id,
+      placeholder: "Type something",
       phx_hook: "ContentEditable",
       phx_target: myself
     }

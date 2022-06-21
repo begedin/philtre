@@ -34,10 +34,7 @@ describe('h1', () => {
     visitNew();
     block(1).focus().type('{moveToEnd}{enter}');
     block(2, 'p').focus().type('# ');
-    // cypress moves in to fast, so the first key press is sometimes lost.
-    // .wait(5) eliminates the chances of that
-    block(2, 'h1').focus().wait(5).type('New header');
-
+    block(2, 'h1').focus().type('New header');
     block(2, 'h1').should('contain.text', 'New header');
   });
 });

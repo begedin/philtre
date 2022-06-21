@@ -5,10 +5,10 @@ defmodule Philtre.Block.CodeTest do
 
   alias Philtre.Block.Code
 
-  describe "read_only" do
+  describe "render_static" do
     test "renders" do
       rendered =
-        render_component(&Code.read_only/1,
+        render_component(&Code.render_static/1,
           block: %Code{
             content:
               Enum.join(

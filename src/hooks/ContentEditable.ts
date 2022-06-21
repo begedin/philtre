@@ -2,10 +2,21 @@ import { ViewHook } from './types';
 import { getTarget } from './utils';
 
 /**
- * Resolves closest cell element to the specified node or dom element.
- * This could be the specified record itself, or a parent, or a child.
+ * Used to match the closest cell from selection anchor or offset node.
+ *
+ * Reason for this is, when moving selection using hotkeys, we can end up in a
+ * text node within the block, but outside the cell.
+ *
+ * This usually happens on a new block, or close to the end of the cell.
+ *
+ * When we serialize the selection to send to backend, we want to match it to
+ * the closest cell.
  */
-const resolveCell = (node: Node | HTMLElement): HTMLElement | null => {
+const resolveCell = (node: Node | HTMLElement | null): HTMLElement | null => {
+  if (node === null) {
+    return null;
+  }
+
   // the current node is the cell we are looking for
   if ('dataset' in node && node.dataset.cellId) {
     return node;
@@ -25,44 +36,112 @@ const resolveCell = (node: Node | HTMLElement): HTMLElement | null => {
   return null;
 };
 
-const getChildIndex = (node: Node): number =>
-  Array.prototype.indexOf.call(node.parentNode?.children || [], node);
-
-const isAtStartOfBlock = (): boolean => {
-  const selection = document.getSelection();
-  if (!selection) {
-    return false;
-  }
-  const node = selection.anchorNode;
-  if (!node) {
-    return false;
-  }
-  const indexedNode = node.nodeType === Node.TEXT_NODE ? node.parentNode : node;
-  if (!indexedNode) {
-    return false;
-  }
-  return getChildIndex(indexedNode) === 0 && selection.anchorOffset == 0;
+/**
+ * Used to determine whether the current selection is at start of block
+ * That means 0 offset in first cell.
+ *
+ * We use the selection and cell serializer functions to determine this.
+ */
+const isAtStartOfBlock = (el: HTMLElement): boolean => {
+  const selection = getBlockSelection(el);
+  const cells = getCells(el);
+  return selection.start_id === cells[0].id && selection.start_offset === 0;
 };
 
-const getSelection = () => {
+/**
+ * Type guard to determine whether the specified node is an element
+ */
+const isElement = (node: Node): node is HTMLElement =>
+  node.nodeType === node.ELEMENT_NODE;
+
+/**
+ * Resolves cell id from an anchor node
+ */
+const getCellId = (node: Node | null): string | null => {
+  if (!node) {
+    return null;
+  }
+  if (!isElement(node)) {
+    return null;
+  }
+  if (!node.dataset.cellId) {
+    return null;
+  }
+  return node.dataset.cellId;
+};
+
+const IRREGULAR_WHITESPACE = ' ';
+/**
+ * Content editable will sometimes insert &nbsp; or a special space character.
+ *
+ * When looking at el.innerText, this is given as IRREGULAR_WHITESPACE
+ *
+ * We need to replace it with regular space when sending to backend.
+ */
+const sanitizeText = (text: string) => text.replace(IRREGULAR_WHITESPACE, ' ');
+
+/**
+ * Used to determine whether current selection is outside a cell whilw we've already been typing .
+ *
+ * This usually needs at the start of the block, before the first cell.
+ */
+const getIsOutOfCell = (el: HTMLElement): boolean => {
+  const cells = Array.from(
+    el.querySelectorAll<HTMLSpanElement>('[data-cell-id]')
+  );
+
+  return (
+    cells.length === 0 ||
+    (cells.length === 1 && cells[0].innerText === '' && el.innerText !== '')
+  );
+};
+
+type Selection = {
+  start_id: string;
+  end_id: string;
+  start_offset: number;
+  end_offset: number;
+};
+
+/**
+ * Returns inferred default selection, when the actual selection is not inside a valid cell
+ */
+const getDefaultSelection = (el: HTMLElement): Selection => {
+  const cell = el.querySelector<HTMLElement>('[data-cell-id]');
+  const cellId = getCellId(cell);
+  const offset = el.innerText.length;
+  if (!cell || !cellId) {
+    return {
+      start_id: el.id,
+      end_id: el.id,
+      start_offset: offset,
+      end_offset: offset,
+    };
+  }
+  return {
+    start_id: cellId,
+    start_offset: offset,
+    end_id: cellId,
+    end_offset: offset,
+  };
+};
+
+/**
+ * Returns proper selection from within a range of cells.
+ */
+const getProperSelection = (): Selection => {
   const selection = document.getSelection();
-  if (!selection || !selection.anchorNode || !selection.focusNode) {
-    return;
+  if (!selection) {
+    throw new Error('No selection during update');
   }
-
   const startElement = resolveCell(selection.anchorNode);
+  const startId = getCellId(startElement);
   const endElement = resolveCell(selection.focusNode);
+  const endId = getCellId(endElement);
 
-  if (!startElement) {
-    return null;
+  if (!startId || !endId) {
+    throw new Error('Invalid selection');
   }
-
-  if (!endElement) {
-    return null;
-  }
-
-  const startId = startElement.dataset.cellId;
-  const endId = endElement.dataset.cellId;
 
   const [startOffset, endOffset] =
     selection.anchorOffset < selection.focusOffset
@@ -77,41 +156,94 @@ const getSelection = () => {
   };
 };
 
+/**
+ * Returns either the proper or the inferred default seleciton
+ */
+const getBlockSelection = (el: HTMLElement): Selection =>
+  getIsOutOfCell(el) ? getDefaultSelection(el) : getProperSelection();
+
 type Cell = {
   id: string;
   modifiers: ('strong' | 'italic' | 'br')[];
   text: string;
 };
 
-const getCells = (el: HTMLElement): Cell[] => {
-  const cells = el.querySelectorAll<HTMLSpanElement>('[data-cell-id]');
+/**
+ * Returns all cell elements within the specified block element
+ */
+const getCellElements = (el: HTMLElement): HTMLElement[] =>
+  Array.from(el.querySelectorAll<HTMLSpanElement>('[data-cell-id]'));
 
-  return Array.from(cells).map((child) => {
-    const modifiers: ('strong' | 'italic' | 'br')[] = [];
+/**
+ * Returns inferred default cells, when the cell structure is not valid.
+ *
+ * Usual case is, due to invalid selection, block text is in a text node before
+ * the first cell.
+ *
+ * When shift deleting the contents of a block, we also have the case of there
+ * being no cells in the block at all.
+ */
+const getDefaultCells = (el: HTMLElement): Cell[] => {
+  const cells = getCellElements(el);
+  const id = cells.length === 0 ? el.id : getCellId(cells[0]);
+  if (!id) {
+    throw new Error('Completely invalid block');
+  }
+  const text = sanitizeText(el.innerText);
 
-    if (child.classList.contains('strong')) {
-      modifiers.push('strong');
-    }
-
-    if (child.classList.contains('italic')) {
-      modifiers.push('italic');
-    }
-
-    if (child.classList.contains('br')) {
-      modifiers.push('br');
-    }
-
-    return {
-      id: child.dataset.cellId || '',
-      text: child.innerText.replace(' ', ' '),
-      modifiers,
-    };
-  });
+  return [
+    {
+      id,
+      text,
+      modifiers: [],
+    },
+  ];
 };
 
-const resolveCommand = (e: KeyboardEvent) => {
+/**
+ * Takes data from a cell element and outputs a proper cell
+ */
+const cellElementToCell = (child: HTMLElement): Cell => {
+  const modifiers: ('strong' | 'italic' | 'br')[] = [];
+
+  if (child.classList.contains('strong')) {
+    modifiers.push('strong');
+  }
+
+  if (child.classList.contains('italic')) {
+    modifiers.push('italic');
+  }
+
+  if (child.classList.contains('br')) {
+    modifiers.push('br');
+  }
+
+  return {
+    id: child.dataset.cellId || '',
+    text: sanitizeText(child.innerText),
+    modifiers,
+  };
+};
+
+/**
+ * Returns proper cells from a block, when everything is valid.
+ */
+const getProperCells = (el: HTMLElement): Cell[] =>
+  getCellElements(el).map((child) => cellElementToCell(child));
+
+/**
+ * Returns either proper or default inferred cells from a block, depending on
+ * block structure being valid or not.
+ */
+const getCells = (el: HTMLElement): Cell[] =>
+  getIsOutOfCell(el) ? getDefaultCells(el) : getProperCells(el);
+
+/**
+ * Resolves command for a keyboard event preformed on a block, if any.
+ */
+const resolveCommand = (e: KeyboardEvent, el: HTMLElement) => {
   if (e.key === 'Backspace') {
-    if (isAtStartOfBlock()) {
+    if (isAtStartOfBlock(el)) {
       return 'backspace_from_start';
     }
   }
@@ -133,6 +265,9 @@ const resolveCommand = (e: KeyboardEvent) => {
   }
 };
 
+/**
+ * Restores block selection from the structure given by backend
+ */
 const restoreSelection = (el: HTMLElement): void => {
   // if the block is the focused block, the backend will insert these data
   // attributes onto the containing element
@@ -154,6 +289,11 @@ const restoreSelection = (el: HTMLElement): void => {
 
   // we know the element needs to be focused, just not fully clear where yet
   el.focus();
+
+  // if the element is blank, we can't focus on the cell, so we keep focus on the contenteditable
+  if (el.innerText === '') {
+    return;
+  }
 
   const selection = el.ownerDocument.getSelection();
   if (!selection) {
@@ -201,7 +341,7 @@ export const ContentEditable = {
 
       savePromise = new Promise((resolve) => {
         const cells = getCells(el);
-        const selection = getSelection();
+        const selection = getBlockSelection(el);
         const params = { selection, cells };
 
         saveRef = window.setTimeout(async () => {
@@ -210,12 +350,12 @@ export const ContentEditable = {
             savePromise = null;
             resolve();
           });
-        }, 300);
+        }, 50);
       });
     });
 
     el.addEventListener('keydown', async (event: KeyboardEvent) => {
-      const command = resolveCommand(event);
+      const command = resolveCommand(event, el);
 
       if (!command) {
         return;
@@ -223,19 +363,20 @@ export const ContentEditable = {
 
       event.preventDefault();
 
-      const selection = getSelection();
-
       if (savePromise && command) {
         await savePromise;
       }
 
+      const selection = getBlockSelection(el);
       this.pushEventTo(getTarget(el), command, { selection });
     });
 
     el.addEventListener('paste', (event: ClipboardEvent) => {
       event.preventDefault();
       const target = getTarget(el);
-      this.pushEventTo(target, 'paste_blocks', { selection: getSelection() });
+      this.pushEventTo(target, 'paste_blocks', {
+        selection: getBlockSelection(el),
+      });
     });
 
     restoreSelection(el);

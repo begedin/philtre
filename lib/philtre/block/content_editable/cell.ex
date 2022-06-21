@@ -9,7 +9,7 @@ defmodule Philtre.Block.ContentEditable.Cell do
 
   alias Philtre.Editor.Utils
 
-  defstruct id: Utils.new_id(), modifiers: [], text: " "
+  defstruct id: Utils.new_id(), modifiers: [], text: ""
 
   @type id :: String.t()
 
@@ -23,7 +23,7 @@ defmodule Philtre.Block.ContentEditable.Cell do
     %__MODULE__{
       id: Utils.new_id(),
       modifiers: [],
-      text: " "
+      text: ""
     }
   end
 end

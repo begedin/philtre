@@ -18,40 +18,15 @@ defmodule Philtre.Editor.Engine do
           ContentEditable.t(),
           %{required(:selection) => map, required(:cells) => list(map)}
         ) :: Editor.t()
-  def update(%Editor{} = editor, %ContentEditable{} = block, %{selection: nil, cells: []}) do
-    %Cell{} = cell = Cell.new()
-
-    %ContentEditable{} =
-      new_block =
-      block
-      |> Map.put(:cells, [cell])
-      |> Map.put(:selection, Selection.new_start_of(cell))
-      |> resolve_transform()
-
-    Editor.replace_block(editor, block, [new_block])
-  end
-
-  def update(%Editor{} = editor, %ContentEditable{cells: old_cells} = block, %{
+  def update(%Editor{} = editor, %ContentEditable{} = block, %{
         selection: selection,
         cells: new_cells
       }) do
     # the new cells are content received from the client side of the ContentEditable hook
     # and should be the exact correct content of the updated block
-    new_cells =
+    updated_cells =
       Enum.map(new_cells, fn %{"id" => id, "modifiers" => modifiers, "text" => text} ->
         %Cell{id: id, modifiers: modifiers, text: text}
-      end)
-
-    # the remainder here probably isn't necessary and updated cells should just equal to new cells
-    # but just in case, until more testing is added, we do not fully trust the frontend and instead
-    # manually match old with new cell records to update them
-    new_ids = Enum.map(new_cells, & &1.id)
-    remaining_cells = Enum.filter(old_cells, &(&1.id in new_ids))
-
-    updated_cells =
-      Enum.map(remaining_cells, fn %Cell{} = cell ->
-        %Cell{} = params = Enum.find(new_cells, &(&1.id === cell.id))
-        %{cell | modifiers: params.modifiers, text: params.text}
       end)
 
     new_block = resolve_transform(%{block | cells: updated_cells, selection: selection})
@@ -449,7 +424,7 @@ defmodule Philtre.Editor.Engine do
   defp empty_block?(%ContentEditable{cells: [cell]}), do: empty_cell?(cell)
   defp empty_block?(%ContentEditable{}), do: false
 
-  defp empty_cell?(%Cell{text: t}) when t in ["", nil, " ", "&nbsp;", " "], do: true
+  defp empty_cell?(%Cell{text: ""}), do: true
   defp empty_cell?(%Cell{}), do: false
 
   @spec split_cell(Cell.t(), non_neg_integer()) :: {Cell.t(), Cell.t()}
@@ -554,19 +529,19 @@ defmodule Philtre.Editor.Engine do
 
   @transforms [
     %{
-      prefixes: ["* ", "* "],
+      prefixes: ["* "],
       kind: "li"
     },
     %{
-      prefixes: ["# ", "# "],
+      prefixes: ["# "],
       kind: "h1"
     },
     %{
-      prefixes: ["## ", "## "],
+      prefixes: ["## "],
       kind: "h2"
     },
     %{
-      prefixes: ["### ", "### "],
+      prefixes: ["### "],
       kind: "h3"
     },
     %{
@@ -574,7 +549,7 @@ defmodule Philtre.Editor.Engine do
       kind: "pre"
     },
     %{
-      prefixes: ["> ", "> "],
+      prefixes: ["> "],
       kind: "blockquote"
     },
     %{
@@ -654,7 +629,7 @@ defmodule Philtre.Editor.Engine do
 
     new_text =
       case replaced do
-        "" -> " "
+        "" -> ""
         other -> other
       end
 

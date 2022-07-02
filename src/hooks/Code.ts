@@ -28,8 +28,19 @@ const setupHighlight = (el: HTMLElement) => {
   }
 
   const highlightEl = getHiglightEl(el);
+
+  const toRemove: string[] = [];
+  highlightEl.classList.forEach((c) => {
+    if (c.startsWith('lang')) {
+      toRemove.push(c);
+    }
+  });
+
+  toRemove.forEach((c) => highlightEl.classList.remove(c));
   highlightEl.classList.add(`language-${language}`);
   highlightEl.classList.add(`lang-${language}`);
+
+  console.log('highlighting with', language);
 };
 
 const getCodeEl = (el: HTMLElement): HTMLTextAreaElement => {
@@ -78,5 +89,6 @@ export const Code = {
   },
   updated() {
     setupHighlight(this.el);
+    updateHighlight(this.el);
   },
 } as ViewHook;

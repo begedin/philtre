@@ -7,6 +7,7 @@
   border-radius: 0.3em;
   background: $colorDark;
   overflow-y: auto;
+  position: relative;
 
   .code-toolbar,
   .philtre__code__highlighted,
@@ -42,6 +43,30 @@
 
     &::spelling-error {
       text-decoration: none;
+    }
+  }
+
+  .philtre__code__language {
+    display: none;
+  }
+
+  &:hover {
+    .philtre__code__language {
+      display: block;
+      position: absolute;
+      right: 0;
+      top: 0%;
+      padding-top: 0.5em;
+      padding-right: 0.5em;
+      z-index: 1;
+
+      form { margin: 0; }
+
+      select {
+        padding: 0.5em;;
+        background-color: transparent;
+        color: white;
+      }
     }
   }
 }

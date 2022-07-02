@@ -31,6 +31,12 @@ defmodule Philtre.PageTest do
       <.live_component module={Page} id={@editor.id} editor={@editor} />
       """
     end
+
+    @doc false
+    @impl Phoenix.LiveView
+    def handle_info({:update, %Editor{} = editor}, socket) do
+      {:noreply, assign(socket, :editor, editor)}
+    end
   end
 
   defp get_editor(view_pid) when is_pid(view_pid) do
@@ -60,19 +66,19 @@ defmodule Philtre.PageTest do
 
     %Editor{blocks: [_h1, p]} = get_editor(view.pid)
 
-    assert [{"h1", _, _}, {"p", _, _}, {"p", _, _}] =
-             view
-             |> element(~s|button[phx-click="add_block"][phx-value-block_id=#{p.id}"|)
-             |> render_click()
-             |> get_rendered_blocks()
+    view
+    |> element(~s|button[phx-click="add_block"][phx-value-block_id=#{p.id}"|)
+    |> render_click()
+
+    assert [{"h1", _, _}, {"p", _, _}, {"p", _, _}] = view |> render() |> get_rendered_blocks()
 
     %Editor{blocks: [_h1, _p, p_new]} = get_editor(view.pid)
 
-    assert [{"h1", _, _}, {"p", _, _}] =
-             view
-             |> element(~s|button[phx-click="remove_block"][phx-value-block_id=#{p_new.id}"|)
-             |> render_click()
-             |> get_rendered_blocks()
+    view
+    |> element(~s|button[phx-click="remove_block"][phx-value-block_id=#{p_new.id}"|)
+    |> render_click()
+
+    assert [{"h1", _, _}, {"p", _, _}] = view |> render() |> get_rendered_blocks()
   end
 
   test "can shift focus between blocks", %{conn: conn} do

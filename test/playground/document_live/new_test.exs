@@ -112,4 +112,58 @@ defmodule Playground.DocumentLive.NewTest do
     assert Enum.count(editor.blocks) == 6
     assert Editor.text(editor) == "FFooBarooBarBaz"
   end
+
+  test "can save a code block with javascript", %{conn: conn} do
+    {:ok, view, html} = live(conn, "/documents/new")
+
+    {"p", p_attrs, [cell]} =
+      html
+      |> Floki.parse_document!()
+      |> Floki.find(".philtre-block")
+      |> Enum.at(-1)
+
+    block_id = p_attrs |> Map.new() |> Map.get("id")
+    {"span", cell_attrs, _content} = cell
+    cell_id = cell_attrs |> Map.new() |> Map.get("data-cell-id")
+
+    view
+    |> element(".philtre-block[id=#{block_id}")
+    |> render_hook("update", %{
+      "selection" => %{
+        "start_id" => cell_id,
+        "end_id" => cell_id,
+        "start_offset" => 5,
+        "end_offset" => 5
+      },
+      "cells" => [
+        %{
+          "id" => cell_id,
+          "modifiers" => [],
+          "text" => "/code"
+        }
+      ]
+    })
+
+    view |> element(".philtre__code form") |> render_change(%{"language" => "javascript"})
+
+    filename = UUID.uuid4()
+
+    assert view
+           |> element("form[phx-submit=save]")
+           |> render_submit(%{"filename" => filename})
+
+    assert content =
+             File.cwd!()
+             |> Path.join("playground/priv/documents")
+             |> Path.join("#{filename}.json")
+             |> File.read!()
+             |> Jason.decode!()
+
+    assert %{
+             "blocks" => [
+               %{"type" => "contenteditable", "data" => %{"kind" => "h1"}},
+               %{"type" => "code", "data" => %{"language" => "javascript"}}
+             ]
+           } = content
+  end
 end

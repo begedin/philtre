@@ -9,8 +9,9 @@ import {
 beforeEach(() => {
   deleteTestFiles();
 });
+
 describe('code', () => {
-  it('can save a page containing a code block', () => {
+  it('can save a page containing an elixir code block', () => {
     createCode();
     cy.get('.philtre__code textarea')
       .focus()
@@ -31,6 +32,34 @@ describe('code', () => {
     cy.get('textarea.philtre__code__editable').should(
       'have.text',
       'defmodule Foo do\n  @moduledoc false\nend'
+    );
+  });
+
+  it.only('can save a page containing a javascript code block', () => {
+    createCode();
+    cy.get('.philtre__code textarea')
+      .focus()
+      .type('{moveToStart}')
+      .type('const foo = () => false');
+
+    cy.get('.philtre__code')
+      .realHover()
+      .get('.philtre__code__language select')
+      .select('javascript');
+
+    const filename = savePage();
+    openFile(filename);
+
+    const expectedText = 'const foo = () => false';
+
+    cy.get('.philtre__code__highlighted.language-javascript').should(
+      'have.text',
+      expectedText
+    );
+
+    cy.get('textarea.philtre__code__editable').should(
+      'have.text',
+      expectedText
     );
   });
 

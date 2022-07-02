@@ -5,6 +5,7 @@
 - [FEATURE] Add Javascript support for code block
 - [FIX] Remove block functionatliy not actually being saved unless there is a 
   manual update to another block
+- [FIX] Move and rename `mix convert` -> `mix philtre.convert`
 
 ## 0.11.0
 

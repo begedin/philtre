@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Convert do
+defmodule Mix.Tasks.Philtre.Convert do
   @moduledoc """
   Handles conversion of old block formats to newer
   """

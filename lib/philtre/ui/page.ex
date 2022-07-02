@@ -152,6 +152,8 @@ defmodule Philtre.UI.Page do
 
   def handle_event("copy_blocks", %{"block_ids" => block_ids}, socket)
       when is_list(block_ids) do
+    Logger.debug("copy_blocks #{inspect(block_ids)}")
+
     blocks =
       socket.assigns.editor.blocks
       |> Enum.filter(&(&1.id in block_ids))
@@ -162,7 +164,7 @@ defmodule Philtre.UI.Page do
   end
 
   def handle_event("undo", %{}, socket) do
-    Logger.info("undo")
+    Logger.debug("undo")
 
     case Map.get(socket.assigns, :undo_history) do
       [] ->
@@ -184,7 +186,7 @@ defmodule Philtre.UI.Page do
   end
 
   def handle_event("redo", %{}, socket) do
-    Logger.info("redo")
+    Logger.debug("redo")
 
     case Map.get(socket.assigns, :redo_history) do
       [] ->
@@ -206,18 +208,27 @@ defmodule Philtre.UI.Page do
   end
 
   def handle_event("add_block", %{"block_id" => block_id}, socket) do
+    Logger.debug("add_block #{inspect(block_id)}")
+
     %{id: id} = block = Enum.find(socket.assigns.editor.blocks, &(&1.id === block_id))
     %Editor{} = new_editor = Engine.add_block(socket.assigns.editor, block)
     new_index = Enum.find_index(new_editor.blocks, &(&1.id === id)) + 1
     %{id: new_id} = Enum.at(new_editor.blocks, new_index)
-    {:noreply, assign(socket, editor: new_editor, focused_id: new_id)}
+
+    send(self(), {:update, new_editor})
+
+    {:noreply, assign(socket, focused_id: new_id)}
   end
 
   def handle_event("remove_block", %{"block_id" => block_id}, socket) do
+    Logger.debug("remove_block #{inspect(block_id)}")
+
     new_blocks = Enum.reject(socket.assigns.editor.blocks, &(&1.id === block_id))
     new_editor = %{socket.assigns.editor | blocks: new_blocks}
 
-    {:noreply, assign(socket, :editor, new_editor)}
+    send(self(), {:update, new_editor})
+
+    {:noreply, socket}
   end
 
   def handle_event("focus_previous", %{}, socket) do

@@ -3,6 +3,8 @@
 ## 0.11.1
 
 - [FEATURE] Add Javascript support for code block
+- [FIX] Remove block functionatliy not actually being saved unless there is a 
+  manual update to another block
 
 ## 0.11.0
 

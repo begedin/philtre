@@ -29,7 +29,7 @@ defmodule Philtre.Editor do
             }
           ],
           selection: %ContentEditable.Selection{},
-          type: "h1"
+          kind: "h1"
         },
         %ContentEditable{
           id: Utils.new_id(),
@@ -41,7 +41,7 @@ defmodule Philtre.Editor do
             }
           ],
           selection: %ContentEditable.Selection{},
-          type: "p"
+          kind: "p"
         }
         # Uncomment to test table
         # %Philtre.Block.Table{

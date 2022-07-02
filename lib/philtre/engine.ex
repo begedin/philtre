@@ -140,7 +140,7 @@ defmodule Philtre.Editor.Engine do
     new_block = %ContentEditable{
       cells: [cell],
       id: Utils.new_id(),
-      type: "p",
+      kind: "p",
       selection: Selection.new_start_of(cell)
     }
 
@@ -154,10 +154,10 @@ defmodule Philtre.Editor.Engine do
   This is the result of the user usually hitting Shift + Enter.
   """
   @spec split_line(Editor.t(), ContentEditable.t(), %{required(:selection) => map}) :: Editor.t()
-  def split_line(%Editor{} = editor, %ContentEditable{type: type} = block, %{
+  def split_line(%Editor{} = editor, %ContentEditable{kind: kind} = block, %{
         selection: %Selection{} = selection
       })
-      when type in ["p", "pre", "blockquote"] do
+      when kind in ["p", "pre", "blockquote"] do
     new_block =
       block
       |> set_selection(selection)
@@ -235,8 +235,8 @@ defmodule Philtre.Editor.Engine do
       |> remove_selection()
       |> split_at_selection()
 
-    new_type =
-      case block.type do
+    new_kind =
+      case block.kind do
         "li" -> "li"
         _ -> "p"
       end
@@ -257,7 +257,7 @@ defmodule Philtre.Editor.Engine do
         block_after
       end
 
-    block_after = %{block_after | type: new_type}
+    block_after = %{block_after | kind: new_kind}
 
     Editor.replace_block(editor, block, [block_before, block_after])
   end
@@ -451,15 +451,15 @@ defmodule Philtre.Editor.Engine do
   end
 
   @spec backspace_from_start(Editor.t(), ContentEditable.t()) :: Editor.t()
-  def backspace_from_start(%Editor{} = editor, %ContentEditable{type: "p"} = block) do
+  def backspace_from_start(%Editor{} = editor, %ContentEditable{kind: "p"} = block) do
     merge_previous(editor, block)
   end
 
-  def backspace_from_start(%Editor{} = editor, %ContentEditable{type: "h1"} = block) do
+  def backspace_from_start(%Editor{} = editor, %ContentEditable{kind: "h1"} = block) do
     convert(editor, block, "h2")
   end
 
-  def backspace_from_start(%Editor{} = editor, %ContentEditable{type: "h2"} = block) do
+  def backspace_from_start(%Editor{} = editor, %ContentEditable{kind: "h2"} = block) do
     convert(editor, block, "h3")
   end
 
@@ -468,12 +468,12 @@ defmodule Philtre.Editor.Engine do
   end
 
   @spec convert(Editor.t(), ContentEditable.t(), String.t()) :: Editor.t()
-  defp convert(%Editor{} = editor, %ContentEditable{} = block, type)
-       when type in ["p", "h1", "h2", "h3"] do
+  defp convert(%Editor{} = editor, %ContentEditable{} = block, kind)
+       when kind in ["p", "h1", "h2", "h3"] do
     index = Enum.find_index(editor.blocks, &(&1.id === block.id))
 
     if index >= 0 do
-      new_block = %{block | type: type}
+      new_block = %{block | kind: kind}
       new_blocks = List.replace_at(editor.blocks, index, new_block)
       %{editor | id: Utils.new_id(), blocks: new_blocks}
     else
@@ -598,12 +598,11 @@ defmodule Philtre.Editor.Engine do
 
   defp transform(%ContentEditable{} = self, %{kind: kind, prefixes: prefixes}) do
     {new_cells, shift} = drop_leading(self.cells, prefixes)
-    type = kind
 
     %{
       self
       | id: Utils.new_id(),
-        type: type,
+        kind: kind,
         cells: new_cells,
         selection: shift(self.selection, -shift)
     }

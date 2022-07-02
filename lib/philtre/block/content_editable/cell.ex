@@ -26,4 +26,12 @@ defmodule Philtre.Block.ContentEditable.Cell do
       text: ""
     }
   end
+
+  def serialize(%__MODULE__{id: id, modifiers: modifiers, text: text}) do
+    %{"id" => id, "modifiers" => modifiers, "text" => text}
+  end
+
+  def normalize(%{"id" => id, "modifiers" => modifiers, "text" => text}) do
+    %__MODULE__{id: id, modifiers: modifiers, text: text}
+  end
 end

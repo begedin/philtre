@@ -25,6 +25,7 @@ defmodule Philtre.Block.ContentEditable do
   use Phoenix.Component
   use Phoenix.HTML
 
+  alias Philtre.Block
   alias Philtre.Block.ContentEditable
   alias Philtre.Block.ContentEditable.Cell
   alias Philtre.Block.ContentEditable.Selection
@@ -33,11 +34,13 @@ defmodule Philtre.Block.ContentEditable do
 
   require Logger
 
+  @behaviour Block
+
   # struct
 
   defstruct cells: [],
             id: Utils.new_id(),
-            type: "p",
+            kind: "p",
             selection: %Selection{}
 
   @type id :: String.t()
@@ -45,13 +48,33 @@ defmodule Philtre.Block.ContentEditable do
   @type t :: %__MODULE__{
           id: id,
           cells: list(Cell.t()),
-          type: String.t(),
+          kind: String.t(),
           selection: Selection.t()
         }
 
+  @impl Block
+  def id(%__MODULE__{id: id}), do: id
+
+  @impl Block
+  def type(%__MODULE__{}), do: "contenteditable"
+
+  @impl Block
+  def data(%__MODULE__{cells: cells, kind: kind}) do
+    %{"cells" => Enum.map(cells, &Cell.serialize/1), "kind" => kind}
+  end
+
+  @impl Block
+  def normalize(id, %{"kind" => kind, "cells" => cells}) do
+    %__MODULE__{
+      id: id,
+      kind: kind,
+      cells: Enum.map(cells, &Cell.normalize/1)
+    }
+  end
+
   # component
 
-  def render_live(%{block: %__MODULE__{type: "p"}} = assigns) do
+  def render_live(%{block: %__MODULE__{kind: "p"}} = assigns) do
     ~H"""
     <p {attrs(@block, @selected, @myself)}>
       <.content block={@block} />
@@ -59,13 +82,13 @@ defmodule Philtre.Block.ContentEditable do
     """
   end
 
-  def render_live(%{block: %__MODULE__{type: "pre"}} = assigns) do
+  def render_live(%{block: %__MODULE__{kind: "pre"}} = assigns) do
     ~H"""
     <pre {attrs(@block, @selected, @myself)}><.content block={@block} /></pre>
     """
   end
 
-  def render_live(%{block: %__MODULE__{type: "h1"}} = assigns) do
+  def render_live(%{block: %__MODULE__{kind: "h1"}} = assigns) do
     ~H"""
     <h1 {attrs(@block, @selected, @myself)}>
       <.content block={@block} />
@@ -73,7 +96,7 @@ defmodule Philtre.Block.ContentEditable do
     """
   end
 
-  def render_live(%{block: %__MODULE__{type: "h2"}} = assigns) do
+  def render_live(%{block: %__MODULE__{kind: "h2"}} = assigns) do
     ~H"""
     <h2 {attrs(@block, @selected, @myself)}>
       <.content block={@block} />
@@ -81,7 +104,7 @@ defmodule Philtre.Block.ContentEditable do
     """
   end
 
-  def render_live(%{block: %__MODULE__{type: "h3"}} = assigns) do
+  def render_live(%{block: %__MODULE__{kind: "h3"}} = assigns) do
     ~H"""
     <h3 {attrs(@block, @selected, @myself)}>
       <.content block={@block} />
@@ -89,7 +112,7 @@ defmodule Philtre.Block.ContentEditable do
     """
   end
 
-  def render_live(%{block: %__MODULE__{type: "blockquote"}} = assigns) do
+  def render_live(%{block: %__MODULE__{kind: "blockquote"}} = assigns) do
     ~H"""
     <blockquote {attrs(@block, @selected, @myself)}>
       <.content block={@block} />
@@ -97,7 +120,7 @@ defmodule Philtre.Block.ContentEditable do
     """
   end
 
-  def render_live(%{block: %__MODULE__{type: "li"}} = assigns) do
+  def render_live(%{block: %__MODULE__{kind: "li"}} = assigns) do
     ~H"""
     <ul>
       <li {attrs(@block, @selected, @myself)}>
@@ -140,43 +163,43 @@ defmodule Philtre.Block.ContentEditable do
     }
   end
 
-  def render_static(%{block: %__MODULE__{type: "p"}} = assigns) do
+  def render_static(%{block: %__MODULE__{kind: "p"}} = assigns) do
     ~H"""
     <p><.content block={@block} /></p>
     """
   end
 
-  def render_static(%{block: %__MODULE__{type: "pre"}} = assigns) do
+  def render_static(%{block: %__MODULE__{kind: "pre"}} = assigns) do
     ~H"""
     <pre><.content block={@block} /></pre>
     """
   end
 
-  def render_static(%{block: %__MODULE__{type: "h1"}} = assigns) do
+  def render_static(%{block: %__MODULE__{kind: "h1"}} = assigns) do
     ~H"""
     <h1><.content block={@block} /></h1>
     """
   end
 
-  def render_static(%{block: %__MODULE__{type: "h2"}} = assigns) do
+  def render_static(%{block: %__MODULE__{kind: "h2"}} = assigns) do
     ~H"""
     <h2><.content block={@block} /></h2>
     """
   end
 
-  def render_static(%{block: %__MODULE__{type: "h3"}} = assigns) do
+  def render_static(%{block: %__MODULE__{kind: "h3"}} = assigns) do
     ~H"""
     <h3><.content block={@block} /></h3>
     """
   end
 
-  def render_static(%{block: %__MODULE__{type: "blockquote"}} = assigns) do
+  def render_static(%{block: %__MODULE__{kind: "blockquote"}} = assigns) do
     ~H"""
     <blockquote><.content block={@block} /></blockquote>
     """
   end
 
-  def render_static(%{block: %__MODULE__{type: "li"}} = assigns) do
+  def render_static(%{block: %__MODULE__{kind: "li"}} = assigns) do
     ~H"""
     <ul><li><.content block={@block} /></li></ul>
     """

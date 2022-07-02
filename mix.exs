@@ -2,7 +2,7 @@ defmodule Philtre.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/begedin/philtre"
-  @version "0.10.2"
+  @version "0.11.0"
 
   def project do
     [
@@ -19,7 +19,8 @@ defmodule Philtre.MixProject do
       ],
       package: package(),
       docs: docs(),
-      source_url: @source_url
+      source_url: @source_url,
+      dialyzer: [plt_add_apps: [:mix]]
     ]
   end
 

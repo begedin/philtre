@@ -28,7 +28,7 @@ Add it to your dependencies in `mix.exs`:
 ```elixir
 deps: [
   # ...
-  {:philtre, "~> 0.10"}
+  {:philtre, "~> 0.11.0"}
   # ...
 ]
 ```

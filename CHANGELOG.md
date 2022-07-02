@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.11.1
+
+- [FEATURE] Add Javascript support for code block
+
 ## 0.11.0
 
 - [FEATURE] New, more general block json format

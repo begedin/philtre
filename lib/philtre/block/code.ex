@@ -45,18 +45,32 @@ defmodule Philtre.Block.Code do
     <div
       class="philtre__code"
       data-block
-      data-language="elixir"
+      data-language={@block.language}
       id={@block.id}
       phx-hook="Code"
       phx-update="ignore"
       phx-target={@myself}
     >
+      <.language language={@block.language} myself={@myself} />
       <pre><code class="philtre__code__highlighted"><%= @block.content %></code></pre>
       <textarea
         class="philtre__code__editable"
         spellcheck="false"
         autofocus={@block.focused}
         rows={rows(@block.content)}><%= @block.content %></textarea>
+    </div>
+    """
+  end
+
+  defp language(%{} = assigns) do
+    ~H"""
+    <div class="philtre__code__language">
+      <form phx-change="set_language" phx-target={@myself}>
+        <select name="language" value={@language}>
+          <option value="elixir">Elixir</option>
+          <option value="javascript">Javascript</option>
+        </select>
+      </form>
     </div>
     """
   end
@@ -73,9 +87,7 @@ defmodule Philtre.Block.Code do
 
   def handle_event("update", %{"value" => value}, socket) do
     new_block = %{socket.assigns.block | content: value}
-    index = Enum.find_index(socket.assigns.editor.blocks, &(&1.id === new_block.id))
-    new_blocks = List.replace_at(socket.assigns.editor.blocks, index, new_block)
-    new_editor = %{socket.assigns.editor | blocks: new_blocks}
+    new_editor = Editor.replace_block(socket.assigns.editor, socket.assigns.block, [new_block])
 
     send(self(), {:update, new_editor})
 
@@ -97,6 +109,17 @@ defmodule Philtre.Block.Code do
     }
 
     new_editor = Editor.replace_block(socket.assigns.editor, block, [block, new_block])
+
+    send(self(), {:update, new_editor})
+
+    {:noreply, socket}
+  end
+
+  def handle_event("set_language", %{"language" => language} = params, socket) do
+    Logger.debug("set_block: #{inspect(params)}")
+
+    new_block = %{socket.assigns.block | language: language}
+    new_editor = Editor.replace_block(socket.assigns.editor, socket.assigns.block, [new_block])
 
     send(self(), {:update, new_editor})
 

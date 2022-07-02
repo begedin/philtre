@@ -30,7 +30,7 @@ defmodule Playground.Documents do
   end
 
   def save_document(%Editor{} = editor, filename) when is_binary(filename) do
-    json = editor |> Editor.serialize() |> Jason.encode!()
+    json = editor |> Editor.serialize() |> Jason.encode!(pretty: true)
     filename |> ensure_json() |> file_path() |> File.write!(json)
   end
 

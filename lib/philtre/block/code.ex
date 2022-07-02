@@ -7,13 +7,36 @@ defmodule Philtre.Block.Code do
   """
   use Phoenix.Component
 
+  alias Philtre.Block
   alias Philtre.Block.ContentEditable
   alias Philtre.Editor
   alias Philtre.Editor.Utils
 
   require Logger
 
+  @behaviour Block
+
   defstruct id: nil, content: "", language: "elixir", focused: false
+
+  @impl Block
+  def id(%__MODULE__{id: id}), do: id
+
+  @impl Block
+  def type(%__MODULE__{}), do: "code"
+
+  @impl Block
+  def data(%__MODULE__{language: language, content: content}) do
+    %{"language" => language, "content" => content}
+  end
+
+  @impl Block
+  def normalize(id, %{"language" => language, "content" => content}) do
+    %__MODULE__{
+      id: id,
+      language: language,
+      content: content
+    }
+  end
 
   def render_live(assigns) do
     # data-language is used to get the language in the frontend hook, which is
@@ -68,7 +91,7 @@ defmodule Philtre.Block.Code do
 
     new_block = %ContentEditable{
       id: Utils.new_id(),
-      type: "p",
+      kind: "p",
       cells: [cell],
       selection: ContentEditable.Selection.new_start_of(cell)
     }

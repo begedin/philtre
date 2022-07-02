@@ -1,115 +1,144 @@
 {
   "blocks": [
     {
-      "content": [
-        {
-          "text": "This is the title of your page",
-          "modifiers": [],
-          "id": "72466d06-8a7b-49ed-0000-048005d57716"
-        }
-      ],
+      "data": {
+        "cells": [
+          {
+            "id": "72466d06-8a7b-49ed-0000-048005d57716",
+            "modifiers": [],
+            "text": "This is the title of your page"
+          }
+        ],
+        "kind": "h1"
+      },
       "id": "62c4e564-a0ad-44b1-bfa6-c34efbaad60f",
-      "type": "h1"
+      "type": "contenteditable"
     },
     {
-      "content": [
-        {
-          "text": "This is your first paragraph.",
-          "modifiers": [],
-          "id": "72466d06-8a7b-49ed-9a65-048088d57716"
-        }
-      ],
+      "data": {
+        "cells": [
+          {
+            "id": "72466d06-8a7b-49ed-9a65-048088d57716",
+            "modifiers": [],
+            "text": "This is your first paragraph."
+          }
+        ],
+        "kind": "p"
+      },
       "id": "046fcf5f-c5ed-4207-82b2-1eafc47c3cd0",
-      "type": "p"
+      "type": "contenteditable"
     },
     {
-      "content": [
-        {
-          "text": "It can have a list to",
-          "modifiers": [],
-          "id": "72466d06-8a7b-49ed-9a65-048005d57556"
-        }
-      ],
+      "data": {
+        "cells": [
+          {
+            "id": "72466d06-8a7b-49ed-9a65-048005d57556",
+            "modifiers": [],
+            "text": "It can have a list to"
+          }
+        ],
+        "kind": "p"
+      },
       "id": "7a3c9eed-08d2-4916-aa02-3ea24279e60b",
-      "type": "p"
+      "type": "contenteditable"
     },
     {
-      "content": [
-        {
-          "text": "for example",
-          "modifiers": [],
-          "id": "72466d06-8a7b-49ed-9a65-048005d57790"
-        }
-      ],
+      "data": {
+        "cells": [
+          {
+            "id": "72466d06-8a7b-49ed-9a65-048005d57790",
+            "modifiers": [],
+            "text": "for example"
+          }
+        ],
+        "kind": "li"
+      },
       "id": "e927338a-65f6-4b6d-a93a-983e1b7668f6",
-      "type": "li"
+      "type": "contenteditable"
     },
     {
-      "content": [
-        {
-          "text": "and another",
-          "modifiers": [],
-          "id": "72466d06-8a7b-49ed-9a65-048043d57716"
-        }
-      ],
+      "data": {
+        "cells": [
+          {
+            "id": "72466d06-8a7b-49ed-9a65-048043d57716",
+            "modifiers": [],
+            "text": "and another"
+          }
+        ],
+        "kind": "li"
+      },
       "id": "72466d06-8a7b-49ed-9a65-048005d57716",
-      "type": "li"
+      "type": "contenteditable"
     },
     {
-      "content": [
-        {
-          "text": "it can also do PRE",
-          "modifiers": [],
-          "id": "72466d06-8a7b-49ed-9a65-048022d57716"
-        }
-      ],
+      "data": {
+        "cells": [
+          {
+            "id": "72466d06-8a7b-49ed-9a65-048022d57716",
+            "modifiers": [],
+            "text": "it can also do PRE"
+          }
+        ],
+        "kind": "pre"
+      },
       "id": "3a5d9af2-1a41-4189-a5d9-bbe6ef121182",
-      "type": "pre"
+      "type": "contenteditable"
     },
     {
-      "content": [
-        {
-          "text": "and a blockquote",
-          "modifiers": [],
-          "id": "72466d06-8a7b-49ed-9a65-048000d57716"
-        }
-      ],
+      "data": {
+        "cells": [
+          {
+            "id": "72466d06-8a7b-49ed-9a65-048000d57716",
+            "modifiers": [],
+            "text": "and a blockquote"
+          }
+        ],
+        "kind": "blockquote"
+      },
       "id": "e5f04851-e0a3-4a06-a057-a9558699fbf1",
-      "type": "blockquote"
+      "type": "contenteditable"
     },
     {
-      "content": [
-        {
-          "text": "As well as other things.",
-          "type": "span",
-          "modifiers": [],
-          "id": "72466d06-8a7b-49ed-9a65-048405d57716"
-        }
-      ],
+      "data": {
+        "cells": [
+          {
+            "id": "72466d06-8a7b-49ed-9a65-048405d57716",
+            "modifiers": [],
+            "text": "As well as other things."
+          }
+        ],
+        "kind": "p"
+      },
       "id": "d91f3fdd-4182-4329-a38c-2b22e4fe85f5",
-      "type": "p"
+      "type": "contenteditable"
     },
     {
-      "content": [
-        {
-          "text": "A subheader",
-          "modifiers": [],
-          "id": "72466d06-8a7b-49ed-9a65-047005d57716"
-        }
-      ],
+      "data": {
+        "cells": [
+          {
+            "id": "72466d06-8a7b-49ed-9a65-047005d57716",
+            "modifiers": [],
+            "text": "A subheader"
+          }
+        ],
+        "kind": "h2"
+      },
       "id": "1770d81a-23aa-4988-836a-12664942f67c",
-      "type": "h2"
+      "type": "contenteditable"
     },
     {
-      "content": [
-        {
-          "text": "A subsubheader",
-          "modifiers": [],
-          "id": "72466d06-8a7b-49ed-9a65-048105d57716"
-        }
-      ],
+      "data": {
+        "cells": [
+          {
+            "id": "72466d06-8a7b-49ed-9a65-048105d57716",
+            "modifiers": [],
+            "text": "A subsubheader"
+          }
+        ],
+        "kind": "h3"
+      },
       "id": "bf16a035-3714-467c-bb9f-ebf704fca840",
-      "type": "h3"
+      "type": "contenteditable"
     }
   ],
   "id": "83fa4e43-e008-4770-9d6c-ee258cba97ec"

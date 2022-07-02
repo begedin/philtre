@@ -15,17 +15,17 @@ defmodule Playground.DocumentLive.EditTest do
       %ContentEditable{
         id: "1",
         cells: [%ContentEditable.Cell{id: "1-1", text: "Foo", modifiers: []}],
-        type: "h1"
+        kind: "h1"
       },
       %ContentEditable{
         id: "2",
         cells: [%ContentEditable.Cell{id: "2-1", text: "Bar", modifiers: []}],
-        type: "p"
+        kind: "p"
       },
       %ContentEditable{
         id: "3",
         cells: [%ContentEditable.Cell{id: "3-1", text: "Baz", modifiers: []}],
-        type: "p"
+        kind: "p"
       }
     ]
   }

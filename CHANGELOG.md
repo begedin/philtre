@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.11.0
+
+- [FEATURE] New, more general block json format
+
+### Notes
+
+A new format a block serializes into has been introduced. It's description is 
+available in the docs, unter the **outline** section.
+
+A task to convert from old format into new is also available. You can use it by 
+running 
+
+```
+mix philtre.convert path_where_your_files_are
+```
+
+If you need to manually convert, it should also be quite straightforward, from
+looking at the documentation.
+
+The reason for the new format is to support more generalized block structures 
+in the future.
+
 ## 0.10.2
 
 - [QA] Simplify Playground endpoint

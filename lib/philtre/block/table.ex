@@ -9,7 +9,31 @@ defmodule Philtre.Block.Table do
   """
   use Phoenix.Component
 
+  alias Philtre.Block
+
+  @behaviour Block
+
   defstruct id: nil, header_rows: [[""]], rows: [[""]]
+
+  @impl Block
+  def id(%__MODULE__{id: id}), do: id
+
+  @impl Block
+  def type(%__MODULE__{}), do: "table"
+
+  @impl Block
+  def data(%__MODULE__{header_rows: header_rows, rows: rows}) do
+    %{"header_rows" => header_rows, "rows" => rows}
+  end
+
+  @impl Block
+  def normalize(id, %{"header_rows" => header_rows, "rows" => rows}) do
+    %__MODULE__{
+      id: id,
+      header_rows: header_rows,
+      rows: rows
+    }
+  end
 
   def render_live(assigns) do
     ~H"""

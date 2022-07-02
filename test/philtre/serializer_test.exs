@@ -37,7 +37,7 @@ defmodule Editor.SerializerTest do
     test "is idempotent for contenteditable" do
       editable = %ContentEditable{
         id: "foo",
-        type: "pre",
+        kind: "pre",
         cells: [
           %Cell{id: "cell_foo", modifiers: ["strong"], text: "A cell"},
           %Cell{id: "cell_bar", modifiers: [], text: "Another cell"}

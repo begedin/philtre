@@ -2,7 +2,7 @@ defmodule Philtre.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/begedin/philtre"
-  @version "0.10.2"
+  @version "0.11.0"
 
   def project do
     [
@@ -19,7 +19,8 @@ defmodule Philtre.MixProject do
       ],
       package: package(),
       docs: docs(),
-      source_url: @source_url
+      source_url: @source_url,
+      dialyzer: [plt_add_apps: [:mix]]
     ]
   end
 
@@ -109,13 +110,17 @@ defmodule Philtre.MixProject do
         "README.md",
         "CHANGELOG.md",
         "LICENSE",
-        "proposals/extensible_components.md": [
+        "additional_docs/outline_json_format.md": [title: "Block JSON Format"],
+        "additional_docs/proposal_extensible_components.md": [
           title: "Extensible Components"
         ]
       ],
       groups_for_extras: [
+        Outlines: [
+          "additional_docs/outline_json_format.md"
+        ],
         Proposals: [
-          "proposals/extensible_components.md"
+          "additional_docs/proposal_extensible_components.md"
         ]
       ]
     ]

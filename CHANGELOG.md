@@ -4,7 +4,7 @@
 
 - [REWRITE] More agnostic block system where the ContentiEditable is a base
   block through which other blocks communicate
-- [FEATURE] Basic implementation for a list
+- [FEATURE] Basic implementation for a list - not release-ready yet
 
 ## 0.11.1
 

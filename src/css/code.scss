@@ -50,23 +50,20 @@
     display: none;
   }
 
-  &:hover {
-    .philtre__code__language {
-      display: block;
-      position: absolute;
-      right: 0;
-      top: 0%;
-      padding-top: 0.5em;
-      padding-right: 0.5em;
-      z-index: 1;
+  .philtre__code__language {
+    display: block;
+    position: absolute;
+    right: 0;
+    top: 0%;
+    z-index: 1;
+    font-size: 70%;
 
-      form { margin: 0; }
+    form { margin: 0; }
 
-      select {
-        padding: 0.5em;;
-        background-color: transparent;
-        color: white;
-      }
+    select {
+      padding: 0.5em;;
+      background-color: transparent;
+      color: white;
     }
   }
 }

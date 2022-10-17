@@ -29,7 +29,7 @@ defmodule Philtre.BlockRegistry do
     "## " => {ContentEditable, "h2"},
     "### " => {ContentEditable, "h3"},
     "```" => {ContentEditable, "pre"},
-    "> " => {ContentEditable, "blockquoute"}
+    "> " => {ContentEditable, "blockquote"}
   }
 
   def transforms, do: @transforms

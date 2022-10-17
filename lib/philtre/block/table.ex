@@ -10,6 +10,8 @@ defmodule Philtre.Block.Table do
   use Phoenix.Component
 
   alias Philtre.Block
+  alias Philtre.Block.ContentEditable.Selection
+  alias Philtre.Editor.Utils
 
   @behaviour Block
 
@@ -35,6 +37,7 @@ defmodule Philtre.Block.Table do
     }
   end
 
+  @impl Block
   def render_live(assigns) do
     ~H"""
     <div class="philtre__table" data-block>
@@ -149,6 +152,7 @@ defmodule Philtre.Block.Table do
     """
   end
 
+  @impl Block
   def render_static(%{} = assigns) do
     ~H"""
     <table>
@@ -315,4 +319,18 @@ defmodule Philtre.Block.Table do
 
   defp cell_count(%__MODULE__{rows: []}), do: 1
   defp cell_count(%__MODULE__{rows: [row | _]}), do: Enum.count(row)
+
+  @impl Block
+  def transform(%Block.ContentEditable{} = block) do
+    %__MODULE__{id: Utils.new_id(), rows: [Enum.map(block.cells, &String.trim(&1.text))]}
+  end
+
+  @impl Block
+  def set_selection(%__MODULE__{} = block, %Selection{}), do: block
+
+  @impl Block
+  def reduce(%__MODULE__{} = block), do: block
+
+  @impl Block
+  def cells(%__MODULE__{}), do: []
 end

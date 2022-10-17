@@ -6,15 +6,31 @@ defmodule Philtre.BlockRegistry do
 
   alias Philtre.Block.Code
   alias Philtre.Block.ContentEditable
+  alias Philtre.Block.List
   alias Philtre.Block.Table
 
   @structs_by_type %{
+    "code" => Code,
     "contenteditable" => ContentEditable,
-    "table" => Table,
-    "code" => Code
+    "list" => List,
+    "table" => Table
   }
 
   def struct_for_type(type) do
     Map.fetch!(@structs_by_type, type)
   end
+
+  @transforms %{
+    "/list" => List,
+    "/code" => Code,
+    "/table" => Table,
+    "* " => {ContentEditable, "li"},
+    "# " => {ContentEditable, "h1"},
+    "## " => {ContentEditable, "h2"},
+    "### " => {ContentEditable, "h3"},
+    "```" => {ContentEditable, "pre"},
+    "> " => {ContentEditable, "blockquoute"}
+  }
+
+  def transforms, do: @transforms
 end

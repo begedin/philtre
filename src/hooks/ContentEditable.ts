@@ -2,6 +2,13 @@ import { ViewHook } from './types';
 import { getTarget } from './utils';
 
 /**
+ * This hook can be used directly on a contenteditable,
+ * or a parent of a contenteditable
+ */
+const resolveContentEditabe = (el: HTMLElement) =>
+  el.contentEditable ? el : el.querySelector<HTMLElement>('[contenteditable]');
+
+/**
  * Used to match the closest cell from selection anchor or offset node.
  *
  * Reason for this is, when moving selection using hotkeys, we can end up in a
@@ -74,7 +81,7 @@ const IRREGULAR_WHITESPACE = ' ';
 /**
  * Content editable will sometimes insert &nbsp; or a special space character.
  *
- * When looking at el.innerText, this is given as IRREGULAR_WHITESPACE
+ * When looking at el.innerText, this is given as `IRREGULAR_WHITESPACE`
  *
  * We need to replace it with regular space when sending to backend.
  */
@@ -110,6 +117,9 @@ const getDefaultSelection = (el: HTMLElement): Selection => {
   const cell = el.querySelector<HTMLElement>('[data-cell-id]');
   const cellId = getCellId(cell);
   const offset = el.innerText.length;
+
+  console.log('getDefaultSelection', el, cell, cellId);
+
   if (!cell || !cellId) {
     return {
       start_id: el.id,
@@ -118,6 +128,7 @@ const getDefaultSelection = (el: HTMLElement): Selection => {
       end_offset: offset,
     };
   }
+
   return {
     start_id: cellId,
     start_offset: offset,
@@ -134,10 +145,13 @@ const getProperSelection = (): Selection => {
   if (!selection) {
     throw new Error('No selection during update');
   }
+
   const startElement = resolveCell(selection.anchorNode);
   const startId = getCellId(startElement);
   const endElement = resolveCell(selection.focusNode);
   const endId = getCellId(endElement);
+
+  console.log('getProperSelection', startElement, endElement);
 
   if (!startId || !endId) {
     throw new Error('Invalid selection');
@@ -164,7 +178,7 @@ const getBlockSelection = (el: HTMLElement): Selection =>
 
 type Cell = {
   id: string;
-  modifiers: ('strong' | 'italic' | 'br')[];
+  modifiers: ('bold' | 'italic' | 'br')[];
   text: string;
 };
 
@@ -204,10 +218,10 @@ const getDefaultCells = (el: HTMLElement): Cell[] => {
  * Takes data from a cell element and outputs a proper cell
  */
 const cellElementToCell = (child: HTMLElement): Cell => {
-  const modifiers: ('strong' | 'italic' | 'br')[] = [];
+  const modifiers: ('bold' | 'italic' | 'br')[] = [];
 
-  if (child.classList.contains('strong')) {
-    modifiers.push('strong');
+  if (child.classList.contains('bold')) {
+    modifiers.push('bold');
   }
 
   if (child.classList.contains('italic')) {
@@ -268,7 +282,11 @@ const resolveCommand = (e: KeyboardEvent, el: HTMLElement) => {
 /**
  * Restores block selection from the structure given by backend
  */
-const restoreSelection = (el: HTMLElement): void => {
+const restoreSelection = (container: HTMLElement): void => {
+  const el = resolveContentEditabe(container);
+  if (!el) {
+    throw new Error('Component does not contain a contenteditable');
+  }
   // if the block is the focused block, the backend will insert these data
   // attributes onto the containing element
   const {
@@ -345,6 +363,7 @@ export const ContentEditable = {
         const params = { selection, cells };
 
         saveRef = window.setTimeout(async () => {
+          console.log('event', eventName, params);
           this.pushEventTo(target, eventName, params, () => {
             saveRef = null;
             savePromise = null;

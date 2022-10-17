@@ -20,7 +20,7 @@ defmodule Philtre.Block.ContentEditable.ReduceTest do
     block = %ContentEditable{
       cells: [
         %Cell{text: "foo", modifiers: []},
-        %Cell{text: "bar", modifiers: ["strong"]}
+        %Cell{text: "bar", modifiers: ["bold"]}
       ]
     }
 
@@ -56,8 +56,8 @@ defmodule Philtre.Block.ContentEditable.ReduceTest do
         %Cell{text: "foo", modifiers: []},
         %Cell{text: "bar", modifiers: []},
         %Cell{text: "baz", modifiers: []},
-        %Cell{text: "bam", modifiers: ["strong"]},
-        %Cell{text: "bat", modifiers: ["strong"]}
+        %Cell{text: "bam", modifiers: ["bold"]},
+        %Cell{text: "bat", modifiers: ["bold"]}
       ]
     }
 
@@ -107,7 +107,7 @@ defmodule Philtre.Block.ContentEditable.ReduceTest do
       cells: [
         %Cell{id: "1", text: "foo", modifiers: []},
         %Cell{id: "2", text: "bar", modifiers: []},
-        %Cell{id: "3", text: "baz", modifiers: ["strong"]}
+        %Cell{id: "3", text: "baz", modifiers: ["bold"]}
       ],
       selection: %Selection{start_id: "2", end_id: "3", start_offset: 1, end_offset: 2}
     }
@@ -119,7 +119,7 @@ defmodule Philtre.Block.ContentEditable.ReduceTest do
   test "updates selection when it starts in another cell and ends in from cell" do
     block = %ContentEditable{
       cells: [
-        %Cell{id: "1", text: "foo", modifiers: ["strong"]},
+        %Cell{id: "1", text: "foo", modifiers: ["bold"]},
         %Cell{id: "2", text: "bar", modifiers: []},
         %Cell{id: "3", text: "baz", modifiers: []}
       ],

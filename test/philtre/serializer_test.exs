@@ -39,7 +39,7 @@ defmodule Editor.SerializerTest do
         id: "foo",
         kind: "pre",
         cells: [
-          %Cell{id: "cell_foo", modifiers: ["strong"], text: "A cell"},
+          %Cell{id: "cell_foo", modifiers: ["bold"], text: "A cell"},
           %Cell{id: "cell_bar", modifiers: [], text: "Another cell"}
         ]
       }

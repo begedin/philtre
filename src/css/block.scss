@@ -7,10 +7,6 @@
   padding: 12px;
   background-clip: border-box;
 
-  [data-cell-id] {
-    white-space: pre-wrap;
-  }
-
   & > * {
     width: 100%;
   }
@@ -25,15 +21,20 @@
     background: $colorMiddleBlue;
   }
 
-  .philtre-cell.bold {
+}
+
+[data-cell-id] {
+  white-space: pre-wrap;
+
+  &.bold {
     font-weight: bold;
   }
 
-  .philtre-cell.italic {
+  &.italic {
     font-style: italic;
   }
 
-  .philtre-cell.br {
+  &.br {
     display: block;
     clear: both;
   }

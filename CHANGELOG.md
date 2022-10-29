@@ -1,5 +1,11 @@
 # Changelog
 
+# 0.12.1
+
+- [FIX] Publish JS
+
+Previous version didn't incoude prebuilt js and types
+
 # 0.12.0
 
 - [REWRITE] More agnostic block system where the ContentEditable is a base

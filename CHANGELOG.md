@@ -1,5 +1,18 @@
 # Changelog
 
+# 0.12.2
+
+- [CHORE] Update mix dependencies
+  - credo 1.6.0 -> 1.6.7
+  - dialyxir 1.1.0 -> 1.2.0
+  - ex_doc 0.28.0 -> 0.29
+  - floki 0.30 -> 0.33
+  - jason 1.3.0 -> 1.4.0
+  - phoenix_live_view 0.17.0 -> 0.18.3
+  - phoenix 1.6.0 -> 1.6.15
+- [CHORE] Add and apply heex formatter
+- [CHORE] Fix warnings emitted by new phoenix_live_view
+
 # 0.12.1
 
 - [FIX] Publish JS

@@ -11,7 +11,8 @@ defmodule Philtre.Editor do
             clipboard: nil,
             id: nil,
             selected_blocks: [],
-            selection: nil
+            selection: nil,
+            version: Philtre.MixProject.project()[:version]
 
   @type t :: %__MODULE__{}
 

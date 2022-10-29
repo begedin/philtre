@@ -5,6 +5,7 @@
 - [REWRITE] More agnostic block system where the ContentiEditable is a base
   block through which other blocks communicate
 - [FEATURE] Basic implementation for a list - not release-ready yet
+- [FEATURE] Include library version in every editor
 
 ## 0.11.1
 

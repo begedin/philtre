@@ -10,7 +10,11 @@ defmodule Editor.SerializerTest do
   alias Philtre.Editor
 
   test "works" do
-    assert Editor.Serializer.serialize(%Editor{}) == %{"blocks" => [], "id" => nil}
+    assert Editor.Serializer.serialize(%Editor{}) == %{
+             "blocks" => [],
+             "id" => nil,
+             "version" => Philtre.MixProject.project()[:version]
+           }
   end
 
   describe "normalize/serialize" do
@@ -39,7 +43,7 @@ defmodule Editor.SerializerTest do
         id: "foo",
         kind: "pre",
         cells: [
-          %Cell{id: "cell_foo", modifiers: ["strong"], text: "A cell"},
+          %Cell{id: "cell_foo", modifiers: ["bold"], text: "A cell"},
           %Cell{id: "cell_bar", modifiers: [], text: "Another cell"}
         ]
       }

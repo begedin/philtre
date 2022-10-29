@@ -8,7 +8,11 @@ defmodule Philtre.Editor.Serializer do
   alias Philtre.StaticBlock
 
   def serialize(%Editor{} = editor) do
-    %{"id" => editor.id, "blocks" => Enum.map(editor.blocks, &serialize/1)}
+    %{
+      "id" => editor.id,
+      "blocks" => Enum.map(editor.blocks, &serialize/1),
+      "version" => editor.version
+    }
   end
 
   @spec serialize(struct) :: map

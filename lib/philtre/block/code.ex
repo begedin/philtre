@@ -9,6 +9,7 @@ defmodule Philtre.Block.Code do
 
   alias Philtre.Block
   alias Philtre.Block.ContentEditable
+  alias Philtre.Block.ContentEditable.Selection
   alias Philtre.Editor
   alias Philtre.Editor.Utils
 
@@ -17,6 +18,8 @@ defmodule Philtre.Block.Code do
   @behaviour Block
 
   defstruct id: nil, content: "", language: "elixir", focused: false
+
+  @type t :: %__MODULE__{}
 
   @impl Block
   def id(%__MODULE__{id: id}), do: id
@@ -38,7 +41,8 @@ defmodule Philtre.Block.Code do
     }
   end
 
-  def render_live(assigns) do
+  @impl Block
+  def render_live(%{block: _} = assigns) do
     # data-language is used to get the language in the frontend hook, which is
     # then used by the frontend-based code-highlighting library
     ~H"""
@@ -81,6 +85,7 @@ defmodule Philtre.Block.Code do
     |> Enum.count()
   end
 
+  @impl Block
   def render_static(%{block: _} = assigns) do
     ~H"<pre><%= @block.content %></pre>"
   end
@@ -125,4 +130,22 @@ defmodule Philtre.Block.Code do
 
     {:noreply, socket}
   end
+
+  @impl Block
+  @spec transform(ContentEditable.t()) :: t
+  def transform(%ContentEditable{} = _block) do
+    %__MODULE__{id: Utils.new_id(), content: "", language: "elixir", focused: true}
+  end
+
+  @impl Block
+  def reduce(%__MODULE__{} = block), do: block
+
+  @impl Block
+  def set_selection(%__MODULE__{} = block, %Selection{}) do
+    # We do not set selection on code block from BE yet
+    block
+  end
+
+  @impl Block
+  def cells(%__MODULE__{}), do: []
 end

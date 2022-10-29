@@ -59,15 +59,25 @@ defmodule Philtre.EditorTest do
     assert Enum.count(editor.blocks) == 6
 
     assert %{
-             blocks: [
-               %ContentEditable{cells: [%{text: "Fo"}], kind: "h1"},
-               %ContentEditable{cells: [%{text: "Foo"}], kind: "h1"},
-               %ContentEditable{cells: [%{text: "Bar"}], kind: "p"},
-               %ContentEditable{cells: [%{text: "o"}], kind: "h1"},
-               %ContentEditable{cells: [%{text: "Bar"}], kind: "p"},
-               %ContentEditable{cells: [%{text: "Baz"}], kind: "p"}
+      blocks: [
+        %ContentEditable{cells: [%{text: "Fo"}], kind: "h1"},
+        %ContentEditable{cells: [%{text: "Foo"}], kind: "h1"},
+        %ContentEditable{cells: [%{text: "Bar"}], kind: "p"},
+        %ContentEditable{cells: [%{text: "o"}], kind: "p"},
+        %ContentEditable{cells: [%{text: "Bar"}], kind: "p"},
+        %ContentEditable{cells: [%{text: "Baz"}], kind: "p"}
+      ]
+    }
+
+    assert Enum.map(editor.blocks, fn %{cells: [%{text: text}], kind: kind} -> {kind, text} end) ==
+             [
+               {"h1", "Fo"},
+               {"h1", "Foo"},
+               {"p", "Bar"},
+               {"p", "o"},
+               {"p", "Bar"},
+               {"p", "Baz"}
              ]
-           } = editor
   end
 
   test "can select,then copy and paste blocks at the end of a block", %{conn: conn} do

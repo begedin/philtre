@@ -35,7 +35,7 @@ describe('code', () => {
     );
   });
 
-  it.only('can save a page containing a javascript code block', () => {
+  it('can save a page containing a javascript code block', () => {
     createCode();
     cy.get('.philtre__code textarea')
       .focus()
@@ -43,7 +43,6 @@ describe('code', () => {
       .type('const foo = () => false');
 
     cy.get('.philtre__code')
-      .realHover()
       .get('.philtre__code__language select')
       .select('javascript');
 

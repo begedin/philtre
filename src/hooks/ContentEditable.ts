@@ -118,8 +118,6 @@ const getDefaultSelection = (el: HTMLElement): Selection => {
   const cellId = getCellId(cell);
   const offset = el.innerText.length;
 
-  console.log('getDefaultSelection', el, cell, cellId);
-
   if (!cell || !cellId) {
     return {
       start_id: el.id,
@@ -150,8 +148,6 @@ const getProperSelection = (): Selection => {
   const startId = getCellId(startElement);
   const endElement = resolveCell(selection.focusNode);
   const endId = getCellId(endElement);
-
-  console.log('getProperSelection', startElement, endElement);
 
   if (!startId || !endId) {
     throw new Error('Invalid selection');
@@ -363,7 +359,6 @@ export const ContentEditable = {
         const params = { selection, cells };
 
         saveRef = window.setTimeout(async () => {
-          console.log('event', eventName, params);
           this.pushEventTo(target, eventName, params, () => {
             saveRef = null;
             savePromise = null;

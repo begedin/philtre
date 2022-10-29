@@ -39,8 +39,6 @@ const setupHighlight = (el: HTMLElement) => {
   toRemove.forEach((c) => highlightEl.classList.remove(c));
   highlightEl.classList.add(`language-${language}`);
   highlightEl.classList.add(`lang-${language}`);
-
-  console.log('highlighting with', language);
 };
 
 const getCodeEl = (el: HTMLElement): HTMLTextAreaElement => {

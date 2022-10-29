@@ -73,7 +73,8 @@ defmodule Philtre.Block.List do
           data-selection-end-offset={item.contenteditable.selection.end_offset}
           data-selection-start-id={item.contenteditable.selection.start_id}
           data-selection-start-offset={item.contenteditable.selection.start_offset}
-          phx-target={@myself}>
+          phx-target={@myself}
+        >
           <%= for cell <- item.contenteditable.cells do %>
             <.cell cell={cell} />
           <% end %>
@@ -83,11 +84,12 @@ defmodule Philtre.Block.List do
     """
   end
 
-  defp cell(%{cell: %{id: id, modifiers: modifiers, text: text}} = assigns) do
-    classes = ["philtre-cell"] |> Enum.concat(modifiers) |> Enum.join(" ") |> String.trim()
+  defp cell(%{cell: %{id: _, modifiers: _, text: _}} = assigns) do
+    classes = ["philtre-cell"] |> Enum.concat(assigns.modifiers) |> Enum.join(" ") |> String.trim()
+    assigns = assign(assigns, :classes, classes)
 
     ~H"""
-    <span data-cell-id={id} class={classes}><%= text %></span>
+    <span data-cell-id={@id} class={@classes}><%= @text %></span>
     """
   end
 
@@ -98,7 +100,7 @@ defmodule Philtre.Block.List do
       <%= for item <- @block.items do %>
         <li>
           <%= for cell <- item.cells do %>
-            <.static_cell :text={cell.text} :modifiers={cell.modifiers} />
+            <.static_cell text={cell.text} modifiers={cell.modifiers} />
           <% end %>
         </li>
       <% end %>
@@ -106,15 +108,22 @@ defmodule Philtre.Block.List do
     """
   end
 
+  attr(:modifiers, :list)
+  attr(:text, :string)
+
   defp static_cell(%{modifiers: ["bold" | rest]} = assigns) do
+    assigns = assign(assigns, :rest, rest)
+
     ~H"""
-    <strong><.static_cell text={@text} modifiers={rest} /></strong>
+    <strong><.static_cell text={@text} modifiers={@rest} /></strong>
     """
   end
 
   defp static_cell(%{modifiers: ["italic" | rest]} = assigns) do
+    assigns = assign(assigns, :rest, rest)
+
     ~H"""
-    <em><.static_cell text={@text} modifiers={rest} /></em>
+    <em><.static_cell text={@text} modifiers={@rest} /></em>
     """
   end
 

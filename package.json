@@ -1,6 +1,6 @@
 {
   "name": "philtrejs",
-  "version": "0.12.1",
+  "version": "0.12.2",
   "description": "Block-style editor for phoenix_live_view, the frontend part",
   "directories": {
     "lib": "dist",
@@ -34,24 +34,24 @@
   },
   "homepage": "https://github.com/begedin/philtre#readme",
   "dependencies": {
-    "phoenix_live_view": "^0.17.9"
+    "phoenix_live_view": "^0.18.3"
   },
   "devDependencies": {
     "@types/phoenix_live_view": "^0.15.1",
     "@types/prismjs": "^1.26.0",
-    "@typescript-eslint/eslint-plugin": "^5.21.0",
-    "cypress": "^9.6.0",
+    "@typescript-eslint/eslint-plugin": "^5.41.0",
     "cypress-plugin-tab": "^1.0.5",
-    "cypress-real-events": "^1.7.1",
-    "esbuild": "^0.14.38",
-    "esbuild-sass-plugin": "^2.2.6",
-    "eslint": "^8.14.0",
+    "cypress-real-events": "^1.7.2",
+    "cypress": "^9.7.0",
+    "esbuild-sass-plugin": "^2.4.0",
+    "esbuild": "^0.15.12",
     "eslint-config-prettier": "^8.5.0",
-    "eslint-plugin-prettier": "^4.0.0",
-    "phoenix": "^1.6.7",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint": "^8.26.0",
     "phoenix_html": "^3.2.0",
-    "prismjs": "^1.28.0",
+    "phoenix": "^1.6.15",
+    "prismjs": "^1.29.0",
     "rimraf": "^3.0.2",
-    "typescript": "^4.6.3"
+    "typescript": "^4.8.4"
   }
 }

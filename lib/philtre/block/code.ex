@@ -61,7 +61,8 @@ defmodule Philtre.Block.Code do
         class="philtre__code__editable"
         spellcheck="false"
         autofocus={@block.focused}
-        rows={rows(@block.content)}><%= @block.content %></textarea>
+        rows={rows(@block.content)}
+      ><%= @block.content %></textarea>
     </div>
     """
   end
@@ -87,7 +88,8 @@ defmodule Philtre.Block.Code do
 
   @impl Block
   def render_static(%{block: _} = assigns) do
-    ~H"<pre><%= @block.content %></pre>"
+    ~H"<pre><%= @block.content %></pre>
+"
   end
 
   def handle_event("update", %{"value" => value}, socket) do

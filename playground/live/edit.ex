@@ -4,7 +4,7 @@ defmodule Playground.Live.Edit do
 
   import Phoenix.LiveView.Helpers
 
-  use Phoenix.LiveView, layout: {Playground.View, "live.html"}
+  use Phoenix.LiveView, layout: {Playground.View, :live}
 
   alias Philtre.Editor
   alias Philtre.UI.Page

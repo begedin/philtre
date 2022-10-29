@@ -136,15 +136,23 @@ defmodule Philtre.Block.ContentEditable do
     # single-row rendering is needed here, as properly formatted
     # rendering will introduce newlines into the content
     ~H"""
-    <%= for cell <- @block.cells do %><.cell cell={cell} /><% end %>
+    <%= for cell <- @block.cells do %>
+      <.cell cell={cell} />
+    <% end %>
     """
   end
 
-  defp cell(%{cell: %Cell{id: id, modifiers: modifiers, text: text}} = assigns) do
-    classes = ["philtre-cell"] |> Enum.concat(modifiers) |> Enum.join(" ") |> String.trim()
+  attr(:cell, Cell, required: true)
+  attr(:classes, :list, default: [])
+
+  defp cell(%{cell: %Cell{}} = assigns) do
+    classes =
+      ["philtre-cell"] |> Enum.concat(assigns.cell.modifiers) |> Enum.join(" ") |> String.trim()
+
+    assigns = assign(assigns, :classes, classes)
 
     ~H"""
-    <span data-cell-id={id} class={classes}><%= text %></span>
+    <span data-cell-id={@cell.id} class={@classes}><%= @cell.text %></span>
     """
   end
 
@@ -204,7 +212,9 @@ defmodule Philtre.Block.ContentEditable do
 
   def render_static(%{block: %__MODULE__{kind: "li"}} = assigns) do
     ~H"""
-    <ul><li><.content block={@block} /></li></ul>
+    <ul>
+      <li><.content block={@block} /></li>
+    </ul>
     """
   end
 

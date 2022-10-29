@@ -4,7 +4,7 @@ defmodule Playground.Live.Index do
 
   import Phoenix.LiveView.Helpers
 
-  use Phoenix.LiveView, layout: {Playground.View, "live.html"}
+  use Phoenix.LiveView, layout: {Playground.View, :live}
 
   alias Phoenix.LiveView
   alias Playground.Documents

@@ -12,6 +12,15 @@
   - phoenix 1.6.0 -> 1.6.15
 - [CHORE] Add and apply heex formatter
 - [CHORE] Fix warnings emitted by new phoenix_live_view
+- [CHORE] Update npm dependencies
+  - @typescript-eslint/eslint-plugin 5.21.0 -> 5.41.0
+  - cypress 9.6.0 -> 9.7.0
+  - cypress-real-events 1.7.1. -> 1.7.2
+  - esbuild 0.14.38 -> 0.15.12
+  - eslint-plugin-prettier 4.0.0 -> 4.2.1
+  - phoenix 1.6.7 -> 1.6.15
+  - prismjs 1.28.0 -> 1.29.0
+  - typescript 4.6.3 -> 4.8.4
 
 # 0.12.1
 

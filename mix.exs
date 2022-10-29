@@ -54,16 +54,16 @@ defmodule Philtre.MixProject do
 
   defp deps do
     [
-      {:credo, "~> 1.6.0", only: [:dev, :test], runtime: false, optional: true},
-      {:dialyxir, "~> 1.1.0", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.28.0", only: :dev, runtime: false},
-      {:floki, "~> 0.30"},
-      {:jason, "~> 1.3.0"},
+      {:credo, "~> 1.6.7", only: [:dev, :test], runtime: false, optional: true},
+      {:dialyxir, "~> 1.2.0", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.29", only: :dev, runtime: false},
+      {:floki, "~> 0.33"},
+      {:jason, "~> 1.4.0"},
       {:mix_test_watch, "~> 1.0", only: [:test]},
       {:phoenix_html, "~> 3.0"},
       {:phoenix_live_reload, "~> 1.2", only: [:dev]},
-      {:phoenix_live_view, "~> 0.17.0"},
-      {:phoenix, "~> 1.6.0"},
+      {:phoenix_live_view, "~> 0.18.3"},
+      {:phoenix, "~> 1.6.15"},
       {:plug_cowboy, "~> 2.5.0"},
       {:uuid, "~> 1.1.0"}
     ]

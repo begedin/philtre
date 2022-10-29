@@ -7,6 +7,7 @@ defmodule Playground.Router do
 
   pipeline :browser do
     plug(:put_root_layout, {Playground.View, :root})
+    plug(:accepts, ~w(html))
   end
 
   scope "/", Playground do

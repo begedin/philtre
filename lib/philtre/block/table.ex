@@ -10,6 +10,7 @@ defmodule Philtre.Block.Table do
   use Phoenix.Component
 
   alias Philtre.Block
+  alias Philtre.Block.ContentEditable.Cell
   alias Philtre.Block.ContentEditable.Selection
   alias Philtre.Editor.Utils
 
@@ -55,8 +56,10 @@ defmodule Philtre.Block.Table do
     """
   end
 
+  attr(:block, __MODULE__, required: true)
+
   defp head(assigns) do
-    cell_count = cell_count(assigns[:block])
+    assigns = assign(assigns, :disabled, cell_count(assigns.block) <= 1)
 
     ~H"""
     <%= for {row, row_index} <- Enum.with_index(@block.header_rows) do %>
@@ -64,21 +67,18 @@ defmodule Philtre.Block.Table do
         <%= for {cell, cell_index} <- Enum.with_index(row) do %>
           <th>
             <!-- each column of the first header row gets the remove column button -->
-            <%= if row_index == 0 do %>
-              <button
-                disabled={cell_count <= 1}
-                title="Remove this column"
-                phx-click="remove_column"
-                phx-value-index={cell_index}
-                phx-target={@myself}>-</button>
-            <% end %>
-            <.cell
-              {assigns}
-              cell={cell}
-              cell_index={cell_index}
-              cell_type="head"
-              row_index={row_index}
-              />
+            <button
+              if={row_index == 0}
+              disabled={@disabled}
+              title="Remove this column"
+              phx-click="remove_column"
+              phx-value-index={cell_index}
+              phx-target={@myself}
+            >
+              -
+            </button>
+
+            <.cell {assigns} cell={cell} cell_index={cell_index} cell_type="head" row_index={row_index} />
           </th>
         <% end %>
       </tr>
@@ -93,13 +93,7 @@ defmodule Philtre.Block.Table do
         <% cell_count = Enum.count(row) %>
         <%= for {cell, cell_index} <- Enum.with_index(row) do %>
           <td>
-            <.cell
-              {assigns}
-              cell={cell}
-              cell_index={cell_index}
-              cell_type="body"
-              row_index={row_index}
-            />
+            <.cell {assigns} cell={cell} cell_index={cell_index} cell_type="body" row_index={row_index} />
             <!-- last column of a row gets the remove row button -->
             <%= if cell_index == cell_count - 1 do %>
               <button
@@ -107,7 +101,10 @@ defmodule Philtre.Block.Table do
                 title="Remove this row"
                 phx-click="remove_row"
                 phx-value-index={row_index}
-                phx-target={@myself}>-</button>
+                phx-target={@myself}
+              >
+                -
+              </button>
             <% end %>
           </td>
         <% end %>
@@ -115,6 +112,8 @@ defmodule Philtre.Block.Table do
     <% end %>
     """
   end
+
+  attr(:cell, Cell, required: true)
 
   defp cell(assigns) do
     rows =
@@ -137,17 +136,14 @@ defmodule Philtre.Block.Table do
       |> Enum.max(fn -> 1 end)
       |> Kernel.max(1)
 
+    assigns = assign(assigns, width: width, height: height)
+
     ~H"""
     <form phx-change="update_cell" phx-target={@myself}>
       <input type="hidden" name="cell_type" value={@cell_type} />
       <input type="hidden" name="cell_index" value={@cell_index} />
       <input type="hidden" name="row_index" value={@row_index} />
-      <textarea
-        name="cell"
-        type="text"
-        rows={height}
-        cols={width}
-      ><%= @cell %></textarea>
+      <textarea name="cell" type="text" rows={@height} cols={@width}><%= @cell %></textarea>
     </form>
     """
   end

@@ -77,17 +77,8 @@ defmodule Playground.View do
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <%= csrf_meta_tag() %>
       <%= live_title_tag(assigns[:page_title] || "Playground", suffix: " · Homepage") %>
-      <link
-        phx-track-static
-        rel="stylesheet"
-        href={Routes.static_path(@conn, "/app.css")}
-      />
-      <script
-        defer
-        phx-track-static
-        type="text/javascript"
-        src={Routes.static_path(@conn, "/app.js")}
-      >
+      <link phx-track-static rel="stylesheet" href={Routes.static_path(@conn, "/app.css")} />
+      <script defer phx-track-static type="text/javascript" src={Routes.static_path(@conn, "/app.js")}>
       </script>
     </head>
     """

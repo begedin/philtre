@@ -13,7 +13,6 @@ defmodule Philtre.PageTest do
 
     use Phoenix.LiveView
 
-    import Phoenix.LiveView.Helpers
     import Phoenix.LiveViewTest
 
     alias Philtre.Editor

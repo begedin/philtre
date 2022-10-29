@@ -87,11 +87,12 @@ defmodule Philtre.UI.Page do
 
   defp section(assigns) do
     focused = assigns.focused_id === assigns.block.id
+    assigns = assign(assigns, :focused, focused)
 
     ~H"""
     <div
       class="philtre-page__section"
-      data-focused={focused}
+      data-focused={@focused}
       id={"section_#{@index}"}
       phx-hook="BlockNavigation"
       phx-target={@myself}
@@ -104,28 +105,17 @@ defmodule Philtre.UI.Page do
 
   def block(%{block: _} = assigns) do
     ~H"""
-    <.live_component
-      module={LiveBlock}
-      {block_assigns(assigns)}
-    />
+    <.live_component module={LiveBlock} {block_assigns(assigns)} />
     """
   end
 
   def sidebar(%{block: _} = assigns) do
     ~H"""
     <div class="philtre-sidebar">
-      <button
-        phx-click="add_block"
-        phx-value-block_id={@block.id}
-        phx-target={@myself}
-      >
+      <button phx-click="add_block" phx-value-block_id={@block.id} phx-target={@myself}>
         +
       </button>
-      <button
-        phx-click="remove_block"
-        phx-value-block_id={@block.id}
-        phx-target={@myself}
-      >
+      <button phx-click="remove_block" phx-value-block_id={@block.id} phx-target={@myself}>
         -
       </button>
     </div>

@@ -7,7 +7,6 @@ defmodule Philtre.Wrapper do
   """
   use Phoenix.LiveView
 
-  import Phoenix.LiveView.Helpers
   import Phoenix.LiveViewTest
 
   alias Philtre.Block.ContentEditable

@@ -12,7 +12,7 @@
   "scripts": {
     "build": "rimraf dist && node ./esbuild.js --deploy && tsc --emitDeclarationOnly --outDir dist",
     "lint": "eslint src playground/js --ext .js,.ts --fix",
-    "test:e2e:ci": "cypress run",
+    "test:e2e:ci": "cypress run --record",
     "test:e2e": "cypress open"
   },
   "repository": {
@@ -42,7 +42,7 @@
     "@typescript-eslint/eslint-plugin": "^5.41.0",
     "cypress-plugin-tab": "^1.0.5",
     "cypress-real-events": "^1.7.2",
-    "cypress": "^9.7.0",
+    "cypress": "^10.11.0",
     "esbuild-sass-plugin": "^2.4.0",
     "esbuild": "^0.15.12",
     "eslint-config-prettier": "^8.5.0",

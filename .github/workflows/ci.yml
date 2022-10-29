@@ -4,24 +4,24 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: ["*"]
+    branches: ['*']
   workflow_dispatch:
 
 env:
   MIX_ENV: test
 
 jobs:
-  # this first job is a prerequisite for all the others. 
-  # it prebuilds the project, compiles everything, etc, creating artefacts 
+  # this first job is a prerequisite for all the others.
+  # it prebuilds the project, compiles everything, etc, creating artefacts
   # for the remaining jobs to use
   build-env:
     name: Build CI env
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
-      matrix: 
-        elixir: ["1.13.3"]
-        otp: ["24.2.2"]
+      matrix:
+        elixir: ['1.13.3']
+        otp: ['24.2.2']
 
     steps:
       - uses: actions/checkout@v2
@@ -29,8 +29,8 @@ jobs:
       - name: Set up Elixir
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: ${{ matrix.elixir }} 
-          otp-version: ${{ matrix.otp }} 
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
 
       - name: Restore elixir dependencies cache
         id: mix-cache
@@ -53,14 +53,13 @@ jobs:
           path: /home/runner/.cache/Cypress
           key: cypress-${{ runner.os }}-mix-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/package-lock.json') }}-v3
 
-
       - name: Restore build cache
         id: build-cache
         uses: actions/cache@v3
         with:
           path: _build
           key: cache-${{ runner.os }}-dialyzer_build-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}-v3
-      
+
       - name: Install NPM Dependencies
         if: steps.npm-cache.outputs.cache-hit != 'true' || steps.cypress-cache.outputs.cache-hit != 'true'
         run: npm ci
@@ -87,7 +86,7 @@ jobs:
         env:
           MIX_ENV: dev
         run: mix deps.compile; mix compile --force --warnings-as-errors
-           
+
       - name: Create Artifacts
         run: |
           mkdir -p $GITHUB_WORKSPACE/artifacts
@@ -97,24 +96,24 @@ jobs:
           tar czf $GITHUB_WORKSPACE/artifacts/cypress.tgz --directory=/home/runner/.cache/Cypress .
           tar czf $GITHUB_WORKSPACE/artifacts/static.tgz --directory=playground/priv/static/ .
 
-      - uses: "actions/upload-artifact@v2"
+      - uses: 'actions/upload-artifact@v2'
         with:
           name: build-env
-          path: "${{ github.workspace }}/artifacts"
+          path: '${{ github.workspace }}/artifacts'
           retention-days: 1
 
   # checks elixir formatting and runs credo
   formatter-credo:
-    name: "Formatter & Credo"
-    runs-on: "ubuntu-latest"
+    name: 'Formatter & Credo'
+    runs-on: 'ubuntu-latest'
     needs: build-env
     env:
       MIX_ENV: test
-    strategy: 
+    strategy:
       fail-fast: true
-      matrix: 
-        elixir: ["1.13.3"]
-        otp: ["24.2.2"]
+      matrix:
+        elixir: ['1.13.3']
+        otp: ['24.2.2']
     steps:
       - uses: actions/checkout@v2
 
@@ -129,10 +128,10 @@ jobs:
           mix local.hex --force
 
       - name: Download artifacts
-        uses: "actions/download-artifact@v2"
+        uses: 'actions/download-artifact@v2'
         with:
           name: build-env
-          path: "${{ github.workspace }}/artifacts"
+          path: '${{ github.workspace }}/artifacts'
       - run: |
           mkdir -p ./_build
           mkdir -p ./deps
@@ -144,47 +143,47 @@ jobs:
 
       - name: Run Credo
         run: mix credo --strict
-  
+
   # runs eslint on ts/js code
   lint:
-    name: "Lint"
-    runs-on: "ubuntu-latest"
+    name: 'Lint'
+    runs-on: 'ubuntu-latest'
     needs: build-env
     steps:
       - uses: actions/checkout@v2
 
       - name: Download artifacts
-        uses: "actions/download-artifact@v2"
+        uses: 'actions/download-artifact@v2'
         with:
           name: build-env
-          path: "${{ github.workspace }}/artifacts"
+          path: '${{ github.workspace }}/artifacts'
       - run: |
           mkdir -p ./node_modules
           tar xzf $GITHUB_WORKSPACE/artifacts/node_modules.tgz --directory=./node_modules
 
       - name: Run Eslint
         run: npm run lint
-  
+
   # runs elixir unit tests
   unit:
-    name: "Unit tests"
-    runs-on: "ubuntu-latest"
+    name: 'Unit tests'
+    runs-on: 'ubuntu-latest'
     needs: build-env
     env:
       MIX_ENV: test
-    strategy: 
+    strategy:
       fail-fast: true
-      matrix: 
-        elixir: ["1.13.3"]
-        otp: ["24.2.2"]
+      matrix:
+        elixir: ['1.13.3']
+        otp: ['24.2.2']
     steps:
       - uses: actions/checkout@v2
 
       - name: Set up Elixir
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: ${{ matrix.elixir }} 
-          otp-version: ${{ matrix.otp }} 
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
 
       - name: Install Rebar / Hex
         run: |
@@ -192,10 +191,10 @@ jobs:
           mix local.hex --force
 
       - name: Download artifacts
-        uses: "actions/download-artifact@v2"
+        uses: 'actions/download-artifact@v2'
         with:
           name: build-env
-          path: "${{ github.workspace }}/artifacts"
+          path: '${{ github.workspace }}/artifacts'
       - run: |
           mkdir -p ./_build
           mkdir -p ./deps
@@ -203,41 +202,41 @@ jobs:
           tar xzf $GITHUB_WORKSPACE/artifacts/build.tgz --directory=./_build
           tar xzf $GITHUB_WORKSPACE/artifacts/deps.tgz --directory=./deps
           tar xzf $GITHUB_WORKSPACE/artifacts/static.tgz --directory=./playground/priv/static
-      
+
       - name: Run elixir unit tests
         run: mix test
-  
+
   # runs dialyzer
   dialyzer:
-    name: "Run dialyzer"
-    runs-on: "ubuntu-latest"
-    env: 
+    name: 'Run dialyzer'
+    runs-on: 'ubuntu-latest'
+    env:
       MIX_ENV: dev
     needs: build-env
-    strategy: 
+    strategy:
       fail-fast: true
-      matrix: 
-        elixir: ["1.13.3"]
-        otp: ["24.2.2"]
+      matrix:
+        elixir: ['1.13.3']
+        otp: ['24.2.2']
     steps:
       - uses: actions/checkout@v2
 
       - name: Set up Elixir
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: ${{ matrix.elixir }} 
+          elixir-version: ${{ matrix.elixir }}
           otp-version: ${{ matrix.otp }}
-          
+
       - name: Install Rebar / Hex
         run: |
           mix local.rebar --force
           mix local.hex --force
 
       - name: Download artifacts
-        uses: "actions/download-artifact@v2"
+        uses: 'actions/download-artifact@v2'
         with:
           name: build-env
-          path: "${{ github.workspace }}/artifacts"
+          path: '${{ github.workspace }}/artifacts'
       - run: |
           mkdir -p ./_build
           mkdir -p ./deps
@@ -251,7 +250,7 @@ jobs:
         with:
           path: priv/plts
           key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-plts-${{ hashFiles('**/mix.lock') }}
-      
+
       - name: Create PLTs
         if: steps.plt-cache.outputs.cache-hit != 'true'
         run: |
@@ -262,18 +261,19 @@ jobs:
         run: mix dialyzer --halt-exit-status
 
       # runs cypress acceptance/e2e tests
-  
+
   acceptance:
-    name: "Acceptance/E2E tests"
-    runs-on: "ubuntu-latest"
+    name: 'Acceptance/E2E tests'
+    runs-on: 'ubuntu-latest'
     needs: build-env
-    env: 
+    env:
       MIX_ENV: dev
-    strategy: 
+      CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+    strategy:
       fail-fast: true
-      matrix: 
-        elixir: ["1.13.3"]
-        otp: ["24.2.2"]
+      matrix:
+        elixir: ['1.13.3']
+        otp: ['24.2.2']
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -281,20 +281,20 @@ jobs:
       - name: Set up Elixir
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: ${{ matrix.elixir }} 
+          elixir-version: ${{ matrix.elixir }}
           otp-version: ${{ matrix.otp }}
-          
+
       - name: Install Rebar / Hex
         run: |
           mix local.rebar --force
           mix local.hex --force
 
       - name: Download Artifacts
-        uses: "actions/download-artifact@v2"
+        uses: 'actions/download-artifact@v2'
         with:
           name: build-env
-          path: "${{ github.workspace }}/artifacts"
-      
+          path: '${{ github.workspace }}/artifacts'
+
       - name: Extract Artifacts
         run: |
           mkdir -p ./_build
@@ -307,10 +307,8 @@ jobs:
           tar xzf $GITHUB_WORKSPACE/artifacts/node_modules.tgz --directory=./node_modules
           tar xzf $GITHUB_WORKSPACE/artifacts/static.tgz --directory=./playground/priv/static
           tar xzf $GITHUB_WORKSPACE/artifacts/cypress.tgz --directory=/home/runner/.cache/Cypress
-      
+
       - name: E2E tests
         run: |
           mix playground &
           npm run test:e2e:ci
-
-      

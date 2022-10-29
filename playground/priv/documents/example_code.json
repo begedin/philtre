@@ -16,20 +16,6 @@
     },
     {
       "data": {
-        "cells": [
-          {
-            "id": "5f64c5a1-05a3-4d63-a565-76fd2463a098",
-            "modifiers": [],
-            "text": "This is your first paragraph."
-          }
-        ],
-        "kind": "p"
-      },
-      "id": "f2ae4d5c-690b-45da-ae17-faa613f2cb2f",
-      "type": "contenteditable"
-    },
-    {
-      "data": {
         "content": "defmodule Foo do \n  @moduledoc false\n\n  def func(arg) do\n    IO.inspect(arg, label: \"fun\")\n  end\nend\n\ndefmodule Bar\n  def func_2(arg, arg_2) do\n    IO.def(arg, arg_2)\n  end\nend",
         "language": "elixir"
       },

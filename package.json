@@ -1,6 +1,6 @@
 {
   "name": "philtrejs",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "description": "Block-style editor for phoenix_live_view, the frontend part",
   "directories": {
     "lib": "dist",

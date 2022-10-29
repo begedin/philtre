@@ -29,6 +29,7 @@ defmodule Philtre.Block.ContentEditable do
   alias Philtre.Block.ContentEditable
   alias Philtre.Block.ContentEditable.Cell
   alias Philtre.Block.ContentEditable.Selection
+  alias Philtre.Editor
   alias Philtre.Editor.Engine
   alias Philtre.Editor.Utils
 
@@ -74,6 +75,7 @@ defmodule Philtre.Block.ContentEditable do
 
   # component
 
+  @impl Block
   def render_live(%{block: %__MODULE__{kind: "p"}} = assigns) do
     ~H"""
     <p {attrs(@block, @selected, @myself)}>
@@ -163,6 +165,7 @@ defmodule Philtre.Block.ContentEditable do
     }
   end
 
+  @impl Block
   def render_static(%{block: %__MODULE__{kind: "p"}} = assigns) do
     ~H"""
     <p><.content block={@block} /></p>
@@ -208,11 +211,13 @@ defmodule Philtre.Block.ContentEditable do
   def handle_event("update", %{"selection" => selection, "cells" => cells} = attrs, socket) do
     Logger.info("update: #{inspect(attrs)}")
 
-    editor =
-      Engine.update(socket.assigns.editor, socket.assigns.block, %{
+    new_block =
+      Engine.update(socket.assigns.block, %{
         selection: Selection.normalize!(selection),
         cells: cells
       })
+
+    editor = Philtre.Editor.replace_block(socket.assigns.editor, socket.assigns.block, [new_block])
 
     if editor !== socket.assigns.editor do
       send(self(), {:update, editor})
@@ -256,10 +261,10 @@ defmodule Philtre.Block.ContentEditable do
   def handle_event("split_block", %{"selection" => selection} = attrs, socket) do
     Logger.info("split_block: #{inspect(attrs)}")
 
-    editor =
-      Engine.split_block(socket.assigns.editor, socket.assigns.block, %{
-        selection: Selection.normalize!(selection)
-      })
+    {block_a, block_b} =
+      Engine.split_block(socket.assigns.block, %{selection: Selection.normalize!(selection)})
+
+    editor = Editor.replace_block(socket.assigns.editor, socket.assigns.block, [block_a, block_b])
 
     if editor !== socket.assigns.editor do
       send(self(), {:update, editor})
@@ -292,5 +297,25 @@ defmodule Philtre.Block.ContentEditable do
     end
 
     {:noreply, socket}
+  end
+
+  def transform(%__MODULE__{} = block, kind) do
+    %{block | id: Utils.new_id(), kind: kind}
+  end
+
+  @impl Block
+  def cells(%__MODULE__{cells: cells}), do: cells
+
+  @impl Block
+  def transform(%__MODULE__{} = block), do: block
+
+  @impl Block
+  def set_selection(%__MODULE__{} = block, selection) do
+    %{block | selection: selection}
+  end
+
+  @impl Block
+  def reduce(%__MODULE__{} = block) do
+    __MODULE__.Reduce.call(block)
   end
 end

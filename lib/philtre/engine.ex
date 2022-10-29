@@ -3,25 +3,22 @@ defmodule Philtre.Editor.Engine do
   Holds shared logic for modifying editor blocks
   """
 
-  alias Philtre.Block.Code
   alias Philtre.Block.ContentEditable
   alias Philtre.Block.ContentEditable.Cell
   alias Philtre.Block.ContentEditable.CleanEmptyCells
   alias Philtre.Block.ContentEditable.Reduce
   alias Philtre.Block.ContentEditable.Selection
-  alias Philtre.Block.Table
+  alias Philtre.BlockRegistry
   alias Philtre.Editor
   alias Philtre.Editor.Utils
 
+  require Logger
+
   @spec update(
-          Editor.t(),
           ContentEditable.t(),
           %{required(:selection) => map, required(:cells) => list(map)}
-        ) :: Editor.t()
-  def update(%Editor{} = editor, %ContentEditable{} = block, %{
-        selection: selection,
-        cells: new_cells
-      }) do
+        ) :: ContentEditable.t()
+  def update(%_{cells: _} = block, %{selection: selection, cells: new_cells}) do
     # the new cells are content received from the client side of the ContentEditable hook
     # and should be the exact correct content of the updated block
     updated_cells =
@@ -29,9 +26,7 @@ defmodule Philtre.Editor.Engine do
         %Cell{id: id, modifiers: modifiers, text: text}
       end)
 
-    new_block = resolve_transform(%{block | cells: updated_cells, selection: selection})
-
-    Editor.replace_block(editor, block, [new_block])
+    resolve_transform(%{block | cells: updated_cells, selection: selection})
   end
 
   @spec toggle_style_on_selection(
@@ -223,9 +218,11 @@ defmodule Philtre.Editor.Engine do
   The first block retains the type of the original.
   The second block is usually a P block.
   """
-  @spec split_block(Editor.t(), ContentEditable.t(), %{required(:selection) => map}) :: Editor.t()
+  @spec split_block(
+          ContentEditable.t(),
+          %{required(:selection) => Selection.t()}
+        ) :: {ContentEditable.t(), ContentEditable.t()}
   def split_block(
-        %Editor{} = editor,
         %ContentEditable{} = block,
         %{selection: %Selection{} = selection}
       ) do
@@ -234,12 +231,6 @@ defmodule Philtre.Editor.Engine do
       |> set_selection(selection)
       |> remove_selection()
       |> split_at_selection()
-
-    new_kind =
-      case block.kind do
-        "li" -> "li"
-        _ -> "p"
-      end
 
     block_before =
       if empty_block?(block_before) do
@@ -257,13 +248,11 @@ defmodule Philtre.Editor.Engine do
         block_after
       end
 
-    block_after = %{block_after | kind: new_kind}
-
-    Editor.replace_block(editor, block, [block_before, block_after])
+    {block_before, block_after}
   end
 
-  defp set_selection(%ContentEditable{} = block, %Selection{} = selection) do
-    Map.put(block, :selection, selection)
+  defp set_selection(%type{} = block, %Selection{} = selection) do
+    type.set_selection(block, selection)
   end
 
   defp remove_selection(
@@ -374,13 +363,20 @@ defmodule Philtre.Editor.Engine do
 
     selected_cell = Enum.at(cells_after, 0)
 
+    new_kind =
+      case block.kind do
+        "li" -> "li"
+        _ -> "p"
+      end
+
     [
       %{block | cells: cells_before, selection: Selection.new_empty()},
       %{
         block
         | cells: cells_after,
           id: Utils.new_id(),
-          selection: Selection.new_start_of(selected_cell)
+          selection: Selection.new_start_of(selected_cell),
+          kind: new_kind
       }
     ]
   end
@@ -481,15 +477,15 @@ defmodule Philtre.Editor.Engine do
     end
   end
 
-  defp merge_previous(%Editor{} = editor, %_{} = block) do
+  defp merge_previous(%Editor{} = editor, %block_type{} = block) do
     index = Enum.find_index(editor.blocks, &(&1 == block)) - 1
 
     if index >= 0 do
-      %_{} = previous_block = Enum.at(editor.blocks, index)
+      %previous_type{} = previous_block = Enum.at(editor.blocks, index)
       merged = %{merge_second_into_first(previous_block, block) | id: Utils.new_id()}
 
-      first_cell = Enum.at(block.cells, 0)
-      last_cell = Enum.at(previous_block.cells, -1)
+      first_cell = block |> block_type.cells() |> Enum.at(0)
+      last_cell = previous_block |> previous_type.cells() |> Enum.at(-1)
 
       selection =
         cond do
@@ -504,9 +500,13 @@ defmodule Philtre.Editor.Engine do
             Selection.new_start_of(only_cell)
         end
 
-      merged = merged |> set_selection(selection) |> Reduce.call()
+      merged = merged |> set_selection(selection) |> reduce()
 
-      blocks = editor.blocks |> List.delete_at(index + 1) |> List.replace_at(index, merged)
+      blocks =
+        editor.blocks
+        |> List.delete_at(index + 1)
+        |> List.replace_at(index, merged)
+
       %{editor | blocks: blocks}
     else
       editor
@@ -523,96 +523,56 @@ defmodule Philtre.Editor.Engine do
     ensure_single_cell(%{first_block | cells: new_cells})
   end
 
+  defp merge_second_into_first(%first_type{} = first_block, %ContentEditable{} = other_block) do
+    first_type.merge(first_block, other_block)
+  end
+
   @spec ensure_single_cell(ContentEditable.t()) :: ContentEditable.t()
   defp ensure_single_cell(%ContentEditable{cells: []} = block), do: %{block | cells: [Cell.new()]}
   defp ensure_single_cell(%ContentEditable{} = block), do: block
-
-  @transforms [
-    %{
-      prefixes: ["* "],
-      kind: "li"
-    },
-    %{
-      prefixes: ["# "],
-      kind: "h1"
-    },
-    %{
-      prefixes: ["## "],
-      kind: "h2"
-    },
-    %{
-      prefixes: ["### "],
-      kind: "h3"
-    },
-    %{
-      prefixes: ["```"],
-      kind: "pre"
-    },
-    %{
-      prefixes: ["> "],
-      kind: "blockquote"
-    },
-    %{
-      prefixes: ["/table"],
-      kind: "table"
-    },
-    %{
-      prefixes: ["/code"],
-      kind: "code"
-    }
-  ]
-
-  @type transform :: %{required(:prefixes) => list(String.t()), kind: String.t()}
 
   # checks for transform wildcard character sequences in the contents of the block (first cell)
   # and applies any matched transform
   @spec resolve_transform(ContentEditable.t()) :: ContentEditable.t()
   defp resolve_transform(%ContentEditable{} = block) do
     with %Cell{text: text} <- Enum.at(block.cells, 0),
-         %{} = transform <- match_transform(text) do
-      transform(block, transform)
+         {prefix, transform} <- match_transform(text) do
+      block
+      |> drop_prefix(prefix)
+      |> transform(transform)
     else
       nil -> block
     end
   end
 
+  defp resolve_transform(%s{} = block) do
+    Logger.warn("TODO: Transform struct #{s}")
+    block
+  end
+
   defp match_transform(text) when is_binary(text) do
-    Enum.find(@transforms, fn %{prefixes: prefixes, kind: _kind} ->
-      Enum.any?(prefixes, &String.starts_with?(text, &1))
+    Enum.find(BlockRegistry.transforms(), fn {prefix, _transform} ->
+      String.starts_with?(text, prefix)
     end)
   end
 
-  # applies a transform to a block, which usually changes its time and, if it's a
-  # regular content-editable block transform, updates selection offsets, as the
-  # wildcard character sequence triggering the transform will be removed
-  @spec transform(ContentEditable.t(), transform) :: ContentEditable.t()
-  defp transform(%ContentEditable{} = self, %{kind: "table", prefixes: prefixes}) do
-    {new_cells, _shift} = drop_leading(self.cells, prefixes)
-
-    %Table{id: Utils.new_id(), rows: [Enum.map(new_cells, &String.trim(&1.text))]}
+  defp drop_prefix(%ContentEditable{} = block, prefix) do
+    {new_cells, shift} = drop_leading(block.cells, prefix)
+    %{block | cells: new_cells, selection: shift(block.selection, -shift)}
   end
 
-  defp transform(%ContentEditable{}, %{kind: "code"}) do
-    %Code{id: Utils.new_id(), content: "", language: "elixir", focused: true}
+  defp transform(%ContentEditable{} = self, {module, data}) do
+    module.transform(self, data)
   end
 
-  defp transform(%ContentEditable{} = self, %{kind: kind, prefixes: prefixes}) do
-    {new_cells, shift} = drop_leading(self.cells, prefixes)
-
-    %{
-      self
-      | id: Utils.new_id(),
-        kind: kind,
-        cells: new_cells,
-        selection: shift(self.selection, -shift)
-    }
+  defp transform(%ContentEditable{} = self, module) do
+    module.transform(self)
   end
 
-  @spec drop_leading(list(Cell.t()), list(String.t())) :: {list(Cell.t()), integer}
+  @spec drop_leading(list(Cell.t()), String.t()) :: {list(Cell.t()), integer}
   defp drop_leading([], _), do: []
 
-  defp drop_leading([%{text: text} = first | rest], prefixes) when is_list(prefixes) do
-    prefix = Enum.find(prefixes, &String.starts_with?(text, &1))
+  defp drop_leading([%Cell{} = first | rest], prefix) do
     replaced = String.replace(first.text, prefix, "")
 
     # we need to make sure the transformed cell has at least a single "fake space"
@@ -656,4 +616,6 @@ defmodule Philtre.Editor.Engine do
       end_offset: end_offset
     }
   end
+
+  defp reduce(%block_type{} = block), do: block_type.reduce(block)
 end

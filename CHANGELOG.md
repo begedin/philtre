@@ -1,9 +1,16 @@
 # Changelog
 
+# 0.12.0
+
+- [REWRITE] More agnostic block system where the ContentEditable is a base
+  block through which other blocks communicate
+- [FEATURE] Basic implementation for a list - not release-ready yet
+- [FEATURE] Include library version in every editor
+
 ## 0.11.1
 
 - [FEATURE] Add Javascript support for code block
-- [FIX] Remove block functionatliy not actually being saved unless there is a 
+- [FIX] Remove block functionatliy not actually being saved unless there is a
   manual update to another block
 - [FIX] Move and rename `mix convert` -> `mix philtre.convert`
 
@@ -13,11 +20,11 @@
 
 ### Notes
 
-A new format a block serializes into has been introduced. It's description is 
+A new format a block serializes into has been introduced. It's description is
 available in the docs, unter the **outline** section.
 
-A task to convert from old format into new is also available. You can use it by 
-running 
+A task to convert from old format into new is also available. You can use it by
+running
 
 ```
 mix philtre.convert path_where_your_files_are
@@ -26,7 +33,7 @@ mix philtre.convert path_where_your_files_are
 If you need to manually convert, it should also be quite straightforward, from
 looking at the documentation.
 
-The reason for the new format is to support more generalized block structures 
+The reason for the new format is to support more generalized block structures
 in the future.
 
 ## 0.10.2

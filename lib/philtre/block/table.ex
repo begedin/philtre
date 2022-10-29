@@ -10,7 +10,6 @@ defmodule Philtre.Block.Table do
   use Phoenix.Component
 
   alias Philtre.Block
-  alias Philtre.Block.ContentEditable.Cell
   alias Philtre.Block.ContentEditable.Selection
   alias Philtre.Editor.Utils
 
@@ -113,7 +112,8 @@ defmodule Philtre.Block.Table do
     """
   end
 
-  attr(:cell, Cell, required: true)
+  attr(:cell, :string, required: true)
+  attr(:cell_index, :integer, required: true)
 
   defp cell(assigns) do
     rows =

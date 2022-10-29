@@ -3,6 +3,7 @@
 # 0.12.1
 
 - [FIX] Publish JS
+- [DOCS] Add publishing instructions
 
 Previous version didn't incoude prebuilt js and types
 
